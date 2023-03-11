@@ -1,25 +1,13 @@
 package main
 
 import (
-	"fmt"
+	"Handlers"
 	"net/http"
 
 	"github.com/gin-contrib/static"
 	"github.com/gin-gonic/gin"
 	"github.com/olahol/melody"
 )
-
-// Nombres y contenido del struct debe ser publico si no no se hace el binding **Mejor moverlo a otro archivo**
-type Login struct {
-	Email    string `json:"email" binding:"required"`
-	Password string `json:"password" binding:"required"`
-}
-
-type Register struct {
-	Name     string `json:"name" binding:"required"`
-	Email    string `json:"email" binding:"required"`
-	Password string `json:"password" binding:"required"`
-}
 
 func main() {
 	// Set the router as the default one shipped with Gin
@@ -33,10 +21,10 @@ func main() {
 	api := router.Group("/api")
 	{
 		//Procesa una petición de login
-		api.POST("/auth/login", postLogin)
+		api.POST("/auth/login", Handlers.PostLogin)
 
 		//Procesa una petición de registro
-		api.POST("/auth/register", postRegister)
+		api.POST("/auth/register", Handlers.PostRegister)
 
 		//Ejemplo de paso de parametros por url
 		api.GET("/prueba/:param", getParam)
@@ -45,7 +33,7 @@ func main() {
 		api.GET("/prueba/names", getNames)
 
 		//Ejemplo para devolver structs de datos
-		api.GET("/prueba/users", getUsers)
+		//api.GET("/prueba/users", getUsers)
 
 		//Carga la página del chat/lobby
 		api.GET("/channel/:lobby", func(c *gin.Context) {
@@ -68,32 +56,6 @@ func main() {
 	router.Run(":3001")
 }
 
-func postLogin(c *gin.Context) {
-
-	u := Login{}
-	//Con el binding guardamos el json de la petición en u que es de tipo login
-	if err := c.BindJSON(&u); err != nil {
-		c.AbortWithError(http.StatusBadRequest, err)
-		return
-	}
-	fmt.Println(u)
-	c.JSON(http.StatusAccepted, &u)
-
-}
-
-func postRegister(c *gin.Context) {
-
-	u := Register{}
-	//Con el binding guardamos el json de la petición en u que es de tipo login
-	if err := c.BindJSON(&u); err != nil {
-		c.AbortWithError(http.StatusBadRequest, err)
-		return
-	}
-	fmt.Println(u)
-	c.JSON(http.StatusAccepted, &u)
-
-}
-
 func getParam(c *gin.Context) {
 	param := c.Param("param")
 	c.JSON(http.StatusOK, gin.H{
@@ -110,9 +72,11 @@ func getNames(c *gin.Context) {
 
 }
 
+/*
 func getUsers(c *gin.Context) {
 	var users = []Login{{"a@gmail.com", "1234"}, {"b@gmail.com", "5678"}, {"c@gmail.com", "91011"}, {"d@gmail.com", "1234"}}
 	c.JSON(http.StatusOK, gin.H{
 		"users": users,
 	})
 }
+*/
