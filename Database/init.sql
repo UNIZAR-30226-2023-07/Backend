@@ -31,11 +31,9 @@ CREATE TABLE PARTIDAS (
 
 CREATE TABLE PARTICIPAR (
 	id serial,
-	partida text,
-	jugador text,
+	partida text REFERENCES PARTIDAS (clave),
+	jugador text REFERENCES JUGADORES (codigo),
 	puntos_resultado integer NOT NULL,
-	partida REFERENCES PARTIDAS (clave),
-	jugador REFERENCES JUGADORES (codigo),
 	UNIQUE (partida, jugador),
 	PRIMARY KEY (id)
 );
