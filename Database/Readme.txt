@@ -11,7 +11,3 @@ Una vez dentro habra que añadir el servidor, para ello click derecho en server 
 Escribir en name Pro_Soft y en address postgres y en contraseña 1234 y save y aparecerá la base de datos
 
 Una vez hecho esto se puede iniciar desde la aplicación de docker
-
-Ejecutar el main para ejecutar las pruebas
-
-

@@ -1,7 +1,7 @@
 CREATE TABLE JUGADORES (
 	nombre text NOT NULL,
     contra text NOT NULL,
---	perfil bytea NOT NULL,
+	foto int NOT NULL,
     descrp text,
     pjugadas integer NOT NULL,
     pganadas integer NOT NULL,
