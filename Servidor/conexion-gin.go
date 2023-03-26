@@ -2,23 +2,27 @@ package main
 
 import (
 	"Handlers"
+	"encoding/json"
+	"fmt"
 	"net/http"
 
 	"github.com/gin-contrib/static"
 	"github.com/gin-gonic/gin"
 	"github.com/olahol/melody"
-	"encoding/json"
 )
 
 type Mensaje struct {
-    Tipo  string `json:"tipo"`
-    Contenido string `json:"contenido"`
+	Tipo      string `json:"tipo"`
+	Contenido string `json:"contenido"`
 }
 
 func main() {
 	// Set the router as the default one shipped with Gin
 	router := gin.Default()
-	m := melody.New()
+
+	//Habrá que crear un melody por cada ws
+	chat_lobby := melody.New()
+	prueba := melody.New()
 
 	router.LoadHTMLFiles("chan.html")
 	router.Use(static.Serve("/", static.LocalFile(".", true)))
@@ -31,6 +35,17 @@ func main() {
 
 		//Procesa una petición de registro
 		api.POST("/auth/register", Handlers.PostRegister)
+
+		//Devuelve lista de amigos confirmados
+		api.GET("/amistad/get/:code", Handlers.GetAmistadList)
+
+		//Elimina una relación de amistad
+		api.POST("/amistad/remove", Handlers.PostAmistadRm)
+
+		//Modifica nombre, foto y descripción de un jugador
+		api.POST("jugador/mod", Handlers.PostModJug)
+
+		//----------------Ejemplos-----------------------------//
 
 		//Ejemplo de paso de parametros por url
 		api.GET("/prueba/:param", getParam)
@@ -46,29 +61,64 @@ func main() {
 			c.HTML(http.StatusOK, "chan.html", nil)
 		})
 
-		api.GET("/ws/:lobby", func(c *gin.Context) {
-			m.HandleRequest(c.Writer, c.Request)
+		api.GET("/ws/chat/lobby/:lobby", func(c *gin.Context) {
+			//Pasa la petición al ws
+			chat_lobby.HandleRequest(c.Writer, c.Request)
 		})
 
-		m.HandleMessage(func(s *melody.Session, msg []byte) {
-			var mensaje Mensaje
-			err := json.Unmarshal(msg, &mensaje)
-			if err != nil {
-				fmt.Println("Error al decodificar mensaje:", err)
-				return
-			} else {
-				fmt.Println("Mensaje recibido: ", mensaje.Tipo, mensaje.Contenido)
-				// procesar mensaje
-				// ...
-				// enviar con jsonMsg,err := json.Marshal(mensaje)
-
-			}
-			m.BroadcastFilter(msg, func(q *melody.Session) bool { //Envia la información a todos con la misma url
-				return q.Request.URL.Path == s.Request.URL.Path
-			})
+		api.GET("/ws/prueba/patricia", func(c *gin.Context) {
+			//Pasa la petición al ws
+			prueba.HandleRequest(c.Writer, c.Request)
 		})
 
 	}
+
+	//Las funciones de los ws hay que ponerlas aquí ya que es aquí donde se declaran
+
+	//Retransmite lo enviado a todos cuya URL sea la misma (lobby)
+	chat_lobby.HandleMessage(func(s *melody.Session, msg []byte) {
+		chat_lobby.BroadcastFilter(msg, func(q *melody.Session) bool { //Envia la información a todos con la misma url
+			return q.Request.URL.Path == s.Request.URL.Path
+		})
+	})
+
+	//Retransmite como JSON
+	prueba.HandleMessage(func(s *melody.Session, msg []byte) {
+
+		type M_rcp struct { //He movido el struct aquí para que no sea global
+			Tipo      string `json:"tipo"`
+			Contenido string `json:"contenido"`
+		}
+
+		var M M_rcp
+
+		//Vemos que ha enviado el usuario //Prueba de Patricia
+		err := json.Unmarshal(msg, &M)
+		if err != nil {
+			fmt.Println("Error al decodificar mensaje:", err)
+			return
+		} else {
+
+			fmt.Println("Mensaje recibido: ", M.Tipo, M.Contenido)
+
+			if M.Contenido == "Hola" {
+				//Si necesitamos estructurar los datos a enviar
+				type M_env struct {
+					Msg string `json:"msg"` //parametros del struct empiezan con mayuscula
+					//en json: ponemos el nombre del atributo json
+				}
+				m := M_env{Msg: "Hola esto es una prueba!"}
+
+				b, _ := json.MarshalIndent(&m, "", "\t")
+
+				prueba.Broadcast(b)
+
+			} else {
+				//Si no necesitamos manda información estructurada entre [] si son varios mensajes
+				prueba.Broadcast([]byte(`{"msg": "Adios"}`))
+			}
+		}
+	})
 
 	// Start and run the server
 	router.Run(":3001")
