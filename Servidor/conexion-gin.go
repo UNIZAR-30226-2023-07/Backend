@@ -7,7 +7,13 @@ import (
 	"github.com/gin-contrib/static"
 	"github.com/gin-gonic/gin"
 	"github.com/olahol/melody"
+	"encoding/json"
 )
+
+type Mensaje struct {
+    Tipo  string `json:"tipo"`
+    Contenido string `json:"contenido"`
+}
 
 func main() {
 	// Set the router as the default one shipped with Gin
@@ -45,6 +51,18 @@ func main() {
 		})
 
 		m.HandleMessage(func(s *melody.Session, msg []byte) {
+			var mensaje Mensaje
+			err := json.Unmarshal(msg, &mensaje)
+			if err != nil {
+				fmt.Println("Error al decodificar mensaje:", err)
+				return
+			} else {
+				fmt.Println("Mensaje recibido: ", mensaje.Tipo, mensaje.Contenido)
+				// procesar mensaje
+				// ...
+				// enviar con jsonMsg,err := json.Marshal(mensaje)
+
+			}
 			m.BroadcastFilter(msg, func(q *melody.Session) bool { //Envia la información a todos con la misma url
 				return q.Request.URL.Path == s.Request.URL.Path
 			})
