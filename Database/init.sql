@@ -24,8 +24,8 @@ CREATE TABLE PARTIDAS (
 	clave text,
 	creador text REFERENCES JUGADORES (codigo),
 	tipo text NOT NULL CHECK(tipo = 'amistosa' OR tipo = 'torneo'), 
-	fecha date NOT NULL,
-	estado text NOT NULL CHECK(estado = 'terminada' OR estado = 'pausada' OR estado = 'iniciada'),
+--	fecha date NOT NULL,
+	estado text NOT NULL CHECK(estado = 'terminada' OR estado = 'pausada' OR estado = 'iniciada' OR estado = 'creando'),
 	PRIMARY KEY (clave)
 );
 
@@ -36,6 +36,16 @@ CREATE TABLE PARTICIPAR (
 	puntos_resultado integer NOT NULL,
 	UNIQUE (partida, jugador),
 	PRIMARY KEY (id)
+);
+
+CREATE TABLE MENSAJES (
+	id serial, 
+	jug_emi text REFERENCES JUGADORES (codigo),
+	jug_rcp text REFERENCES JUGADORES (codigo),
+	timestamp timestamp NOT NULL,
+	contenido text NOT NULL,
+	leido integer NOT NULL,
+	PRIMARY KEY(id)
 );
 
 CREATE TABLE CARTAS(

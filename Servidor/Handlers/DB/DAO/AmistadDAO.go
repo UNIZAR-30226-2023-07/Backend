@@ -52,7 +52,7 @@ func (aDAO *AmistadDAO) AceptarPeticion(j1 string, j2 string) {
 	CheckError(e2)
 }
 
-// Rechaza una relación de amistad pendiente
+// Rechaza una relación de amistad pendiente **también sirve para eliminar una relación de amistad confirmada**
 func (aDAO *AmistadDAO) RechazarPeticion(j1 string, j2 string) {
 	//String para la conexión
 	psqlcon := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable", host, port, user, password, dbname)

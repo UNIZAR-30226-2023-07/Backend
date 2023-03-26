@@ -1,9 +1,9 @@
 package VO
 
 type JugadoresVO struct {
-	nombre string
-	contra string
-	//	perfil   []byte
+	nombre   string
+	contra   string
+	foto     int
 	descrp   string
 	pjugadas int
 	pganadas int
@@ -11,8 +11,8 @@ type JugadoresVO struct {
 	codigo   string
 }
 
-func NewJugadorVO(nombre string, contra string, descrp string, pjugadas int, pganadas int, email string, codigo string) *JugadoresVO {
-	j := JugadoresVO{nombre: nombre, contra: contra, descrp: descrp, pjugadas: pjugadas, pganadas: pganadas, email: email, codigo: codigo}
+func NewJugadorVO(nombre string, contra string, foto int, descrp string, pjugadas int, pganadas int, email string, codigo string) *JugadoresVO {
+	j := JugadoresVO{nombre: nombre, contra: contra, foto: foto, descrp: descrp, pjugadas: pjugadas, pganadas: pganadas, email: email, codigo: codigo}
 	return &j
 }
 
@@ -24,10 +24,9 @@ func (j *JugadoresVO) GetContra() string {
 	return j.contra
 }
 
-/*func (j *JugadoresVO) GetPerfil() []byte {
-	return j.perfil
+func (j *JugadoresVO) GetFoto() int {
+	return j.foto
 }
-*/
 
 func (j *JugadoresVO) GetDescrip() string {
 	return j.descrp
