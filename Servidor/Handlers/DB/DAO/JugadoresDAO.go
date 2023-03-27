@@ -147,7 +147,7 @@ func (jDAO *JugadoresDAO) ListarAmigos(j string) []*VO.JugadoresVO {
 	defer db.Close()
 
 	//Obtenemos todos los parametros para cada amigo del jugador
-	qAmis := "SELECT r.nombre, r.foto, r.descp, r.email, r.codigo " +
+	qAmis := "SELECT r.nombre, r.foto, r.descrp, r.email, r.codigo " +
 		"FROM AMISTAD AS a JOIN JUGADORES AS r ON a.usr2 = r.codigo " +
 		"WHERE a.usr1 = $1 AND a.estado = 'confirmada'"
 	rows, err := db.Query(qAmis, j)
