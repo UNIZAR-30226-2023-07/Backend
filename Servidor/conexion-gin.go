@@ -11,11 +11,6 @@ import (
 	"github.com/olahol/melody"
 )
 
-type Mensaje struct {
-	Tipo      string `json:"tipo"`
-	Contenido string `json:"contenido"`
-}
-
 func main() {
 	// Set the router as the default one shipped with Gin
 	router := gin.Default()
