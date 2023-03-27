@@ -76,3 +76,21 @@ func PostRegister(c *gin.Context) {
 	}
 
 }
+
+func PostModLogin(c *gin.Context) {
+
+	log := Login{}
+	//Con el binding guardamos el json de la petición en log que es de tipo login
+	if err := c.BindJSON(&log); err != nil {
+		c.AbortWithError(http.StatusBadRequest, err)
+		return
+	}
+
+	// Cambia la contraseña del jugador dado el email
+	jDAO := DAO.JugadoresDAO{}
+	jDAO.CambiarContra(log.Email,log.Contra)
+
+	c.JSON(http.StatusAccepted, gin.H{
+		"res": "ok",
+	})
+}

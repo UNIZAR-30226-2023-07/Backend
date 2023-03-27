@@ -67,3 +67,45 @@ func GetAmistadList(c *gin.Context) {
 	})
 
 }
+
+func PostAmistadAdd(c *gin.Context) {
+
+	a := Amistad{}
+
+	if err := c.BindJSON(&a); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"res": "error",
+		})
+		return
+	}
+
+	aDAO := DAO.AmistadDAO{}
+
+	aDAO.PeticionAmistad(a.Emisor, a.Receptor)
+
+	c.JSON(http.StatusAccepted, gin.H{
+		"res": "ok",
+	})
+
+}
+
+func PostAmistadAccept(c *gin.Context) {
+
+	a := Amistad{}
+
+	if err := c.BindJSON(&a); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"res": "error",
+		})
+		return
+	}
+
+	aDAO := DAO.AmistadDAO{}
+
+	aDAO.AceptarPeticion(a.Emisor, a.Receptor)
+
+	c.JSON(http.StatusAccepted, gin.H{
+		"res": "ok",
+	})
+
+}
