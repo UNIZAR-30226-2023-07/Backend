@@ -9,7 +9,7 @@ import (
 )
 
 const (
-	host     = "192.168.56.5"
+	host     = "51.103.94.220"
 	port     = "5432"
 	user     = "frances"
 	password = "1234"
