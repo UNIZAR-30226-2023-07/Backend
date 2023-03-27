@@ -43,7 +43,16 @@ func main() {
 		api.POST("/amistad/remove", Handlers.PostAmistadRm)
 
 		//Modifica nombre, foto y descripción de un jugador
-		api.POST("jugador/mod", Handlers.PostModJug)
+		api.POST("/jugador/mod", Handlers.PostModJug)
+
+		//Modifica la contraseña del jugador
+		api.POST("/auth/mod-login", Handlers.PostModLogin)
+
+		//Manda una solicitud de amistad
+		api.POST("/amistad/add", Handlers.PostAmistadAdd)
+
+		//Acepta una solicitud de amistad
+		api.POST("/amistad/accept", Handlers.PostAmistadAccept)
 
 		//----------------Ejemplos-----------------------------//
 
