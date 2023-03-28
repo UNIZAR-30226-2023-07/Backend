@@ -89,8 +89,6 @@ func main() {
 
 	}
 
-	//Las funciones de los ws hay que ponerlas aquí ya que es aquí donde se declaran
-
 	//Retransmite lo enviado a todos cuya URL sea la misma (lobby)
 	chat_lobby.HandleMessage(func(s *melody.Session, msg []byte) {
 		chat_lobby.BroadcastFilter(msg, func(q *melody.Session) bool { //Envia la información a todos con la misma url
