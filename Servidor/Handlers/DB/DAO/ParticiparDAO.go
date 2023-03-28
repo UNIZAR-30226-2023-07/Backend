@@ -23,7 +23,7 @@ func (pDAO *ParticiparDAO) AddParticipar(pVO VO.ParticiparVO) {
 	defer db.Close()
 
 	//Añadir participación
-	addp := "INSERT INTO PARTICIPAR VALUES ($1, $2, 0)"
+	addp := "INSERT INTO PARTICIPAR (partida, jugador, puntos_resultado) VALUES ($1, $2, 0)"
 	_, e := db.Exec(addp, pVO.GetPartida(), pVO.GetJugador())
 	CheckError(e)
 
@@ -42,7 +42,7 @@ func (pDAO *ParticiparDAO) AsignarPuntos(pVO VO.ParticiparVO) {
 	defer db.Close()
 
 	//Actualiazmos los puntos del usuario
-	puntos := "UPDATE PARTICIPAR SET puntos_resultado = $1 WHERE partida = $2 AND jugador = $3"
+	puntos := "UPDATE PARTICIPAR SET puntos_resultado = ($1) WHERE partida = $2 AND jugador = $3"
 	_, e := db.Exec(puntos, pVO.GetPuntos(), pVO.GetPartida(), pVO.GetJugador())
 	CheckError(e)
 

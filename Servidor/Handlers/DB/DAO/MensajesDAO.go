@@ -43,7 +43,7 @@ func (mDAO *MensajesDAO) LeerMensajes(usr string) {
 	defer db.Close()
 
 	//Ponemos a leido todos los mensajes anteriores a ahora
-	rdm := "UPDATE MENSAJES SET (leido) = (1) WHERE jug_rcp = $1 AND timestamp < $2 "
+	rdm := "UPDATE MENSAJES SET leido = 1 WHERE jug_rcp = $1 AND timestamp < $2 "
 	_, e := db.Exec(rdm, usr, time.Now())
 	CheckError(e)
 }
