@@ -95,6 +95,9 @@ func main() {
 	//Retransmite como JSON
 	prueba.HandleMessage(func(s *melody.Session, msg []byte) {
 
+		fmt.Println(s.Request.URL.Path)
+		fmt.Println(prueba.Sessions())
+
 		type M_rcp struct { //He movido el struct aquí para que no sea global
 			Tipo      string `json:"tipo"`
 			Contenido string `json:"contenido"`
