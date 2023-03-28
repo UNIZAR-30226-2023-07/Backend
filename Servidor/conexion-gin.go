@@ -55,6 +55,12 @@ func main() {
 		//Rechaza una solicitud de amistad
 		api.POST("/amistad/deny", Handlers.PostAmistadDeny)
 
+		//Devulve los mensajes de un usuario
+		api.GET("/msg/get/:code", Handlers.GetMsgList)
+
+		//Pone a leidos los mensajes recibidos por el receptor del emidor
+		api.POST("/msg/leer", Handlers.PostLeer)
+
 		//----------------Ejemplos-----------------------------//
 
 		//Ejemplo de paso de parametros por url
