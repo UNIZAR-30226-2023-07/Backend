@@ -242,7 +242,7 @@ func (JDAO *JugadoresDAO) CambiarContra(email string, ncontra string) {
 	defer db.Close()
 
 	//Actualizamos contraseña de un usuario
-	cc := "UPDATE JUGADORES SET (contra) = ($1) WHERE email = $2"
+	cc := "UPDATE JUGADORES SET contra = ($1) WHERE email = $2"
 	_, e := db.Exec(cc, ncontra, email)
 	CheckError(e)
 }

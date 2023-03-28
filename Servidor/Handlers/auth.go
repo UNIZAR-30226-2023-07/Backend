@@ -67,7 +67,7 @@ func PostRegister(c *gin.Context) {
 
 	if jDAO.AddJugador(*jVO) {
 		c.JSON(http.StatusAccepted, gin.H{
-			"res": "ok",
+			"res": "ok, codigo del jugador = " + codigo,
 		})
 	} else {
 		c.JSON(http.StatusBadRequest, gin.H{

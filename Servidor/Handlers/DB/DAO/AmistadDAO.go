@@ -22,11 +22,11 @@ func (aDAO *AmistadDAO) PeticionAmistad(j1 string, j2 string) {
 	defer db.Close()
 
 	//Añadir petición
-	adda1 := "INSERT INTO AMISTAD VALUES ('esp_confirmacion', $1, $2)"
+	adda1 := "INSERT INTO AMISTAD VALUES (DEFAULT,'esp_confirmacion', $1, $2)"
 	_, e1 := db.Exec(adda1, j1, j2)
 	CheckError(e1)
 
-	adda2 := "INSERT INTO AMISTAD VALUES ('pendiente', $1, $2)"
+	adda2 := "INSERT INTO AMISTAD VALUES (DEFAULT,'pendiente', $1, $2)"
 	_, e2 := db.Exec(adda2, j2, j1)
 	CheckError(e2)
 }
