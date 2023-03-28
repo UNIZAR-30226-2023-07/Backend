@@ -49,6 +49,12 @@ func main() {
 		//Acepta una solicitud de amistad
 		api.POST("/amistad/accept", Handlers.PostAmistadAccept)
 
+		//Devuelve la información del usuario
+		api.GET("api/jugador/get/:email", Handlers.GetInfoUsuario)
+
+		//Rechaza una solicitud de amistad
+		api.POST("/amistad/deny", Handlers.PostAmistadDeny)
+
 		//----------------Ejemplos-----------------------------//
 
 		//Ejemplo de paso de parametros por url

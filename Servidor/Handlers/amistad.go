@@ -109,3 +109,24 @@ func PostAmistadAccept(c *gin.Context) {
 	})
 
 }
+
+func PostAmistadDeny(c *gin.Context) {
+
+	a := Amistad{}
+
+	if err := c.BindJSON(&a); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"res": "error",
+		})
+		return
+	}
+
+	aDAO := DAO.AmistadDAO{}
+
+	aDAO.RechazarPeticion(a.Emisor, a.Receptor)
+
+	c.JSON(http.StatusAccepted, gin.H{
+		"res": "ok",
+	})
+
+}

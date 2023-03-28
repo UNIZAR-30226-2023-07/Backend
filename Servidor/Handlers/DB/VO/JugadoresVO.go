@@ -39,3 +39,15 @@ func (j *JugadoresVO) GetEmail() string {
 func (j *JugadoresVO) GetCodigo() string {
 	return j.codigo
 }
+
+func (j *JugadoresVO) GetPGanadas() int {
+	return j.pganadas
+}
+
+func (j *JugadoresVO) GetPJugadas() int {
+	return j.pjugadas
+}
+
+/*func (j *JugadoresVO) GetPuntos() int {
+	return j.Puntos
+}*/

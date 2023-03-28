@@ -33,3 +33,38 @@ func PostModJug(c *gin.Context) {
 	})
 
 }
+
+func GetInfoUsuario(c *gin.Context){
+	email := c.Param("email")
+
+	jDAO := DAO.JugadoresDAO{}
+
+	jVO := VO.NewJugadorVO("", "", "", "", "", "", email, "")
+
+	jDAO.GetJugador(jVO)
+
+	struct Usuario{
+		Nombre string
+		Foto int
+		Desc string
+		PGanadas int
+		PJugadas int
+		Codigo string
+		//Puntos int
+	}
+
+	user := Usuario{
+		Nombre: jVO[i].GetCodigo(),
+		Foto:   jVO[i].GetFoto(),
+		Descp:  jVO[i].GetDescrip(),
+		PGanadas : jVO[i].GetPGanadas(),
+		PJugadas:   jVO[i].GetPJugadas(),
+		Codigo:  jVO[i].GetCodigo(),
+		//Puntos : jVO[i].Get(),
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"usuario": user,
+	})
+
+}
