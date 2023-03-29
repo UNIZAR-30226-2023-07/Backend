@@ -63,7 +63,7 @@ func main() {
 		api.POST("/msg/leer", Handlers.PostLeer)
 
 		//WebSocket del chat entre amigos
-		api.GET("/ws/chat/:code",func(c * gin.Context){
+		api.GET("/ws/chat/:code", func(c *gin.Context) {
 			chat.HandleRequest(c.Writer, c.Request)
 		})
 
@@ -105,15 +105,14 @@ func main() {
 	//Retransmite el mensaje al ws del receptor del mensaje
 	chat.HandleMessage(func(s *melody.Session, msg []byte) {
 		//Hay que transformar el msg a JSON para obtener el receptor
-		
+
 		//Añadir el mensaje a la base de datos como no leido
-		
+
 		//Retransmitir el mensaje al receptor
-		chat.BroadcastFilter(msg, func(q *melody.Session) bool { 
-			return q.Request.URL.Path == ("api/ws/chat" + receptor)
+		chat.BroadcastFilter(msg, func(q *melody.Session) bool {
+			return q.Request.URL.Path == ("api/ws/chat" + "receptor")
 		})
 	})
-
 
 	//Retransmite como JSON
 	prueba.HandleMessage(func(s *melody.Session, msg []byte) {
