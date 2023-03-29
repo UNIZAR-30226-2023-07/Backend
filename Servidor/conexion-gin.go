@@ -18,6 +18,7 @@ func main() {
 	//Habrá que crear un melody por cada ws
 	chat_lobby := melody.New()
 	prueba := melody.New()
+	chat := melody.New()
 
 	router.LoadHTMLFiles("chan.html")
 	router.Use(static.Serve("/", static.LocalFile(".", true)))
@@ -61,6 +62,10 @@ func main() {
 		//Pone a leidos los mensajes recibidos por el receptor del emidor
 		api.POST("/msg/leer", Handlers.PostLeer)
 
+		api.GET("/ws/chat/:code",func(c * gin.Context){
+			chat.HandleRequest(c.Writer, c.Request)
+		})
+
 		//----------------Ejemplos-----------------------------//
 
 		//Ejemplo de paso de parametros por url
@@ -95,6 +100,14 @@ func main() {
 			return q.Request.URL.Path == s.Request.URL.Path
 		})
 	})
+
+	//Jaja
+	chat.HandleMessage(func(s *melody.Session, msg []byte) {
+		chat.BroadcastFilter(msg, func(q *melody.Session) bool { //Envia la información a todos con la misma url
+			return q.Request.URL.Path =="api/ws/chat" + receptor //?????????
+		})
+	})
+
 
 	//Retransmite como JSON
 	prueba.HandleMessage(func(s *melody.Session, msg []byte) {
