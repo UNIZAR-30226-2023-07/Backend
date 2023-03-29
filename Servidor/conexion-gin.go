@@ -15,7 +15,7 @@ func main() {
 	// Set the router as the default one shipped with Gin
 	router := gin.Default()
 
-	//Habrá que crear un melody por cada ws
+	//Habrá que crear un melody por cada paquete de ws
 	chat_lobby := melody.New()
 	prueba := melody.New()
 	chat := melody.New()
@@ -62,6 +62,7 @@ func main() {
 		//Pone a leidos los mensajes recibidos por el receptor del emidor
 		api.POST("/msg/leer", Handlers.PostLeer)
 
+		//WebSocket del chat entre amigos
 		api.GET("/ws/chat/:code",func(c * gin.Context){
 			chat.HandleRequest(c.Writer, c.Request)
 		})
@@ -101,10 +102,15 @@ func main() {
 		})
 	})
 
-	//Jaja
+	//Retransmite el mensaje al ws del receptor del mensaje
 	chat.HandleMessage(func(s *melody.Session, msg []byte) {
-		chat.BroadcastFilter(msg, func(q *melody.Session) bool { //Envia la información a todos con la misma url
-			return q.Request.URL.Path =="api/ws/chat" + receptor //?????????
+		//Hay que transformar el msg a JSON para obtener el receptor
+		
+		//Añadir el mensaje a la base de datos como no leido
+		
+		//Retransmitir el mensaje al receptor
+		chat.BroadcastFilter(msg, func(q *melody.Session) bool { 
+			return q.Request.URL.Path == ("api/ws/chat" + receptor)
 		})
 	})
 
