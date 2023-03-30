@@ -338,3 +338,257 @@ func AnyadirCarta(jugada *doublylinkedlist.List, mano *doublylinkedlist.List, t 
 	}
 	return -1
 }
+// Se muestra el Tablero por pantalla (para depuración)
+func MostrarTablero(t Tablero) {
+	fmt.Println("MAZO: ", t.Mazo)
+
+	fmt.Println("DESCARTES: ", t.Descartes)
+
+	fmt.Println("COMBINACIONES: ", t.Combinaciones)
+
+	l := t.Combinaciones
+	for e := l.Front(); e != nil; e = e.Next() {
+		fmt.Println(e.Value)
+	}
+	fmt.Println("---------------------------------------\n")
+
+}
+
+// Inicializa el Tablero y la mano del jugador (hay que cambiar lo de repartirMano cuando se hagan más jugadores)
+func IniciarTablero() (Tablero) {
+
+	rand.Seed(time.Now().UnixNano())
+	mazo := doublylinkedlist.New()
+	descarte := doublylinkedlist.New()
+
+	cartas.CreacionBaraja(mazo)
+
+	t := Tablero{mazo, descarte, list.New()}
+
+	aux := doublylinkedlist.New();
+	carta := cartas.Carta{10,1,1}
+	aux.Add(carta)
+	carta = cartas.Carta{11,1,1}
+	aux.Add(carta)
+	carta = cartas.Carta{12,1,1}
+	aux.Add(carta)
+
+	t.Combinaciones.PushBack(aux)
+
+	return t
+}
+
+//función que llama a la jugada que indique el jugador
+/*func RealizarJugada(t *Tablero, mano *doublylinkedlist.List, jugada int, i int, cartasAjugar *doublylinkedlist.List) {
+	switch jugada {
+	case 0: //Descarte
+		FinTurno(t.Mazo, mano, t.Descartes, i)
+		return
+	case 1: //Robar
+		RobarCarta(t.Mazo, mano)
+		return
+	case 2: //Abrir
+		if Suma51(cartasAjugar) {
+			Abrir(cartasAjugar, mano, t)
+		}
+		cartasAjugar.Clear()
+		return
+	case 3: //Añadir 1 carta a una combinación existente
+		AnyadirCarta(cartasAjugar, mano, t, 0)
+		cartasAjugar.Clear()
+		return
+	default:
+	}
+}*/
+
+/*
+Pre: TRUE
+Post: return true si es un comodin, es decir vale 0
+		false en caso contrario
+*/
+func EsComodin(valor int) bool{
+	return valor == 0
+}
+
+/*
+Pre: TRUE
+Post: devuelve el numero de comodines en la lista
+*/
+func NumComodines(jugada *doublylinkedlist.List) int{
+	num_comodines := 0
+	for j := 0; j < jugada.Size(); j++  {
+		cart, _ := jugada.Get(j)
+		carta, _ := cart.(cartas.Carta)
+		ValorCarta := carta.Valor
+
+		if EsComodin(ValorCarta) {
+			num_comodines++
+		}
+	}
+	return num_comodines
+}
+
+/*
+Pre: lista ordenada en orden de jugada (Consideramos que el comodin es el 0)
+Post: return true si es una escalera válida en el juego del Rabino, y 
+		false en caso contrario
+*/
+func EscaleraValida(jugada *doublylinkedlist.List) bool{
+
+	if(jugada.Empty()){ //Si la lista de la jugada es vacia
+		return false
+	}
+
+	num_cartas := jugada.Size()
+
+	//COMPROBACION: NUMERO DE CARTAS VALIDO
+	//Escalera maxima: 1,2,3,4,5,6,7,8,9,10,Sota(11),Caballo(12),Rey(13),As(1 o 0)
+	if num_cartas > 14 {//Tamagno maximo de escalera 14
+		return false
+	}
+
+	num_comodines := NumComodines(jugada)
+
+	//COMPROBACION: NUMERO DE COMODINES VALIDO
+	if num_comodines > (num_cartas - 2) {//Numero de comodines es como mucho num_cartas - 2 
+		return false
+	}
+
+	//COMPROBACION: TIENEN EL MISMO PALO
+	index := 0 //Indice inicial
+	cart, _ := jugada.Get(index)//Cogemos la primera carta
+	carta, _ := cart.(cartas.Carta)
+	CartaValorRef := carta.Valor //Sacamos este valor por si es un comodin
+	PaloCartaRef := carta.Palo
+	
+	for EsComodin(CartaValorRef) { //Tomamos de referencia una carta que no sea comodin
+		index++ //Miramos la siguiente carta
+		cart, _ := jugada.Get(index)//Cogemos la primera carta
+		carta, _ := cart.(cartas.Carta)
+		CartaValorRef = carta.Valor //Sacamos este valor por si es un comodin
+		PaloCartaRef = carta.Palo
+	}
+
+	for u := index + 1; u < jugada.Size(); u++ {//Miramos que tenga todas las cartas el mismo palo
+		cart1, _ := jugada.Get(u)
+		carta1, _ := cart1.(cartas.Carta)
+		CartaValorMirar := carta1.Valor //Sacamos este valor por si es un comodin
+		PaloCartaMirar := carta1.Palo
+
+		if PaloCartaRef != PaloCartaMirar && !EsComodin(CartaValorRef) && !EsComodin(CartaValorMirar) {//Si tiene distinto palo, no valido
+			return false
+		}
+	}
+
+	//COMPROBACION: VALOR DE CARTAS CRECIENTE
+	index = 0 //Indice inicial
+	cart, _ = jugada.Get(index)
+	carta, _ = cart.(cartas.Carta)
+	CartaValorRef = carta.Valor //Sacamos este valor de la primera carta
+
+	for EsComodin(CartaValorRef) { //Tomamos de referencia una carta que no sea comodin
+		index++ //Miramos la siguiente carta
+		cart, _ = jugada.Get(index)
+		carta, _ = cart.(cartas.Carta)
+		CartaValorRef = carta.Valor
+	}
+
+	//El numero de comodines que hay delante de 1 debe ser cero, el numero de comodines que pueden ir delante
+	// de 2 es 1, y asi sucesibamente. Index en este caso tambien tomaria el numero de comodines que hay delante
+	if (CartaValorRef - index) <= 0 {
+		return false
+	}
+
+	for j := index + 1; j < jugada.Size(); j++ { //Miramos si el valor de las cartas es creciente
+		//Empezamos a comparar con cartas posteriores a la de referencia
+		CartaValorRef++
+		cart1, _ := jugada.Get(j)
+		carta1, _ := cart1.(cartas.Carta)
+		CartaValorMirar := carta1.Valor //Sacamos este valor de la carta
+
+		if !EsComodin(CartaValorMirar) {//Si es un comodin seguro que valdra para la escalera
+			if CartaValorMirar != 1 || CartaValorRef != 14 { //Esta condicion no se cumple cuando despues del Rey(13), se pone un As(1)
+				if CartaValorMirar != CartaValorRef { //Si concuerda el valor con lo que deberia dar(p.ejem: 2 != 15(valor despues de As))
+					return false
+				}
+			}
+		} else if CartaValorRef > 14{ //Si la jugada continua despues de ..., Rey, As,...sera erronea
+			return false
+		}
+	}
+
+	return true //Si cumple todas las condiciones
+}
+
+/*
+Pre: TRUE
+Post: return true si es una trio o cuarteto válida en el juego del Rabino, y 
+		false en caso contrario
+*/
+func TrioValido(jugada *doublylinkedlist.List) bool{
+
+	if(jugada.Empty()){ //Si la lista de la jugada es vacia
+		return false
+	}
+
+	//COMPROBACION: ES UN TRIO O UN CUARTETO
+	if jugada.Size() < 3 || jugada.Size() > 4 { //El tamaño de la jugada puede ser 3 o 4
+		return false
+	}
+
+	//COMPROBACION: NUMERO DE COMODINES VALIDO
+	num_comodines := NumComodines(jugada)
+	if num_comodines > 1 {//Numero de comodines es como mucho 1
+		return false
+	}
+
+	//COMPROBACION: TIENEN EL MISMO VALOR
+	index := 0
+	cart, _ := jugada.Get(index)
+	carta, _ := cart.(cartas.Carta)
+	ValorCartaRef := carta.Valor
+
+	for EsComodin(ValorCartaRef) { //Tomamos de referencia una carta que no sea comodin
+		index++ //Miramos la siguiente carta
+		cart, _ = jugada.Get(index)
+		carta, _ = cart.(cartas.Carta)
+		ValorCartaRef = carta.Valor
+	}
+
+	for i := index + 1; i < jugada.Size(); i++ { //Comprobamos que todas las cartas tengan el mismo valor
+	
+		cart1, _ := jugada.Get(i)
+		carta1, _ := cart1.(cartas.Carta)
+		ValorCarta := carta1.Valor
+
+		if ValorCartaRef != ValorCarta && !EsComodin(ValorCarta){//Si la carta a comparar es un comodin sera valida
+			return false
+		}
+	}
+	
+	//COMPROBACION: TIENEN DISTINTO PALO
+	for j := 0; j < jugada.Size(); j++ {
+
+		cart, _ := jugada.Get(j)
+		carta, _ := cart.(cartas.Carta)
+		CartaValorRef := carta.Valor //Sacamos este valor por si es un comodin
+		PaloCartaRef := carta.Palo
+
+		if !EsComodin(CartaValorRef) { //Si es un comodin seguro que sera valido
+			for u := j + 1; u < jugada.Size(); u++ {//Miramos que tenga todas las cartas el mismo palo
+				cart1, _ := jugada.Get(u)
+				carta1, _ := cart1.(cartas.Carta)
+				CartaValorMirar := carta1.Valor //Sacamos este valor por si es un comodin
+				PaloCartaMirar := carta1.Palo
+
+				if PaloCartaRef == PaloCartaMirar && !EsComodin(CartaValorMirar) {//Si tiene distinto palo, no valido
+					return false
+				}
+			}
+		}
+	}
+	
+	return true //Si cumple todas las condiciones
+
+}
+
