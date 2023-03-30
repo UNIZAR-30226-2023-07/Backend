@@ -1,6 +1,8 @@
 package main
 
 import (
+	"DB/DAO"
+	"DB/VO"
 	"Handlers"
 	"encoding/json"
 	"fmt"
@@ -104,13 +106,26 @@ func main() {
 
 	//Retransmite el mensaje al ws del receptor del mensaje
 	chat.HandleMessage(func(s *melody.Session, msg []byte) {
-		//Hay que transformar el msg a JSON para obtener el receptor
 
-		//Añadir el mensaje a la base de datos como no leido
+		//Estructuramos el mesaje para sacar el receptor del mismo
+		type M_rcp struct {
+			Emisor    string `json:"emisor"`
+			Receptor  string `json:"receptor"`
+			Contenido string `json:"contenido"`
+		}
+
+		var M M_rcp
+
+		json.Unmarshal(msg, &M)
+
+		//Guardamos el mensaje como no leido en la BD
+		mVO := VO.NewMensajesVO(M.Emisor, M.Receptor, M.Contenido, 0)
+		mDAO := DAO.MensajesDAO{}
+		mDAO.AddMensaje(*mVO)
 
 		//Retransmitir el mensaje al receptor
 		chat.BroadcastFilter(msg, func(q *melody.Session) bool {
-			return q.Request.URL.Path == ("api/ws/chat" + "receptor")
+			return q.Request.URL.Path == ("api/ws/chat" + M.Receptor)
 		})
 	})
 
