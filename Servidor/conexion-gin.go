@@ -53,7 +53,7 @@ func main() {
 		api.POST("/amistad/accept", Handlers.PostAmistadAccept)
 
 		//Devuelve la información del usuario
-		api.GET("api/jugador/get/:email", Handlers.GetInfoUsuario)
+		api.GET("/jugador/get/:email", Handlers.GetInfoUsuario)
 
 		//Rechaza una solicitud de amistad
 		api.POST("/amistad/deny", Handlers.PostAmistadDeny)
