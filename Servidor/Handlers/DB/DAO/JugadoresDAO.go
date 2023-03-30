@@ -74,8 +74,8 @@ func (jDAO *JugadoresDAO) DelJugador(j string) bool {
 
 }
 
-// Devuelve true si existe un jugador con ese email y devuelve su información
-func (JDAO *JugadoresDAO) GetJugador(JVO *VO.JugadoresVO) bool {
+// Devuelve la información del jugador que coincida con el email
+func (JDAO *JugadoresDAO) GetJugador(email string) *VO.JugadoresVO {
 	//String para la conexión
 	psqlcon := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable", host, port, user, password, dbname)
 
@@ -86,15 +86,13 @@ func (JDAO *JugadoresDAO) GetJugador(JVO *VO.JugadoresVO) bool {
 	//cerrar base de datos
 	defer db.Close()
 
-	res := false
 	//Busca el usuario cuyo email coincide con el de JVO
 	getj := "SELECT nombre, descrp, foto, pjugadas, pganadas, codigo FROM JUGADORES WHERE email = $1"
-	rows, err := db.Query(getj, JVO.GetEmail())
+	rows, err := db.Query(getj, email)
 	CheckError(err)
 
 	defer rows.Close()
 	if rows.Next() {
-		res = true
 		var nombre string
 		var descripcion string
 		var foto int
@@ -105,14 +103,13 @@ func (JDAO *JugadoresDAO) GetJugador(JVO *VO.JugadoresVO) bool {
 		err := rows.Scan(&nombre, &descripcion, &foto, &pjugadas, &pganadas, &codigo)
 		CheckError(err)
 
-		j := VO.NewJugadorVO(nombre, "", foto, descripcion, pjugadas, pganadas, JVO.GetEmail(), codigo)
-		JVO = j
+		jVO := VO.NewJugadorVO(nombre, "", foto, descripcion, pjugadas, pganadas, email, codigo)
+		return jVO
 
 	} else {
-		res = false
+		return nil
 	}
 
-	return res
 }
 
 // Modifica descripción, nombre de un jugador y su foto cuyo email coincida con el de jvo

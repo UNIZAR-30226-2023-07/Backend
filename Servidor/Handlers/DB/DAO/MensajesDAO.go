@@ -63,9 +63,9 @@ func (mDAO *MensajesDAO) ObtenerMensajes(usr string) []*VO.MensajesVO {
 	//Obtenemos todos los mensajes en los que participa el usuario ordenados por timestamp
 	qMsg := "SELECT jug_emi, jug_rcp, contenido, leido " +
 		"FROM MENSAJES " +
-		"WHERE jug_emi = $1 OR jug_rcp = $1 " +
-		"ORDER BY timestamp"
-	rows, err := db.Query(qMsg, usr)
+		"WHERE jug_emi = $1 OR jug_rcp = $2 " +
+		"ORDER BY timestamp "
+	rows, err := db.Query(qMsg, usr, usr)
 	CheckError(err)
 
 	var res []*VO.MensajesVO
@@ -75,11 +75,12 @@ func (mDAO *MensajesDAO) ObtenerMensajes(usr string) []*VO.MensajesVO {
 		var jug_emi string
 		var jug_rcp string
 		var contenido string
+		var leido int
 
-		err := rows.Scan(&jug_emi, &jug_rcp, &contenido)
+		err := rows.Scan(&jug_emi, &jug_rcp, &contenido, &leido)
 		CheckError(err)
 
-		m := VO.NewMensajesVO(jug_emi, jug_rcp, contenido, 1)
+		m := VO.NewMensajesVO(jug_emi, jug_rcp, contenido, leido)
 		res = append(res, m)
 
 	}

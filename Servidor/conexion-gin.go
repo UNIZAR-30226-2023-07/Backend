@@ -125,7 +125,7 @@ func main() {
 
 		//Retransmitir el mensaje al receptor
 		chat.BroadcastFilter(msg, func(q *melody.Session) bool {
-			return q.Request.URL.Path == ("api/ws/chat" + M.Receptor)
+			return q.Request.URL.Path == ("/api/ws/chat/" + M.Receptor)
 		})
 	})
 

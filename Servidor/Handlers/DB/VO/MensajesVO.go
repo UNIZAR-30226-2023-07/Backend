@@ -17,7 +17,7 @@ func (m *MensajesVO) GetEmisor() string {
 }
 
 func (m *MensajesVO) GetReceptor() string {
-	return m.jug_emi
+	return m.jug_rcp
 }
 
 func (m *MensajesVO) GetContenido() string {

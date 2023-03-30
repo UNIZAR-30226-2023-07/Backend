@@ -13,7 +13,19 @@ func GetMsgList(c *gin.Context) {
 
 	mDAO := DAO.MensajesDAO{}
 
-	vmsg := mDAO.ObtenerMensajes(m)
+	msgs := mDAO.ObtenerMensajes(m)
+
+	type Vmsg struct {
+		Emisor    string
+		Receptor  string
+		Contenido string
+		Leido     int
+	}
+
+	var vmsg []Vmsg
+	for i := 0; i < len(msgs); i++ {
+		vmsg = append(vmsg, Vmsg{msgs[i].GetEmisor(), msgs[i].GetReceptor(), msgs[i].GetContenido(), msgs[i].GetLeido()})
+	}
 
 	c.JSON(http.StatusAccepted, gin.H{
 		"msg": vmsg,

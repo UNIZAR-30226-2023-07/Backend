@@ -39,32 +39,20 @@ func GetInfoUsuario(c *gin.Context) {
 
 	jDAO := DAO.JugadoresDAO{}
 
-	jVO := VO.NewJugadorVO("", "", 0, "", 0, 0, email, "")
+	jVO := jDAO.GetJugador(email)
 
-	jDAO.GetJugador(jVO)
-
-	type Usuario struct {
-		Nombre   string
-		Foto     int
-		Descp    string
-		PGanadas int
-		PJugadas int
-		Codigo   string
-		//Puntos int
+	if jVO != nil {
+		c.JSON(http.StatusOK, gin.H{
+			"nombre":   jVO.GetCodigo(),
+			"foto":     jVO.GetFoto(),
+			"descrp":   jVO.GetDescrip(),
+			"pjugadas": jVO.GetPJugadas(),
+			"pganadas": jVO.GetPGanadas(),
+			"codigo":   jVO.GetCodigo(),
+			"puntos":   0, //Puntos todavía no implementado
+		})
+	} else {
+		c.JSON(http.StatusBadRequest, gin.H{})
 	}
-
-	user := Usuario{
-		Nombre:   jVO.GetCodigo(),
-		Foto:     jVO.GetFoto(),
-		Descp:    jVO.GetDescrip(),
-		PGanadas: jVO.GetPGanadas(),
-		PJugadas: jVO.GetPJugadas(),
-		Codigo:   jVO.GetCodigo(),
-		//Puntos : jVO[i].Get(),
-	}
-
-	c.JSON(http.StatusOK, gin.H{
-		"usuario": user,
-	})
 
 }
