@@ -43,7 +43,7 @@ func GetInfoUsuario(c *gin.Context) {
 
 	if jVO != nil {
 		c.JSON(http.StatusOK, gin.H{
-			"nombre":   jVO.GetCodigo(),
+			"nombre":   jVO.GetNombre(),
 			"foto":     jVO.GetFoto(),
 			"descrp":   jVO.GetDescrip(),
 			"pjugadas": jVO.GetPJugadas(),
