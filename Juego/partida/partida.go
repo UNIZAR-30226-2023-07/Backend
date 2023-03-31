@@ -45,7 +45,7 @@ func inicio_turno(espera chan string,wait chan bool){
 
 }
 
-func IniciarPartida(){
+func IniciarPartida() *doublylinkedlist.List{
 	//jugad, err := strconv.Atoi(os.Args[1])
 	//torn, err := strconv.Atoi(os.Args[2])
 	//bots, err := strconv.Atoi(os.Args[3])
@@ -79,7 +79,7 @@ func IniciarPartida(){
 		turno = true
 		carta_robada = false
 		if err{
-			/*ab[0] = true;		//Borrar
+			ab[0] = true;		//Borrar
 			carta_robada = true;
 			jugador.(jugadores.Jugador).Mano.Clear()
 			carta := cartas.Carta{13,1,1}
@@ -89,7 +89,7 @@ func IniciarPartida(){
 			carta = cartas.Carta{3,1,1}
 			jugador.(jugadores.Jugador).Mano.Add(carta)
 			carta = cartas.Carta{4,1,1}
-			jugador.(jugadores.Jugador).Mano.Add(carta)*/
+			jugador.(jugadores.Jugador).Mano.Add(carta)
 			for turno{
 				for !carta_robada{
 					resp := <- espera
@@ -405,5 +405,30 @@ func IniciarPartida(){
 	}
 	SALIR: 
 	
+	fmt.Println("fin, recuento de puntos de la partida actual...")
+	listaJFinal := doublylinkedlist.New()
+	for i:= 0; i < listaJ.Size(); i++ {
+		jugador,_ := listaJ.Get(i)
+		j := jugador.(jugadores.Jugador)
+		manoJugador := j.Mano
+		puntos := j.P_tor
+		for j:= 0; j < manoJugador.Size(); j++ {
+			carta,_ := manoJugador.Get(j)
+			numero := carta.(cartas.Carta).Valor
+			if numero == 1 {
+				puntos += 11
+			} else if numero >= 2 && numero <= 9 {
+				puntos += numero
+			} else if numero == 0 {
+				puntos += 20
+			} else {
+				puntos += 10
+			}
+		}
+		j.P_tor = puntos
+		listaJFinal.Add(j)
+		fmt.Println("Puntos del jugador",jugador.(jugadores.Jugador).Id,":",j.P_tor)
+	}
+	return listaJFinal
 
 }

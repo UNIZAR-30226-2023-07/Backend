@@ -5,13 +5,15 @@ import (
 	//"container/list"
 	//"math/rand"
 	//"time"
-	//"fmt"
+	"fmt"
 	//"net"
 	//"strings"
 	//"strconv"
 	//"os"
+
 	"github.com/emirpasic/gods/lists/doublylinkedlist"
 	"juego/partida"
+	"juego/jugadores"
 )
 
 func main(){
@@ -22,12 +24,15 @@ func main(){
 	// realizar partidas hasta que todos los jugadores se pasen de 100 puntos menos uno (el ganador) 
 	for !ganador {
 		// nueva partida
+		fmt.Println("Nueva Partida")
 		listaJ := partida.IniciarPartida()
+		
 		if primeraPartida { // se inicializa la lista de jugadores
 			for i:= 0; i < listaJ.Size(); i++ {
 				jugador,_ := listaJ.Get(i)
-				jugador.(jugadores.Jugador).P_tor = 0
-				listaJtotal.Add(jugador.(jugadores.Jugador))
+				j := jugador.(jugadores.Jugador)
+				j.P_tor = 0
+				listaJtotal.Add(j)
 			}
 			primeraPartida = false
 		}
@@ -45,18 +50,40 @@ func main(){
 				jMax.Add(jugador.(jugadores.Jugador))
 			}
 		}
+		fmt.Println("la mayor puntuacion que no llega a 100 es",pMax)
+		fmt.Println("jugadores que se pasan de 100:")
+		for i:= 0; i < jMax.Size(); i++ {
+			jugador,_ := jMax.Get(i)
+			fmt.Println("id:",jugador.(jugadores.Jugador).Id,"puntos:",jugador.(jugadores.Jugador).P_tor)
+		}
 
 		// si algún jugador se pasa de 100 puntos, obtiene la mayor puntuación (que no se haya pasado)
 		listaAux := doublylinkedlist.New()
-		for j:= 0; j < jMax.Size(); j++ {
-			jugadorMax,_ := jMax.Get(i)
-			for i:= 0; i < listaJtotal.Size(); i++ {
-				jugadorPartida,_ := listaJtotal.Get(i)
-				if jugadorMax.(jugadores.Jugador).Id == jugadorPartida.(jugadores.Jugador).Id {
-					jugadorPartida.(jugadores.Jugador).P_tor += pMax
+		for i:= 0; i < listaJtotal.Size(); i++ {
+			jugadorPartida,_ := listaJtotal.Get(i)
+			jug := jugadorPartida.(jugadores.Jugador)
+			sePasa := false
+			for j:= 0; j < jMax.Size(); j++ {
+				jugadorMax,_ := jMax.Get(j)
+				if jugadorMax.(jugadores.Jugador).Id == jug.Id {
+					jug.P_tor += pMax
+					sePasa = true
 					break
 				}
 			}
+			if !sePasa { // si no se pasa de 100 puntos se suman solo los puntos de la partida
+				jugador,_ := listaJ.Get(i)
+				j := jugador.(jugadores.Jugador)
+				jug.P_tor += j.P_tor
+			}
+			listaAux.Add(jug)
+		}
+
+		listaJtotal = listaAux
+		fmt.Println("Recuento de puntos:")
+		for i:= 0; i < listaJtotal.Size(); i++ {
+			jugador,_ := listaJtotal.Get(i)
+			fmt.Println("id:",jugador.(jugadores.Jugador).Id,"puntos:",jugador.(jugadores.Jugador).P_tor)
 		}
 
 		// comprobar si hay ganador
@@ -67,8 +94,9 @@ func main(){
 				numPerdedores++
 			}
 		}
-		if numPerdedores == listaJtotal.Size() - 2 {
+		if numPerdedores == listaJtotal.Size() - 1 {
 			ganador = true
+			fmt.Println("Hay ganador")
 		}
 	}
 }
