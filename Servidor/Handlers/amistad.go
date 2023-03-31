@@ -54,7 +54,7 @@ func GetAmistadList(c *gin.Context) {
 
 	for i := 0; i < len(friends); i++ {
 		a := Amigo{
-			Nombre: friends[i].GetCodigo(),
+			Nombre: friends[i].GetNombre(),
 			Foto:   friends[i].GetFoto(),
 			Descp:  friends[i].GetDescrip(),
 		}
