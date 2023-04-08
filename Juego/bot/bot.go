@@ -4,6 +4,7 @@ import (
 	"github.com/emirpasic/gods/lists/doublylinkedlist"
 	"juego/cartas"
 	"juego/tablero"
+	"fmt"
 )
 
 type Carta struct { //Struct utilizado para definir la estructura de datos que representa las cartas
@@ -398,7 +399,7 @@ func calcularTrios(mano *doublylinkedlist.List) (int, *doublylinkedlist.List, bo
 					i += 1
 				}
 				for j := i; j >= i_inf; j-- {
-					// se eliminan de la mano las cartas que hemos cojido
+					// se eliminan de la mano las cartas que hemos cogido
 					mano.Remove(j)
 				}
 				comb.Add(l)
@@ -412,29 +413,32 @@ func separarJokers(mano *doublylinkedlist.List) (*doublylinkedlist.List, *doubly
 	mano = cartas.SortStart(mano, 0)
 	joker := doublylinkedlist.New()
 	hay_j := true
+	fmt.Println("Me quedo aquí1")
 	for hay_j {
 		v, _ := mano.Get(mano.Size() - 1)
 		carta, _ := v.(Carta)
 		if carta.Valor == 0 {
 			joker.Add(carta)
 			mano.Remove(mano.Size() - 1)
-		} else {
-			hay_j = false
 		}
+		hay_j = false
 	}
+	fmt.Println("Me quedo aquí2")
 	return mano, joker
 }
 
 func descarteBot(mazo *doublylinkedlist.List, mano *doublylinkedlist.List, descarte *doublylinkedlist.List) {
 	mano = cartas.SortStart(mano, 0)
-	tablero.finTurno(mazo, mano, descarte, mano.Size()-1)
+	tablero.FinTurno(mazo, mano, descarte, mano.Size()-1)
 }
 
-func calcularPuntosPosibles(mano *doublylinkedlist.List) (int, *doublylinkedlist.List) { //Función encargada de revisar los puntos posibles de una mano
+func CalcularPuntosPosibles(mano *doublylinkedlist.List) (int, *doublylinkedlist.List) { //Función encargada de revisar los puntos posibles de una mano
 	puntos := 0
 	esc := true
 	comb := doublylinkedlist.New()
+	fmt.Println("Hola")
 	mano, joker := separarJokers(mano)
+	fmt.Println("hola")
 	trio := true
 	for esc {
 		// bucle para encontrar todas las escaleras
@@ -445,6 +449,7 @@ func calcularPuntosPosibles(mano *doublylinkedlist.List) (int, *doublylinkedlist
 			comb.Add(combE)
 		}
 		esc = escR
+		fmt.Println("Me quedo aquí")
 	}
 	esc_j := true
 	for esc_j {
@@ -480,6 +485,25 @@ func calcularPuntosPosibles(mano *doublylinkedlist.List) (int, *doublylinkedlist
 	}
 
 	return puntos, comb
+}
+
+func ComprobarColocarCarta(m *doublylinkedlist.List,t *tablero.Tablero){
+	aux := m.Size()
+	for i := 0; i < aux ; i++{
+		l_aux := doublylinkedlist.New()
+		c_aux , _ := m.Get(i)
+		fmt.Println("Comprobamos la carta " , c_aux)
+		l_aux.Add(c_aux)
+		for j := 0; j < t.Combinaciones.Len() ; j++{
+			r := tablero.AnyadirCarta(l_aux,m,t,j)
+			if(r != -1){
+				fmt.Printf("Se ha añadido una carta a una combinacion")
+				if(r == 1){
+					fmt.Println(" Y se ha obtenido un Joker \n")
+				}
+			}
+		}
+	}
 }
 
 /*func partition(mano *doublylinkedlist.List, low, high int, tipo int) (*doublylinkedlist.List, int) { //Función del sort encargada de particionar los datos
