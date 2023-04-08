@@ -9,6 +9,7 @@ import (
 	"net/http"
 
 	"github.com/gin-contrib/static"
+	"github.com/gin-gonic/contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/olahol/melody"
 )
@@ -16,6 +17,7 @@ import (
 func main() {
 	// Set the router as the default one shipped with Gin
 	router := gin.Default()
+	router.Use(cors.Default())
 
 	//Habrá que crear un melody por cada paquete de ws
 	chat_lobby := melody.New()
