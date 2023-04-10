@@ -36,17 +36,14 @@ func main() {
 		//Procesa una petición de registro
 		api.POST("/auth/register", Handlers.PostRegister)
 
+		//Modifica la contraseña del jugador
+		api.POST("/auth/mod-login", Handlers.PostModLogin)
+
 		//Devuelve lista de amigos confirmados
 		api.GET("/amistad/get/:code", Handlers.GetAmistadList)
 
 		//Elimina una relación de amistad
 		api.POST("/amistad/remove", Handlers.PostAmistadRm)
-
-		//Modifica nombre, foto y descripción de un jugador
-		api.POST("/jugador/mod", Handlers.PostModJug)
-
-		//Modifica la contraseña del jugador
-		api.POST("/auth/mod-login", Handlers.PostModLogin)
 
 		//Manda una solicitud de amistad
 		api.POST("/amistad/add", Handlers.PostAmistadAdd)
@@ -54,11 +51,20 @@ func main() {
 		//Acepta una solicitud de amistad
 		api.POST("/amistad/accept", Handlers.PostAmistadAccept)
 
+		//Rechaza una solicitud de amistad
+		api.POST("/amistad/deny", Handlers.PostAmistadDeny)
+
+		//Devuelve la lista de solicitudes pendientes
+		api.GET("/amistad/get/pendientes/:code", Handlers.GetPendientesList)
+
 		//Devuelve la información del usuario
 		api.GET("/jugador/get/:email", Handlers.GetInfoUsuario)
 
-		//Rechaza una solicitud de amistad
-		api.POST("/amistad/deny", Handlers.PostAmistadDeny)
+		//Devuelve la información del usuario
+		api.GET("/jugador/get2/:code", Handlers.GetInfoUsuario2)
+
+		//Modifica nombre, foto y descripción de un jugador
+		api.POST("/jugador/mod", Handlers.PostModJug)
 
 		//Devulve los mensajes de un usuario
 		api.GET("/msg/get/:code", Handlers.GetMsgList)

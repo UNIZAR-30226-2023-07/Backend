@@ -112,6 +112,44 @@ func (JDAO *JugadoresDAO) GetJugador(email string) *VO.JugadoresVO {
 
 }
 
+// Devuelve la información del jugador que coincida con el codigo
+func (JDAO *JugadoresDAO) GetJugador2(code string) *VO.JugadoresVO {
+	//String para la conexión
+	psqlcon := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable", host, port, user, password, dbname)
+
+	//abrir base de datos
+	db, err := sql.Open("postgres", psqlcon)
+	CheckError(err)
+
+	//cerrar base de datos
+	defer db.Close()
+
+	//Busca el usuario cuyo email coincide con el de JVO
+	getj := "SELECT nombre, descrp, foto, pjugadas, pganadas, email FROM JUGADORES WHERE codigo = $1"
+	rows, err := db.Query(getj, code)
+	CheckError(err)
+
+	defer rows.Close()
+	if rows.Next() {
+		var nombre string
+		var descripcion string
+		var foto int
+		var pjugadas int
+		var pganadas int
+		var email string
+
+		err := rows.Scan(&nombre, &descripcion, &foto, &pjugadas, &pganadas, &email)
+		CheckError(err)
+
+		jVO := VO.NewJugadorVO(nombre, "", foto, descripcion, pjugadas, pganadas, email, code)
+		return jVO
+
+	} else {
+		return nil
+	}
+
+}
+
 // Modifica descripción, nombre de un jugador y su foto cuyo email coincida con el de jvo
 func (jDAO *JugadoresDAO) ModJugador(jVO VO.JugadoresVO) {
 	//String para la conexión
@@ -169,6 +207,77 @@ func (jDAO *JugadoresDAO) ListarAmigos(j string) []*VO.JugadoresVO {
 	}
 
 	return res
+
+}
+
+// Lista las peticiones no confirmadas del jugador j
+func (jDAO *JugadoresDAO) ListarPendientes(j string) ([]*VO.JugadoresVO, []*VO.AmistadVO) {
+	//String para la conexión
+	psqlcon := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable", host, port, user, password, dbname)
+
+	//abrir base de datos
+	db, err := sql.Open("postgres", psqlcon)
+	CheckError(err)
+
+	//cerrar base de datos
+	defer db.Close()
+
+	//Obtenemos todos los parametros para cada jugador del que se espera confirmación
+	qAmis := "SELECT r.nombre, r.foto, r.descrp, r.email, r.codigo " +
+		"FROM AMISTAD AS a JOIN JUGADORES AS r ON a.usr2 = r.codigo " +
+		"WHERE a.usr1 = $1 AND a.estado = 'esp_confirmacion'"
+	rows, err := db.Query(qAmis, j)
+	CheckError(err)
+
+	var resj []*VO.JugadoresVO
+	var resa []*VO.AmistadVO
+
+	defer rows.Close()
+	for rows.Next() {
+		var nombre string
+		var foto int
+		var descripcion string
+		var email string
+		var codigo string
+
+		err := rows.Scan(&nombre, &foto, &descripcion, &email, &codigo)
+		CheckError(err)
+
+		jVO := VO.NewJugadorVO(nombre, "", foto, descripcion, 0, 0, email, codigo)
+		resj = append(resj, jVO)
+
+		aVO := VO.NewAmistadVO("esp_confirmacion", j, codigo)
+		resa = append(resa, aVO)
+
+	}
+
+	//Obtenemos todos los parametros para cada jugador que tiene pendiente por responder
+	qAmis = "SELECT r.nombre, r.foto, r.descrp, r.email, r.codigo " +
+		"FROM AMISTAD AS a JOIN JUGADORES AS r ON a.usr2 = r.codigo " +
+		"WHERE a.usr1 = $1 AND a.estado = 'pendiente'"
+	rows, err = db.Query(qAmis, j)
+	CheckError(err)
+
+	defer rows.Close()
+	for rows.Next() {
+		var nombre string
+		var foto int
+		var descripcion string
+		var email string
+		var codigo string
+
+		err := rows.Scan(&nombre, &foto, &descripcion, &email, &codigo)
+		CheckError(err)
+
+		jVO := VO.NewJugadorVO(nombre, "", foto, descripcion, 0, 0, email, codigo)
+		resj = append(resj, jVO)
+
+		aVO := VO.NewAmistadVO("pendiente", codigo, j)
+		resa = append(resa, aVO)
+
+	}
+
+	return resj, resa
 
 }
 

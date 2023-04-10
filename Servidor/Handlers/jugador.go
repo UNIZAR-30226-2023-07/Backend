@@ -56,3 +56,26 @@ func GetInfoUsuario(c *gin.Context) {
 	}
 
 }
+
+func GetInfoUsuario2(c *gin.Context) {
+	code := c.Param("code")
+
+	jDAO := DAO.JugadoresDAO{}
+
+	jVO := jDAO.GetJugador2(code)
+
+	if jVO != nil {
+		c.JSON(http.StatusOK, gin.H{
+			"nombre":   jVO.GetNombre(),
+			"foto":     jVO.GetFoto(),
+			"descrp":   jVO.GetDescrip(),
+			"pjugadas": jVO.GetPJugadas(),
+			"pganadas": jVO.GetPGanadas(),
+			"codigo":   jVO.GetCodigo(),
+			"puntos":   0, //Puntos todavía no implementado
+		})
+	} else {
+		c.JSON(http.StatusBadRequest, gin.H{})
+	}
+
+}

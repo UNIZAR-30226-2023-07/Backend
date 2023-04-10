@@ -130,3 +130,39 @@ func PostAmistadDeny(c *gin.Context) {
 	})
 
 }
+
+func GetPendientesList(c *gin.Context) {
+
+	jug := c.Param("code") //Sacamos el parametro que llega en :code
+
+	jDAO := DAO.JugadoresDAO{}
+
+	friends, state := jDAO.ListarPendientes(jug)
+
+	//Solo necesitamos estos parametros de los amigos
+
+	type Amigo struct {
+		Nombre string
+		Foto   int
+		Descp  string
+		Estado string
+	}
+
+	var amiguis []Amigo
+
+	for i := 0; i < len(friends); i++ {
+		a := Amigo{
+			Nombre: friends[i].GetNombre(),
+			Foto:   friends[i].GetFoto(),
+			Descp:  friends[i].GetDescrip(),
+			Estado: state[i].GetEstado(),
+		}
+
+		amiguis = append(amiguis, a)
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"amistad": amiguis,
+	})
+
+}
