@@ -13,6 +13,14 @@ func IniciarTorneo(){
 	primeraPartida := true
 	ganador := false
 	listaJtotal := doublylinkedlist.New()
+
+	// prueba
+	// listaJ := doublylinkedlist.New()
+	// listaJ.Add(jugadores.Jugador{0,doublylinkedlist.New(),0})
+	// listaJ.Add(jugadores.Jugador{1,doublylinkedlist.New(),536})
+	// listaJ.Add(jugadores.Jugador{2,doublylinkedlist.New(),138})
+
+
 	// realizar partidas hasta que todos los jugadores se pasen de 100 puntos menos uno (el ganador) 
 	for !ganador {
 		// nueva partida
@@ -49,29 +57,34 @@ func IniciarTorneo(){
 			fmt.Println("id:",jugador.(jugadores.Jugador).Id,"puntos:",jugador.(jugadores.Jugador).P_tor)
 		}
 
-		// si algún jugador se pasa de 100 puntos, obtiene la mayor puntuación (que no se haya pasado)
-		listaAux := doublylinkedlist.New()
-		for i:= 0; i < listaJtotal.Size(); i++ {
-			jugadorPartida,_ := listaJtotal.Get(i)
-			jug := jugadorPartida.(jugadores.Jugador)
-			sePasa := false
-			for j:= 0; j < jMax.Size(); j++ {
-				jugadorMax,_ := jMax.Get(j)
-				if jugadorMax.(jugadores.Jugador).Id == jug.Id {
-					jug.P_tor += pMax
-					sePasa = true
-					break
+		
+		if jMax.Size() < listaJ.Size() - 1 {
+			listaAux := doublylinkedlist.New()
+			// si algún jugador se pasa de 100 puntos, obtiene la mayor puntuación (que no se haya pasado)
+			for i:= 0; i < listaJtotal.Size(); i++ {
+				jugadorPartida,_ := listaJtotal.Get(i)
+				jug := jugadorPartida.(jugadores.Jugador)
+				sePasa := false
+				for j:= 0; j < jMax.Size(); j++ {
+					jugadorMax,_ := jMax.Get(j)
+					if jugadorMax.(jugadores.Jugador).Id == jug.Id {
+						jug.P_tor += pMax
+						sePasa = true
+						break
+					}
 				}
+				if !sePasa { // si no se pasa de 100 puntos se suman solo los puntos de la partida
+					jugador,_ := listaJ.Get(i)
+					j := jugador.(jugadores.Jugador)
+					jug.P_tor += j.P_tor
+				}
+				listaAux.Add(jug)
 			}
-			if !sePasa { // si no se pasa de 100 puntos se suman solo los puntos de la partida
-				jugador,_ := listaJ.Get(i)
-				j := jugador.(jugadores.Jugador)
-				jug.P_tor += j.P_tor
-			}
-			listaAux.Add(jug)
+			listaJtotal = listaAux
+		} else {
+			listaJtotal = listaJ
 		}
 
-		listaJtotal = listaAux
 		fmt.Println("Recuento de puntos:")
 		for i:= 0; i < listaJtotal.Size(); i++ {
 			jugador,_ := listaJtotal.Get(i)
