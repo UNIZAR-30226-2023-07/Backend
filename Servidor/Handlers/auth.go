@@ -3,8 +3,6 @@ package Handlers
 import (
 	"DB/DAO"
 	"DB/VO"
-	"fmt"
-	"io/ioutil"
 	"math/rand"
 	"net/http"
 	"strconv"
@@ -47,10 +45,6 @@ func PostLogin(c *gin.Context) {
 }
 
 func PostRegister(c *gin.Context) {
-
-	bodyAsByteArray, _ := ioutil.ReadAll(c.Request.Body)
-	jsonBody := string(bodyAsByteArray)
-	fmt.Println(jsonBody)
 
 	u := Register{}
 	//Con el binding guardamos el json de la petición en u que es de tipo login
