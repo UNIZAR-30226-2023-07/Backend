@@ -56,11 +56,11 @@ func PostRegister(c *gin.Context) {
 	jDAO := DAO.JugadoresDAO{}
 
 	id := rand.Intn(1000)
-	codigo := u.Nombre + "#" + strconv.Itoa(id)
+	codigo := u.Nombre + "_" + strconv.Itoa(id)
 
 	for jDAO.EstaJugador(codigo) {
 		id = rand.Intn(1000)
-		codigo = u.Nombre + "#" + strconv.Itoa(id)
+		codigo = u.Nombre + "_" + strconv.Itoa(id)
 	}
 
 	jVO := VO.NewJugadorVO(u.Nombre, u.Contra, 0, "", 0, 0, 0, u.Email, codigo)
