@@ -24,7 +24,7 @@ func PostModJug(c *gin.Context) {
 	}
 
 	jDAO := DAO.JugadoresDAO{}
-	jVO := VO.NewJugadorVO(m.Nombre, "", m.Foto, m.Descp, 0, 0, m.Email, "")
+	jVO := VO.NewJugadorVO(m.Nombre, "", m.Foto, m.Descp, 0, 0, 0, m.Email, "")
 
 	jDAO.ModJugador(*jVO)
 
@@ -49,7 +49,7 @@ func GetInfoUsuario(c *gin.Context) {
 			"pjugadas": jVO.GetPJugadas(),
 			"pganadas": jVO.GetPGanadas(),
 			"codigo":   jVO.GetCodigo(),
-			"puntos":   0, //Puntos todavía no implementado
+			"puntos":   jVO.GetPuntos(),
 		})
 	} else {
 		c.JSON(http.StatusBadRequest, gin.H{})
@@ -72,7 +72,7 @@ func GetInfoUsuario2(c *gin.Context) {
 			"pjugadas": jVO.GetPJugadas(),
 			"pganadas": jVO.GetPGanadas(),
 			"codigo":   jVO.GetCodigo(),
-			"puntos":   0, //Puntos todavía no implementado
+			"puntos":   jVO.GetPuntos(),
 		})
 	} else {
 		c.JSON(http.StatusBadRequest, gin.H{})

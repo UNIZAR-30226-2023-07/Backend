@@ -40,7 +40,7 @@ func (jDAO *JugadoresDAO) AddJugador(jVO VO.JugadoresVO) bool {
 	defer db.Close()
 
 	//Añadir jugador j
-	addj := "INSERT INTO JUGADORES VALUES ($1, $2, 0, $3, 0, 0, $4, $5)"
+	addj := "INSERT INTO JUGADORES VALUES ($1, $2, 0, $3, 0, 0, 0, $4, $5)"
 	_, e := db.Exec(addj, jVO.GetNombre(), jVO.GetContra(), jVO.GetDescrip(), jVO.GetEmail(), jVO.GetCodigo())
 
 	if e == nil {
@@ -87,7 +87,7 @@ func (JDAO *JugadoresDAO) GetJugador(email string) *VO.JugadoresVO {
 	defer db.Close()
 
 	//Busca el usuario cuyo email coincide con el de JVO
-	getj := "SELECT nombre, descrp, foto, pjugadas, pganadas, codigo FROM JUGADORES WHERE email = $1"
+	getj := "SELECT nombre, descrp, foto, pjugadas, pganadas, puntos, codigo FROM JUGADORES WHERE email = $1"
 	rows, err := db.Query(getj, email)
 	CheckError(err)
 
@@ -98,12 +98,13 @@ func (JDAO *JugadoresDAO) GetJugador(email string) *VO.JugadoresVO {
 		var foto int
 		var pjugadas int
 		var pganadas int
+		var puntos int
 		var codigo string
 
-		err := rows.Scan(&nombre, &descripcion, &foto, &pjugadas, &pganadas, &codigo)
+		err := rows.Scan(&nombre, &descripcion, &foto, &pjugadas, &pganadas, &puntos, &codigo)
 		CheckError(err)
 
-		jVO := VO.NewJugadorVO(nombre, "", foto, descripcion, pjugadas, pganadas, email, codigo)
+		jVO := VO.NewJugadorVO(nombre, "", foto, descripcion, pjugadas, pganadas, puntos, email, codigo)
 		return jVO
 
 	} else {
@@ -125,7 +126,7 @@ func (JDAO *JugadoresDAO) GetJugador2(code string) *VO.JugadoresVO {
 	defer db.Close()
 
 	//Busca el usuario cuyo email coincide con el de JVO
-	getj := "SELECT nombre, descrp, foto, pjugadas, pganadas, email FROM JUGADORES WHERE codigo = $1"
+	getj := "SELECT nombre, descrp, foto, pjugadas, pganadas, puntos, email FROM JUGADORES WHERE codigo = $1"
 	rows, err := db.Query(getj, code)
 	CheckError(err)
 
@@ -136,12 +137,13 @@ func (JDAO *JugadoresDAO) GetJugador2(code string) *VO.JugadoresVO {
 		var foto int
 		var pjugadas int
 		var pganadas int
+		var puntos int
 		var email string
 
-		err := rows.Scan(&nombre, &descripcion, &foto, &pjugadas, &pganadas, &email)
+		err := rows.Scan(&nombre, &descripcion, &foto, &pjugadas, &pganadas, &puntos, &email)
 		CheckError(err)
 
-		jVO := VO.NewJugadorVO(nombre, "", foto, descripcion, pjugadas, pganadas, email, code)
+		jVO := VO.NewJugadorVO(nombre, "", foto, descripcion, pjugadas, pganadas, puntos, email, code)
 		return jVO
 
 	} else {
@@ -182,9 +184,10 @@ func (jDAO *JugadoresDAO) ListarAmigos(j string) []*VO.JugadoresVO {
 	defer db.Close()
 
 	//Obtenemos todos los parametros para cada amigo del jugador
-	qAmis := "SELECT r.nombre, r.foto, r.descrp, r.email, r.codigo " +
+	qAmis := "SELECT r.nombre, r.foto, r.descrp, r.email, r.codigo, r.puntos " +
 		"FROM AMISTAD AS a JOIN JUGADORES AS r ON a.usr2 = r.codigo " +
-		"WHERE a.usr1 = $1 AND a.estado = 'confirmada'"
+		"WHERE a.usr1 = $1 AND a.estado = 'confirmada' " +
+		"ORDER BY r.puntos DESC"
 	rows, err := db.Query(qAmis, j)
 	CheckError(err)
 
@@ -197,11 +200,12 @@ func (jDAO *JugadoresDAO) ListarAmigos(j string) []*VO.JugadoresVO {
 		var descripcion string
 		var email string
 		var codigo string
+		var puntos int
 
-		err := rows.Scan(&nombre, &foto, &descripcion, &email, &codigo)
+		err := rows.Scan(&nombre, &foto, &descripcion, &email, &codigo, &puntos)
 		CheckError(err)
 
-		j := VO.NewJugadorVO(nombre, "", foto, descripcion, 0, 0, email, codigo)
+		j := VO.NewJugadorVO(nombre, "", foto, descripcion, 0, 0, puntos, email, codigo)
 		res = append(res, j)
 
 	}
@@ -243,7 +247,7 @@ func (jDAO *JugadoresDAO) ListarPendientes(j string) ([]*VO.JugadoresVO, []*VO.A
 		err := rows.Scan(&nombre, &foto, &descripcion, &email, &codigo)
 		CheckError(err)
 
-		jVO := VO.NewJugadorVO(nombre, "", foto, descripcion, 0, 0, email, codigo)
+		jVO := VO.NewJugadorVO(nombre, "", foto, descripcion, 0, 0, 0, email, codigo)
 		resj = append(resj, jVO)
 
 		aVO := VO.NewAmistadVO("esp_confirmacion", j, codigo)
@@ -269,7 +273,7 @@ func (jDAO *JugadoresDAO) ListarPendientes(j string) ([]*VO.JugadoresVO, []*VO.A
 		err := rows.Scan(&nombre, &foto, &descripcion, &email, &codigo)
 		CheckError(err)
 
-		jVO := VO.NewJugadorVO(nombre, "", foto, descripcion, 0, 0, email, codigo)
+		jVO := VO.NewJugadorVO(nombre, "", foto, descripcion, 0, 0, 0, email, codigo)
 		resj = append(resj, jVO)
 
 		aVO := VO.NewAmistadVO("pendiente", codigo, j)

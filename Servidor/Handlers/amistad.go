@@ -46,8 +46,10 @@ func GetAmistadList(c *gin.Context) {
 
 	type Amigo struct {
 		Nombre string
+		Codigo string
 		Foto   int
 		Descp  string
+		Puntos int
 	}
 
 	var amiguis []Amigo
@@ -55,8 +57,10 @@ func GetAmistadList(c *gin.Context) {
 	for i := 0; i < len(friends); i++ {
 		a := Amigo{
 			Nombre: friends[i].GetNombre(),
+			Codigo: friends[i].GetCodigo(),
 			Foto:   friends[i].GetFoto(),
 			Descp:  friends[i].GetDescrip(),
+			Puntos: friends[i].GetPuntos(),
 		}
 
 		amiguis = append(amiguis, a)
@@ -143,6 +147,7 @@ func GetPendientesList(c *gin.Context) {
 
 	type Amigo struct {
 		Nombre string
+		Codigo string
 		Foto   int
 		Descp  string
 		Estado string
@@ -153,6 +158,7 @@ func GetPendientesList(c *gin.Context) {
 	for i := 0; i < len(friends); i++ {
 		a := Amigo{
 			Nombre: friends[i].GetNombre(),
+			Codigo: friends[i].GetCodigo(),
 			Foto:   friends[i].GetFoto(),
 			Descp:  friends[i].GetDescrip(),
 			Estado: state[i].GetEstado(),

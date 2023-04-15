@@ -7,12 +7,13 @@ type JugadoresVO struct {
 	descrp   string
 	pjugadas int
 	pganadas int
+	puntos   int
 	email    string
 	codigo   string
 }
 
-func NewJugadorVO(nombre string, contra string, foto int, descrp string, pjugadas int, pganadas int, email string, codigo string) *JugadoresVO {
-	j := JugadoresVO{nombre: nombre, contra: contra, foto: foto, descrp: descrp, pjugadas: pjugadas, pganadas: pganadas, email: email, codigo: codigo}
+func NewJugadorVO(nombre string, contra string, foto int, descrp string, pjugadas int, pganadas int, puntos int, email string, codigo string) *JugadoresVO {
+	j := JugadoresVO{nombre: nombre, contra: contra, foto: foto, descrp: descrp, pjugadas: pjugadas, pganadas: pganadas, puntos: puntos, email: email, codigo: codigo}
 	return &j
 }
 
@@ -48,6 +49,6 @@ func (j *JugadoresVO) GetPJugadas() int {
 	return j.pjugadas
 }
 
-/*func (j *JugadoresVO) GetPuntos() int {
-	return j.Puntos
-}*/
+func (j *JugadoresVO) GetPuntos() int {
+	return j.puntos
+}

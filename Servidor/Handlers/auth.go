@@ -31,7 +31,7 @@ func PostLogin(c *gin.Context) {
 	}
 
 	jDAO := DAO.JugadoresDAO{}
-	jVO := VO.NewJugadorVO("", u.Contra, 0, "", 0, 0, u.Email, "")
+	jVO := VO.NewJugadorVO("", u.Contra, 0, "", 0, 0, 0, u.Email, "")
 	if jDAO.ValJugador(jVO) {
 		c.JSON(http.StatusAccepted, gin.H{
 			"res": "ok",
@@ -63,11 +63,12 @@ func PostRegister(c *gin.Context) {
 		codigo = u.Nombre + "#" + strconv.Itoa(id)
 	}
 
-	jVO := VO.NewJugadorVO(u.Nombre, u.Contra, 0, "", 0, 0, u.Email, codigo)
+	jVO := VO.NewJugadorVO(u.Nombre, u.Contra, 0, "", 0, 0, 0, u.Email, codigo)
 
 	if jDAO.AddJugador(*jVO) {
 		c.JSON(http.StatusAccepted, gin.H{
-			"res": "ok, codigo del jugador = " + codigo,
+			"res":  "ok",
+			"code": codigo,
 		})
 	} else {
 		c.JSON(http.StatusBadRequest, gin.H{
