@@ -3,6 +3,7 @@ package Handlers
 import (
 	"DB/DAO"
 	"DB/VO"
+	"fmt"
 	"math/rand"
 	"net/http"
 	"strconv"
@@ -49,6 +50,7 @@ func PostRegister(c *gin.Context) {
 	u := Register{}
 	//Con el binding guardamos el json de la petición en u que es de tipo login
 	if err := c.BindJSON(&u); err != nil {
+		fmt.Println(u)
 		c.AbortWithError(http.StatusBadRequest, err)
 		return
 	}
@@ -88,7 +90,7 @@ func PostModLogin(c *gin.Context) {
 
 	// Cambia la contraseña del jugador dado el email
 	jDAO := DAO.JugadoresDAO{}
-	jDAO.CambiarContra(log.Email,log.Contra)
+	jDAO.CambiarContra(log.Email, log.Contra)
 
 	c.JSON(http.StatusAccepted, gin.H{
 		"res": "ok",
