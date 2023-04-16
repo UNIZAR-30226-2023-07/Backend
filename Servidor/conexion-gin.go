@@ -10,7 +10,7 @@ import (
 	"net/http"
 	"strconv"
 
-	"Servidor/Juego/partida"
+	"Juego/partida"
 
 	"github.com/gin-contrib/static"
 	"github.com/gin-gonic/contrib/cors"

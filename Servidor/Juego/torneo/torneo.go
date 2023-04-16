@@ -3,13 +3,13 @@ package torneo
 import (
 	"fmt"
 
+	"Juego/jugadores"
+
 	"github.com/emirpasic/gods/lists/doublylinkedlist"
-	"Servidor/Juego/partida"
-	"Servidor/Juego/jugadores"
 )
 
-func IniciarTorneo(){
-	
+func IniciarTorneo() {
+
 	primeraPartida := true
 	ganador := false
 	listaJtotal := doublylinkedlist.New()
@@ -20,16 +20,16 @@ func IniciarTorneo(){
 	// listaJ.Add(jugadores.Jugador{1,doublylinkedlist.New(),536})
 	// listaJ.Add(jugadores.Jugador{2,doublylinkedlist.New(),138})
 
-
-	// realizar partidas hasta que todos los jugadores se pasen de 100 puntos menos uno (el ganador) 
+	// realizar partidas hasta que todos los jugadores se pasen de 100 puntos menos uno (el ganador)
 	for !ganador {
 		// nueva partida
 		fmt.Println("Nueva Partida")
-		listaJ := partida.IniciarPartida()
-		
+		//listaJ := partida.IniciarPartida()
+		listaJ := doublylinkedlist.New()
+
 		if primeraPartida { // se inicializa la lista de jugadores
-			for i:= 0; i < listaJ.Size(); i++ {
-				jugador,_ := listaJ.Get(i)
+			for i := 0; i < listaJ.Size(); i++ {
+				jugador, _ := listaJ.Get(i)
 				j := jugador.(jugadores.Jugador)
 				j.P_tor = 0
 				listaJtotal.Add(j)
@@ -40,33 +40,32 @@ func IniciarTorneo(){
 		// contar puntos
 		pMax := 0
 		jMax := doublylinkedlist.New()
-		for i:= 0; i < listaJ.Size(); i++{
-			jugador,_ := listaJ.Get(i)
+		for i := 0; i < listaJ.Size(); i++ {
+			jugador, _ := listaJ.Get(i)
 			puntos := jugador.(jugadores.Jugador).P_tor
-			
+
 			if puntos > pMax && puntos <= 100 { // quedarse con la mayor puntuacion que no se pasa de 100
 				pMax = puntos
 			} else if puntos > 100 { // quedarse con los jugadores que se pasan de 100
 				jMax.Add(jugador.(jugadores.Jugador))
 			}
 		}
-		fmt.Println("la mayor puntuacion que no llega a 100 es",pMax)
+		fmt.Println("la mayor puntuacion que no llega a 100 es", pMax)
 		fmt.Println("jugadores que se pasan de 100:")
-		for i:= 0; i < jMax.Size(); i++ {
-			jugador,_ := jMax.Get(i)
-			fmt.Println("id:",jugador.(jugadores.Jugador).Id,"puntos:",jugador.(jugadores.Jugador).P_tor)
+		for i := 0; i < jMax.Size(); i++ {
+			jugador, _ := jMax.Get(i)
+			fmt.Println("id:", jugador.(jugadores.Jugador).Id, "puntos:", jugador.(jugadores.Jugador).P_tor)
 		}
 
-		
-		if jMax.Size() < listaJ.Size() - 1 {
+		if jMax.Size() < listaJ.Size()-1 {
 			listaAux := doublylinkedlist.New()
 			// si algún jugador se pasa de 100 puntos, obtiene la mayor puntuación (que no se haya pasado)
-			for i:= 0; i < listaJtotal.Size(); i++ {
-				jugadorPartida,_ := listaJtotal.Get(i)
+			for i := 0; i < listaJtotal.Size(); i++ {
+				jugadorPartida, _ := listaJtotal.Get(i)
 				jug := jugadorPartida.(jugadores.Jugador)
 				sePasa := false
-				for j:= 0; j < jMax.Size(); j++ {
-					jugadorMax,_ := jMax.Get(j)
+				for j := 0; j < jMax.Size(); j++ {
+					jugadorMax, _ := jMax.Get(j)
 					if jugadorMax.(jugadores.Jugador).Id == jug.Id {
 						jug.P_tor += pMax
 						sePasa = true
@@ -74,7 +73,7 @@ func IniciarTorneo(){
 					}
 				}
 				if !sePasa { // si no se pasa de 100 puntos se suman solo los puntos de la partida
-					jugador,_ := listaJ.Get(i)
+					jugador, _ := listaJ.Get(i)
 					j := jugador.(jugadores.Jugador)
 					jug.P_tor += j.P_tor
 				}
@@ -86,20 +85,20 @@ func IniciarTorneo(){
 		}
 
 		fmt.Println("Recuento de puntos:")
-		for i:= 0; i < listaJtotal.Size(); i++ {
-			jugador,_ := listaJtotal.Get(i)
-			fmt.Println("id:",jugador.(jugadores.Jugador).Id,"puntos:",jugador.(jugadores.Jugador).P_tor)
+		for i := 0; i < listaJtotal.Size(); i++ {
+			jugador, _ := listaJtotal.Get(i)
+			fmt.Println("id:", jugador.(jugadores.Jugador).Id, "puntos:", jugador.(jugadores.Jugador).P_tor)
 		}
 
 		// comprobar si hay ganador
 		numPerdedores := 0
-		for i:= 0; i < listaJtotal.Size(); i++ {
-			jugador,_ := listaJtotal.Get(i)
+		for i := 0; i < listaJtotal.Size(); i++ {
+			jugador, _ := listaJtotal.Get(i)
 			if jugador.(jugadores.Jugador).P_tor > 100 {
 				numPerdedores++
 			}
 		}
-		if numPerdedores == listaJtotal.Size() - 1 {
+		if numPerdedores == listaJtotal.Size()-1 {
 			ganador = true
 			fmt.Println("Hay ganador")
 		}

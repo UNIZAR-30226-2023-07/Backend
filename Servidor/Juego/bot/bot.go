@@ -1,10 +1,11 @@
 package bot
 
 import (
-	"github.com/emirpasic/gods/lists/doublylinkedlist"
-	"Servidor/Juego/cartas"
-	"Servidor/Juego/tablero"
+	"Juego/cartas"
+	"Juego/tablero"
 	"fmt"
+
+	"github.com/emirpasic/gods/lists/doublylinkedlist"
 )
 
 type Carta struct { //Struct utilizado para definir la estructura de datos que representa las cartas
@@ -487,18 +488,18 @@ func CalcularPuntosPosibles(mano *doublylinkedlist.List) (int, *doublylinkedlist
 	return puntos, comb
 }
 
-func ComprobarColocarCarta(m *doublylinkedlist.List,t *tablero.Tablero){
+func ComprobarColocarCarta(m *doublylinkedlist.List, t *tablero.Tablero) {
 	aux := m.Size()
-	for i := 0; i < aux ; i++{
+	for i := 0; i < aux; i++ {
 		l_aux := doublylinkedlist.New()
-		c_aux , _ := m.Get(i)
-		fmt.Println("Comprobamos la carta " , c_aux)
+		c_aux, _ := m.Get(i)
+		fmt.Println("Comprobamos la carta ", c_aux)
 		l_aux.Add(c_aux)
-		for j := 0; j < t.Combinaciones.Len() ; j++{
-			r := tablero.AnyadirCarta(l_aux,m,t,j)
-			if(r != -1){
+		for j := 0; j < t.Combinaciones.Len(); j++ {
+			r := tablero.AnyadirCarta(l_aux, m, t, j)
+			if r != -1 {
 				fmt.Printf("Se ha añadido una carta a una combinacion")
-				if(r == 1){
+				if r == 1 {
 					fmt.Println(" Y se ha obtenido un Joker \n")
 				}
 			}
