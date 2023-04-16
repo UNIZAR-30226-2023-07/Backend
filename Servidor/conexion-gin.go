@@ -6,15 +6,16 @@ import (
 	"Handlers"
 	"encoding/json"
 	"fmt"
+	"math/rand"
 	"net/http"
 	"strconv"
-	"math/rand"
+
+	"Servidor/Juego/partida"
 
 	"github.com/gin-contrib/static"
 	"github.com/gin-gonic/contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/olahol/melody"
-	"Servidor/Juego/partida"
 )
 
 func main() {
@@ -137,6 +138,7 @@ func main() {
 		var M M_rcp
 
 		json.Unmarshal(msg, &M)
+		fmt.Println(M)
 
 		//Guardamos el mensaje como no leido en la BD
 		mVO := VO.NewMensajesVO(M.Emisor, M.Receptor, M.Contenido, 0)
