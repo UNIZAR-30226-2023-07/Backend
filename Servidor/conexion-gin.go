@@ -7,14 +7,20 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"strconv"
+	"math/rand"
 
 	"github.com/gin-contrib/static"
 	"github.com/gin-gonic/contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/olahol/melody"
+	"Servidor/Juego/partida"
 )
 
 func main() {
+	// canales de todas las partidas -> clave: codigo_partida, valor: canal de la partida
+	partidas := make(map[string]chan string)
+
 	// Set the router as the default one shipped with Gin
 	router := gin.Default()
 	router.Use(cors.Default())
@@ -23,6 +29,7 @@ func main() {
 	chat_lobby := melody.New()
 	prueba := melody.New()
 	chat := melody.New()
+	partidaNueva := melody.New()
 
 	router.LoadHTMLFiles("chan.html")
 	router.Use(static.Serve("/", static.LocalFile(".", true)))
@@ -103,6 +110,11 @@ func main() {
 			prueba.HandleRequest(c.Writer, c.Request)
 		})
 
+		api.GET("/ws/partida", func(c *gin.Context) {
+			//Pasa la petición al ws
+			partidaNueva.HandleRequest(c.Writer, c.Request)
+		})
+
 	}
 
 	//Retransmite lo enviado a todos cuya URL sea la misma (lobby)
@@ -176,6 +188,29 @@ func main() {
 				prueba.Broadcast([]byte(`{"msg": "Adios"}`))
 			}
 		}
+	})
+
+	//crea una nueva partida y envia el código de la misma por un canal
+	partidaNueva.HandleMessage(func(s *melody.Session, msg []byte) {
+
+		// Generar identificador único para la partida que no sea ninguna clave existente
+		var code string
+		for {
+			code = strconv.Itoa(rand.Intn(9999))
+			if _, ok := partidas[code]; !ok {
+				break
+			}
+		}
+
+		// Crear canal para la partida y almacenarlo en el mapa
+		partidas[code] = make(chan string)
+
+		// Llamar a la función partida con el canal correspondiente
+		go partida.IniciarPartida(code, partidas[code])
+		fmt.Println("Se ha iniciado la partida: ", code)
+
+		// Responder al jugador con el identificador de la partida
+		s.Write([]byte(code))
 	})
 
 	// Start and run the server

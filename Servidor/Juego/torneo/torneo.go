@@ -4,8 +4,8 @@ import (
 	"fmt"
 
 	"github.com/emirpasic/gods/lists/doublylinkedlist"
-	"juego/partida"
-	"juego/jugadores"
+	"Servidor/Juego/partida"
+	"Servidor/Juego/jugadores"
 )
 
 func IniciarTorneo(){

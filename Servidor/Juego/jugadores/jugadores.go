@@ -2,7 +2,7 @@ package jugadores
 
 import (
 	"github.com/emirpasic/gods/lists/doublylinkedlist"
-	"juego/cartas"
+	"Servidor/Juego/cartas"
 )
 
 type Jugador struct{

@@ -6,7 +6,7 @@ import (
 	"math/rand"
 	"time"
 	"github.com/emirpasic/gods/lists/doublylinkedlist"
-	"juego/cartas"
+	"Servidor/Juego/cartas"
 )
 
 type Tablero struct {

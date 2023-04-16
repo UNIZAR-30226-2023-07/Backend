@@ -3,8 +3,8 @@ package main
 import (
 	"fmt"
 
-	"juego/partida"
-	"juego/torneo"
+	"Servidor/Juego/partida"
+	"Servidor/Juego/torneo"
 )
 
 func main(){

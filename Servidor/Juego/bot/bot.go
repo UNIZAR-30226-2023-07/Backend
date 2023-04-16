@@ -2,8 +2,8 @@ package Bot
 
 import (
 	"github.com/emirpasic/gods/lists/doublylinkedlist"
-	"juego/cartas"
-	"juego/tablero"
+	"Servidor/Juego/cartas"
+	"Servidor/Juego/tablero"
 	"fmt"
 )
 

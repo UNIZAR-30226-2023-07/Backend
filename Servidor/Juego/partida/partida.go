@@ -7,15 +7,15 @@ import (
 	//"time"
 	"fmt"
 	//"net"
-	//"strings"
+	"strings"
 	"strconv"
 	//"os"
 	"github.com/emirpasic/gods/lists/doublylinkedlist"
-	"juego/cartas"
-	"juego/jugadores"
+	"Servidor/Juego/cartas"
+	"Servidor/Juego/jugadores"
 	//"juego/partida"
-	"juego/tablero"
-	"juego/Bot"
+	"Servidor/Juego/tablero"
+	"Servidor/Juego/Bot"
 )
 
 type Partida struct {
@@ -43,10 +43,15 @@ func inicio_turno(espera chan string,wait chan bool){
 
 }
 
-func IniciarPartida() *doublylinkedlist.List{
+func IniciarPartida(idPartida string, canalPartida chan string) *doublylinkedlist.List{
 	//jugad, err := strconv.Atoi(os.Args[1])
 	//torn, err := strconv.Atoi(os.Args[2])
 	//bots, err := strconv.Atoi(os.Args[3])
+	var parametrosPartida string
+	parametrosPartida = <-canalPartida
+	// separar los parametros por el caracter ","
+	param := strings.Split(parametrosPartida, ",")
+	numJugad, _ := strconv.Atoi(param[0])
 
 	input := ""
 
@@ -56,7 +61,7 @@ func IniciarPartida() *doublylinkedlist.List{
 
 	var ab [3]bool
 
-	for i := 0; i < 3; i++{								//Inicio de los jugadores
+	for i := 0; i < numJugad; i++{								//Inicio de los jugadores
 		jugador := jugadores.CrearJugador(i,t.Mazo)
 		listaJ.Add(jugador)
 		ab[i] = false
