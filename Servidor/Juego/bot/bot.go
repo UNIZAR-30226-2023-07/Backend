@@ -1,4 +1,4 @@
-package Bot
+package bot
 
 import (
 	"github.com/emirpasic/gods/lists/doublylinkedlist"

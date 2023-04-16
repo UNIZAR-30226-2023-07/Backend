@@ -15,7 +15,7 @@ import (
 	"Servidor/Juego/jugadores"
 	//"juego/partida"
 	"Servidor/Juego/tablero"
-	"Servidor/Juego/Bot"
+	"Servidor/Juego/bot"
 )
 
 type Partida struct {
@@ -117,12 +117,12 @@ func IniciarPartida(idPartida string, canalPartida chan string) *doublylinkedlis
 
 					fmt.Println("Vamos a ver las combinaciones posibles de la mano del bot")
 				
-					p,comb := Bot.CalcularPuntosPosibles(jugador.(jugadores.Jugador).Mano)
+					p,comb := bot.CalcularPuntosPosibles(jugador.(jugadores.Jugador).Mano)
 				
 					fmt.Println("Tenemos " , p , " puntos con las combinaciones")
 					fmt.Println(comb)
 				
-					Bot.ComprobarColocarCarta(jugador.(jugadores.Jugador).Mano,&t)
+					bot.ComprobarColocarCarta(jugador.(jugadores.Jugador).Mano,&t)
 				
 					tablero.FinTurno(t.Mazo,jugador.(jugadores.Jugador).Mano,t.Descartes,0)
 					wait <- false
