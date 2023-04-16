@@ -127,8 +127,8 @@ func main() {
 
 	//Retransmite el mensaje al ws del receptor del mensaje
 	chat.HandleMessage(func(s *melody.Session, msg []byte) {
-
-		fmt.Println(msg)
+		msgs := string(msg)
+		fmt.Println(msgs)
 
 		//Estructuramos el mesaje para sacar el receptor del mismo
 		type M_rcp struct {
