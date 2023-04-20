@@ -6,11 +6,11 @@ import (
 	"Handlers"
 	"encoding/json"
 	"fmt"
-	"math/rand"
+	//"math/rand"
 	"net/http"
-	"strconv"
+	//"strconv"
 
-	"Juego/partida"
+	//"Juego/partida"
 
 	"github.com/gin-contrib/static"
 	"github.com/gin-gonic/contrib/cors"
@@ -20,7 +20,7 @@ import (
 
 func main() {
 	// canales de todas las partidas -> clave: codigo_partida, valor: canal de la partida
-	partidas := make(map[string]chan string)
+	//partidas := make(map[string]chan string)
 
 	// Set the router as the default one shipped with Gin
 	router := gin.Default()
@@ -111,7 +111,7 @@ func main() {
 			prueba.HandleRequest(c.Writer, c.Request)
 		})
 
-		api.GET("/ws/partida", func(c *gin.Context) {
+		api.GET("/ws/partida/:lobby", func(c *gin.Context) {
 			//Pasa la petición al ws
 			partidaNueva.HandleRequest(c.Writer, c.Request)
 		})
@@ -196,25 +196,40 @@ func main() {
 
 	//crea una nueva partida y envia el código de la misma por un canal
 	partidaNueva.HandleMessage(func(s *melody.Session, msg []byte) {
+		msgs := string(msg)
+		fmt.Println(msgs)
 
-		// Generar identificador único para la partida que no sea ninguna clave existente
-		var code string
-		for {
-			code = strconv.Itoa(rand.Intn(9999))
-			if _, ok := partidas[code]; !ok {
-				break
-			}
+		type Mensaje struct {
+			Emisor    string `json:"emisor"`
+			Tipo	string `json:"tipo"`
+			Cartas 	[]string `json:"cartas"`	
 		}
 
-		// Crear canal para la partida y almacenarlo en el mapa
-		partidas[code] = make(chan string)
+		var M Mensaje
 
-		// Llamar a la función partida con el canal correspondiente
-		go partida.IniciarPartida(code, partidas[code])
-		fmt.Println("Se ha iniciado la partida: ", code)
+		json.Unmarshal(msg, &M)
 
-		// Responder al jugador con el identificador de la partida
-		s.Write([]byte(code))
+		if (M.Tipo == "Robar_carta" || M.Tipo == "Robar_carta_descartes") {
+			//partidas[s.Request.URL.Path] <- M.Tipo
+			//respuesta := <-partidas[s.Request.URL.Path]
+		} else if (M.Tipo == "Fin_partida" || M.Tipo == "Mostrar_mano" || M.Tipo == "Mostrar_tablero" || M.Tipo == "FIN" || M.Tipo == "END" ) {
+			//partidas[s.Request.URL.Path] <- M.Tipo
+			//M.Tipo = <-partidas[s.Request.URL.Path]
+		} else if (M.Tipo == "Abrir" || M.Tipo == "Colocar_carta" || M.Tipo == "Colocar_combinacion") {
+			//partidas[s.Request.URL.Path] <- M.Tipo
+
+			// recorremos el vector Cartas y enviamos cada componente por el canal
+			for i := 0; i < len(M.Cartas); i++ {
+				//partidas[s.Request.URL.Path] <- M.Cartas[i]
+			}
+		} 
+
+		msg, _ = json.MarshalIndent(&M, "", "\t")
+
+		partidaNueva.BroadcastFilter(msg, func(q *melody.Session) bool { //Envia la información a todos con la misma url
+			return q.Request.URL.Path == s.Request.URL.Path
+		})
+		
 	})
 
 	// Start and run the server
