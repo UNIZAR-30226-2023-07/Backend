@@ -179,6 +179,7 @@ func calcularEscaleras(mano *doublylinkedlist.List) (int, *doublylinkedlist.List
 	comb := doublylinkedlist.New()
 	// ordenar la mano por palos de menor a mayor
 	mano = cartas.SortStart(mano, 1)
+	cartas.MostrarMano(mano)
 	nuevoPalo := true
 	hay_as := false
 	ind_as := 0
@@ -186,10 +187,13 @@ func calcularEscaleras(mano *doublylinkedlist.List) (int, *doublylinkedlist.List
 	no_elim := -1
 	// bucle hasta que recorre toda la mano o encuentra una escalera
 	for i := 0; i < mano.Size() && !esc; i++ {
+		fmt.Println(mano.Size())
+		fmt.Println(mano.Get(i))
 		num_c := 1
 		puntos_t := 0
 		v1, _ := mano.Get(i)
-		carta1, _ := v1.(Carta)
+		carta1, _ := v1.(cartas.Carta)
+		fmt.Println(carta1)
 		// comprobar si hay as en el palo
 		if nuevoPalo {
 			hay_as = carta1.Valor == 1
@@ -206,17 +210,22 @@ func calcularEscaleras(mano *doublylinkedlist.List) (int, *doublylinkedlist.List
 		i_inf := i
 		hay_esc := true
 		borrar_as := false
+		fmt.Println("Holi")
 		for hay_esc {
 			v2, _ := mano.Get(i + 1)
-			carta2, _ := v2.(Carta)
+			carta2, _ := v2.(cartas.Carta)
+			fmt.Println(carta2)
 			if carta1.Palo == carta2.Palo {
 				nuevoPalo = false
+				fmt.Println("Holi2")
 			} else {
 				nuevoPalo = true
+				fmt.Println("Holi3")
 			}
 			// comprobar si las dos cartas son escalera
 			if carta1.Valor+1 == carta2.Valor && carta1.Palo == carta2.Palo {
-				//añadir la nueva carta a l
+				//añadir la nueva carta a 
+				fmt.Println("Holi4")
 				l.Add(carta2)
 				if carta2.Valor >= 10 {
 					puntos_t = puntos_t + 10
@@ -225,9 +234,12 @@ func calcularEscaleras(mano *doublylinkedlist.List) (int, *doublylinkedlist.List
 				}
 				num_c += 1
 				i++
+			}else if i > mano.Size(){
+				hay_esc = false
 			} else if num_c >= 2 && carta1.Valor == 13 && hay_as {
 				// hay escalera valida de la forma 11 12 AS
 				// recupero la carta del as
+				fmt.Println("Holi5")
 				as, _ := mano.Get(ind_as)
 				as_c, _ := as.(Carta)
 				l.Add(as_c)
@@ -237,18 +249,22 @@ func calcularEscaleras(mano *doublylinkedlist.List) (int, *doublylinkedlist.List
 				borrar_as = true
 			} else if carta1.Valor == carta2.Valor && carta1.Palo == carta2.Palo {
 				// dos cartas con el mismo numero seguidas, avanzo indice
+				fmt.Println("Holi6")
 				i++
+				fmt.Println(i)
 				if no_elim == -1 {
 					no_elim = i
 				} else {
 					no_elim = no_elim*100 + i
 				}
-			} else {
+			}else {
+				fmt.Println("Holi7")
 				// no hay escalera
 				hay_esc = false
 			}
 			carta1 = carta2
 		}
+		fmt.Println("Holi")
 		if num_c >= 3 {
 			// si el numero de cartas seguidas ha sido >=3, escalera valida
 			puntos += puntos_t
@@ -289,6 +305,25 @@ func calcularEscaleras(mano *doublylinkedlist.List) (int, *doublylinkedlist.List
 				mano.Remove(ind_as)
 			}
 			esc = true
+		}
+	}
+	iterator := comb.Iterator()
+	i := 0
+	for iterator.Next() {
+		i++
+		l := iterator.Value()
+		lista := l.(doublylinkedlist.List)
+		iterator2 := lista.Iterator()
+		for iterator2.Next() {
+			c := iterator2.Value()
+			cartas := c.(doublylinkedlist.List)
+			iterator_c := cartas.Iterator()
+			for iterator_c.Next() {
+				v := iterator_c.Value()
+				valor := v.(Carta)
+				fmt.Println(valor)
+				//mano.Add(valor)
+			}
 		}
 	}
 	return puntos, comb, esc
@@ -451,6 +486,7 @@ func CalcularPuntosPosibles(mano *doublylinkedlist.List) (int, *doublylinkedlist
 		}
 		esc = escR
 		fmt.Println("Me quedo aquí")
+		fmt.Println(puntos_m, " ",combE," ",escR);
 	}
 	esc_j := true
 	for esc_j {

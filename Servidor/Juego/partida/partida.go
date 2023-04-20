@@ -46,9 +46,11 @@ func inicio_turno(espera chan string, wait chan bool) {
 
 }
 
+//func IniciarPartida() *doublylinkedlist.List {
+
 func IniciarPartida(idPartida string, canalPartida chan string) *doublylinkedlist.List {
 	//jugad, err := strconv.Atoi(os.Args[1])
-	//torn, err := strconv.Atoi(os.Args[2])
+	//torn, err := strconv.Atoi(os.Args[2])			DESCOMENTAR
 	//bots, err := strconv.Atoi(os.Args[3])
 	var parametrosPartida string
 	parametrosPartida = <-canalPartida
@@ -64,7 +66,8 @@ func IniciarPartida(idPartida string, canalPartida chan string) *doublylinkedlis
 
 	var ab [3]bool
 
-	for i := 0; i < numJugad; i++ { //Inicio de los jugadores
+	for i := 0; i < numJugad; i++ { //Inicio de los jugadores DESCOMENTAR
+	//for i := 0; i < 3; i++ { //Inicio de los jugadores
 		jugador := jugadores.CrearJugador(i, t.Mazo)
 		listaJ.Add(jugador)
 		ab[i] = false

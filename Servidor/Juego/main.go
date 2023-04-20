@@ -2,6 +2,8 @@ package main
 
 import (
 	"fmt"
+	"Juego/partida"
+	"Juego/torneo"
 )
 
 func main() {
@@ -9,8 +11,8 @@ func main() {
 	fmt.Println("¿Que quieres jugar?")
 	fmt.Scanln(&input)
 	if input == "partida" {
-		//partida.IniciarPartida()
+		partida.IniciarPartida()
 	} else if input == "torneo" {
-		//torneo.IniciarTorneo()
+		torneo.IniciarTorneo()
 	}
 }
