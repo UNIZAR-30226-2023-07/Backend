@@ -6,6 +6,9 @@ import (
 	"Handlers"
 	"encoding/json"
 	"fmt"
+	"math/rand"
+	"strconv"
+
 	//"math/rand"
 	"net/http"
 	//"strconv"
@@ -85,6 +88,67 @@ func main() {
 			chat.HandleRequest(c.Writer, c.Request)
 		})
 
+		//Crea una nueva partida
+		api.POST("/partida/crear", func(c *gin.Context) {
+			// Generar identificador único para la partida que no sea ninguna clave existente
+			var code string
+			//for {
+			code = strconv.Itoa(rand.Intn(9999))
+			//if _, ok := partidas[code]; !ok {
+			//	break
+			//}
+			//}
+
+			// Crear canal para la partida y almacenarlo en el mapa
+			//partidas["/api/ws/partida/"+code] = make(chan string)
+
+			// Llamar a la función partida con el canal correspondiente
+			//go partida.IniciarPartida(code, partidas[code])
+			fmt.Println("Se ha iniciado la partida: ", code)
+
+			Handlers.CreatePartida(c, code)
+		})
+
+		//Unirse a un partida existente
+		api.POST("/partida/join", Handlers.JoinPartida)
+
+		//Inicia una partida creada
+		api.GET("/partida/iniciar/:clave", func(c *gin.Context) {
+			//Retrasmitir mensaje a todo el ws
+			type Mensaje struct {
+				Emisor string   `json:"emisor"`
+				Tipo   string   `json:"tipo"`
+				Cartas []string `json:"cartas"`
+			}
+
+			var M Mensaje
+
+			M.Emisor = "Servidor"
+			M.Tipo = "Patida Iniciada"
+
+			msg, _ := json.MarshalIndent(&M, "", "\t")
+
+			clave := c.Param("clave")
+
+			partidaNueva.BroadcastFilter(msg, func(q *melody.Session) bool { //Envia la información a todos con la misma url
+				return q.Request.URL.Path == "/api/ws/partida/"+clave
+			})
+
+			Handlers.IniciarPartida(c)
+		})
+
+		//ws para transmitir la inforación del juego
+		api.GET("/ws/partida/:lobby", func(c *gin.Context) {
+			//Pasa la petición al ws
+			partidaNueva.HandleRequest(c.Writer, c.Request)
+		})
+
+		//ws para el chat de partida
+		api.GET("/ws/chat/lobby/:lobby", func(c *gin.Context) {
+			//Pasa la petición al ws
+			chat_lobby.HandleRequest(c.Writer, c.Request)
+		})
+
 		//----------------Ejemplos-----------------------------//
 
 		//Ejemplo de paso de parametros por url
@@ -101,19 +165,9 @@ func main() {
 			c.HTML(http.StatusOK, "chan.html", nil)
 		})
 
-		api.GET("/ws/chat/lobby/:lobby", func(c *gin.Context) {
-			//Pasa la petición al ws
-			chat_lobby.HandleRequest(c.Writer, c.Request)
-		})
-
 		api.GET("/ws/prueba/patricia", func(c *gin.Context) {
 			//Pasa la petición al ws
 			prueba.HandleRequest(c.Writer, c.Request)
-		})
-
-		api.GET("/ws/partida/:lobby", func(c *gin.Context) {
-			//Pasa la petición al ws
-			partidaNueva.HandleRequest(c.Writer, c.Request)
 		})
 
 	}
@@ -200,36 +254,36 @@ func main() {
 		fmt.Println(msgs)
 
 		type Mensaje struct {
-			Emisor    string `json:"emisor"`
-			Tipo	string `json:"tipo"`
-			Cartas 	[]string `json:"cartas"`	
+			Emisor string   `json:"emisor"`
+			Tipo   string   `json:"tipo"`
+			Cartas []string `json:"cartas"`
 		}
 
 		var M Mensaje
 
 		json.Unmarshal(msg, &M)
 
-		if (M.Tipo == "Robar_carta" || M.Tipo == "Robar_carta_descartes") {
+		if M.Tipo == "Robar_carta" || M.Tipo == "Robar_carta_descartes" {
 			//partidas[s.Request.URL.Path] <- M.Tipo
 			//respuesta := <-partidas[s.Request.URL.Path]
-		} else if (M.Tipo == "Fin_partida" || M.Tipo == "Mostrar_mano" || M.Tipo == "Mostrar_tablero" || M.Tipo == "FIN" || M.Tipo == "END" ) {
+		} else if M.Tipo == "Fin_partida" || M.Tipo == "Mostrar_mano" || M.Tipo == "Mostrar_tablero" || M.Tipo == "FIN" || M.Tipo == "END" {
 			//partidas[s.Request.URL.Path] <- M.Tipo
 			//M.Tipo = <-partidas[s.Request.URL.Path]
-		} else if (M.Tipo == "Abrir" || M.Tipo == "Colocar_carta" || M.Tipo == "Colocar_combinacion") {
+		} else if M.Tipo == "Abrir" || M.Tipo == "Colocar_carta" || M.Tipo == "Colocar_combinacion" {
 			//partidas[s.Request.URL.Path] <- M.Tipo
 
 			// recorremos el vector Cartas y enviamos cada componente por el canal
 			for i := 0; i < len(M.Cartas); i++ {
 				//partidas[s.Request.URL.Path] <- M.Cartas[i]
 			}
-		} 
+		}
 
 		msg, _ = json.MarshalIndent(&M, "", "\t")
 
 		partidaNueva.BroadcastFilter(msg, func(q *melody.Session) bool { //Envia la información a todos con la misma url
 			return q.Request.URL.Path == s.Request.URL.Path
 		})
-		
+
 	})
 
 	// Start and run the server

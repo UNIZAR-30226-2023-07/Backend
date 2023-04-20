@@ -128,7 +128,7 @@ func (pDAO *PartidasDAO) EstaLlena(clave string) bool {
 	res := false
 
 	//Buscamos si hay mas de cinco jugadores
-	fullp := "COUNT(*) FROM PARTICIPAR WHERE partida = $1 HAVING COUNT(*) > 5"
+	fullp := "SELECT COUNT(*) FROM PARTICIPAR WHERE partida = $1 HAVING COUNT(*) > 5"
 	rows, err := db.Query(fullp, clave)
 	CheckError(err)
 
