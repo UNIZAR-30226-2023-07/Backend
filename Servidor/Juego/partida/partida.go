@@ -52,6 +52,7 @@ func IniciarPartida(idPartida string, canalPartida chan string) *doublylinkedlis
 	//jugad, err := strconv.Atoi(os.Args[1])
 	//torn, err := strconv.Atoi(os.Args[2])			DESCOMENTAR
 	//bots, err := strconv.Atoi(os.Args[3])
+	fmt.Println("Partida creada")
 	var parametrosPartida string
 	parametrosPartida = <-canalPartida
 	// separar los parametros por el caracter ","
@@ -87,7 +88,7 @@ func IniciarPartida(idPartida string, canalPartida chan string) *doublylinkedlis
 		jugador, err := listaJ.Get(id) //Inicio de los turnos
 		turno = true                   //Ponemos turno a true porque seguimos en un turno
 		carta_robada = false           //Y la carta robada a false para limitar las acciones hasta que robe una carta
-		if err {
+		if err {/*
 			ab[0] = false //PRUEBAS
 			carta_robada = true
 			jugador.(jugadores.Jugador).Mano.Clear()
@@ -112,7 +113,7 @@ func IniciarPartida(idPartida string, canalPartida chan string) *doublylinkedlis
 			carta = cartas.Carta{3, 3, 1}
 			jugador.(jugadores.Jugador).Mano.Add(carta)
 			carta = cartas.Carta{7, 2, 1}
-			jugador.(jugadores.Jugador).Mano.Add(carta)
+			jugador.(jugadores.Jugador).Mano.Add(carta)*/
 			for turno { //Mientras nos encontremos en un turno
 				if id == 0 {
 					fmt.Println("El bot va a operar")
