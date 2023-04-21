@@ -8,7 +8,7 @@ import (
 	"fmt"
 	//"net"
 	"strconv"
-	"strings"
+	"strings"	//DESCOMENTAR
 
 	//"os"
 	"Juego/cartas"
@@ -48,16 +48,16 @@ func inicio_turno(espera chan string, wait chan bool) {
 
 //func IniciarPartida() *doublylinkedlist.List {
 
-func IniciarPartida(idPartida string, canalPartida chan string) *doublylinkedlist.List {
+func IniciarPartida(idPartida string, canalPartida chan string) *doublylinkedlist.List { //DESCOMENTAR
 	//jugad, err := strconv.Atoi(os.Args[1])
 	//torn, err := strconv.Atoi(os.Args[2])			DESCOMENTAR
 	//bots, err := strconv.Atoi(os.Args[3])
 	fmt.Println("Partida creada")
-	var parametrosPartida string
-	parametrosPartida = <-canalPartida
-	// separar los parametros por el caracter ","
-	param := strings.Split(parametrosPartida, ",")
-	numJugad, _ := strconv.Atoi(param[0])
+	var parametrosPartida string	//DESCOMENTAR
+	parametrosPartida = <-canalPartida	//DESCOMENTAR
+	//separar los parametros por el caracter ","
+	param := strings.Split(parametrosPartida, ",")	//DESCOMENTAR
+	numJugad, _ := strconv.Atoi(param[0])	//DESCOMENTAR
 
 	input := ""
 
@@ -88,7 +88,7 @@ func IniciarPartida(idPartida string, canalPartida chan string) *doublylinkedlis
 		jugador, err := listaJ.Get(id) //Inicio de los turnos
 		turno = true                   //Ponemos turno a true porque seguimos en un turno
 		carta_robada = false           //Y la carta robada a false para limitar las acciones hasta que robe una carta
-		if err {/*
+		if err {
 			ab[0] = false //PRUEBAS
 			carta_robada = true
 			jugador.(jugadores.Jugador).Mano.Clear()
@@ -113,7 +113,7 @@ func IniciarPartida(idPartida string, canalPartida chan string) *doublylinkedlis
 			carta = cartas.Carta{3, 3, 1}
 			jugador.(jugadores.Jugador).Mano.Add(carta)
 			carta = cartas.Carta{7, 2, 1}
-			jugador.(jugadores.Jugador).Mano.Add(carta)*/
+			jugador.(jugadores.Jugador).Mano.Add(carta)
 			for turno { //Mientras nos encontremos en un turno
 				if id == 0 {
 					fmt.Println("El bot va a operar")
@@ -129,16 +129,45 @@ func IniciarPartida(idPartida string, canalPartida chan string) *doublylinkedlis
 					fmt.Println("Tenemos ", p, " puntos con las combinaciones")
 					fmt.Println(comb)
 
-					bot.ComprobarColocarCarta(jugador.(jugadores.Jugador).Mano, &t)
+					iterator := comb.Iterator()
+					i := 0
+					fmt.Println("Mostramos nueva combinacion")
+					for iterator.Next() {
+						i++
+						l := iterator.Value()
+						lista := l.(*doublylinkedlist.List)
+						iterator2 := lista.Iterator()
+						for iterator2.Next() {
+							c := iterator2.Value()
+							cartas := c.(doublylinkedlist.List)
+							iterator_c := cartas.Iterator()
+							for iterator_c.Next() {
+								v := iterator_c.Value()
+								fmt.Println(v)
+								//mano.Add(valor)
+							}
+						}
+					}
+					if(ab[id] == false){
+						if(p < 51){
+							fmt.Println("No podemos abrir")
+						}else{
+							fmt.Println("Vamos a abrir")
+						}
+					}else{
+						bot.ComprobarColocarCarta(jugador.(jugadores.Jugador).Mano, &t)
 
-					tablero.FinTurno(t.Mazo, jugador.(jugadores.Jugador).Mano, t.Descartes, 0)
-					wait <- false
+						tablero.FinTurno(t.Mazo, jugador.(jugadores.Jugador).Mano, t.Descartes, 0)					
+					}
 					if id >= 3 {
 						id = 0
 					} else {
 						id = id + 1
 					}
 					turno = false
+					basura := <- espera
+					fmt.Println(basura)
+					wait <- false
 				} else {
 					for !carta_robada { //Mientras no hayan robado una carta
 						resp := <-espera

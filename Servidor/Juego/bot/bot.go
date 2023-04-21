@@ -62,7 +62,9 @@ func calcularEscalerasJoker(mano *doublylinkedlist.List, joker *doublylinkedlist
 					nuevoPalo = true
 				}
 				// comprobar si las dos cartas son escalera
-				if carta1.Valor+1 == carta2.Valor && carta1.Palo == carta2.Palo {
+				if i > mano.Size(){
+					hay_esc = false
+				}else if carta1.Valor+1 == carta2.Valor && carta1.Palo == carta2.Palo {
 					//añadir la nueva carta a l
 					l.Add(carta2)
 					if carta2.Valor >= 10 {
@@ -309,6 +311,7 @@ func calcularEscaleras(mano *doublylinkedlist.List) (int, *doublylinkedlist.List
 	}
 	iterator := comb.Iterator()
 	i := 0
+	fmt.Println("Mostramos nueva combinacion")
 	for iterator.Next() {
 		i++
 		l := iterator.Value()
@@ -316,14 +319,16 @@ func calcularEscaleras(mano *doublylinkedlist.List) (int, *doublylinkedlist.List
 		iterator2 := lista.Iterator()
 		for iterator2.Next() {
 			c := iterator2.Value()
-			cartas := c.(doublylinkedlist.List)
+			/*cartas := c.(doublylinkedlist.List)
 			iterator_c := cartas.Iterator()
 			for iterator_c.Next() {
 				v := iterator_c.Value()
 				valor := v.(Carta)
 				fmt.Println(valor)
 				//mano.Add(valor)
-			}
+			}*/
+			valor := c.(cartas.Carta)
+			fmt.Println(valor)
 		}
 	}
 	return puntos, comb, esc
@@ -486,7 +491,7 @@ func CalcularPuntosPosibles(mano *doublylinkedlist.List) (int, *doublylinkedlist
 		}
 		esc = escR
 		fmt.Println("Me quedo aquí")
-		fmt.Println(puntos_m, " ",combE," ",escR);
+		fmt.Println(esc)
 	}
 	esc_j := true
 	for esc_j {
