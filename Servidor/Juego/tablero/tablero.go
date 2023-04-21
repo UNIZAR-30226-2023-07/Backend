@@ -16,22 +16,26 @@ type Tablero struct {
 	Combinaciones *list.List //Es una lista de doublylinkedlist donde se guardan las cartas jugadas(trios y escaleras en cada lista)
 }
 
-func RobarCarta(list *doublylinkedlist.List, mano *doublylinkedlist.List) { //Función encargada de robar una carta del mazo
+func RobarCarta(list *doublylinkedlist.List, mano *doublylinkedlist.List) cartas.Carta{ //Función encargada de robar una carta del mazo
 	r := rand.Intn(list.Size()) + 1 //Obtiene un número aleatorio de la lista
 	value, ok := list.Get(r)        //Obtiene el valor de la carta de la lista
-	fmt.Println("Has robado la carta ", value)
+	cart := value.(cartas.Carta)
+	fmt.Println("Has robado la carta ", cart)
 	if ok {
 		mano.Add(value) //Añade el valor a la mano
 		list.Remove(r)  //Elimina el valor del mazo
 	}
+	return cart
 }
 
-func RobarDescartes(list *doublylinkedlist.List, mano *doublylinkedlist.List) {
+func RobarDescartes(list *doublylinkedlist.List, mano *doublylinkedlist.List) cartas.Carta{
 	value, ok := list.Get(0)
-	fmt.Println("Has robado la carta de descartes", value)
+	cart := value.(cartas.Carta)
+	fmt.Println("Has robado la carta de descartes", cart)
 	if ok {
 		mano.Add(value) //Añade el valor a la mano
 	}
+	return cart
 }
 
 func AnyadirCombinaciones(t Tablero, comb *list.List) {

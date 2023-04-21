@@ -17,7 +17,7 @@ import (
 	"github.com/emirpasic/gods/lists/doublylinkedlist"
 
 	//"juego/partida"
-	"Juego/bot"
+	//"Juego/bot" //COMENTADO
 	"Juego/tablero"
 )
 
@@ -29,15 +29,18 @@ func Add_jug(j jugadores.Jugador, p Partida) {
 	p.Jug.Add(j)
 }
 
-func inicio_turno(espera chan string, wait chan bool) {
+//func inicio_turno(espera chan string, wait chan bool) { //COMENTADO
+func inicio_turno(espera chan string, wait chan bool, canalPartida chan string) { //DESCOMENTAR
 	fin := false
 	for !fin {
 		var input string
 		fmt.Println("¿Que acción desea hacer?")
-		fmt.Scanln(&input)
+		//fmt.Scanln(&input) //COMENTADO
+		input = <-canalPartida //DESCOMENTAR
 		if input == "Fin_partida" {
 			fin = true
 			fmt.Println("FINAL")
+			canalPartida <- "fin" //DESCOMENTAR
 		}
 		espera <- input
 		fin = <-wait
@@ -46,15 +49,18 @@ func inicio_turno(espera chan string, wait chan bool) {
 
 }
 
-//func IniciarPartida() *doublylinkedlist.List {
+//func IniciarPartida() *doublylinkedlist.List { //COMENTADO
 
 func IniciarPartida(idPartida string, canalPartida chan string) *doublylinkedlist.List { //DESCOMENTAR
 	//jugad, err := strconv.Atoi(os.Args[1])
-	//torn, err := strconv.Atoi(os.Args[2])			DESCOMENTAR
+	//torn, err := strconv.Atoi(os.Args[2])			
 	//bots, err := strconv.Atoi(os.Args[3])
+
 	fmt.Println("Partida creada")
 	var parametrosPartida string	//DESCOMENTAR
 	parametrosPartida = <-canalPartida	//DESCOMENTAR
+	canalPartida <- "ok" //DESCOMENTAR
+
 	//separar los parametros por el caracter ","
 	param := strings.Split(parametrosPartida, ",")	//DESCOMENTAR
 	numJugad, _ := strconv.Atoi(param[0])	//DESCOMENTAR
@@ -65,10 +71,11 @@ func IniciarPartida(idPartida string, canalPartida chan string) *doublylinkedlis
 
 	listaJ := doublylinkedlist.New()
 
-	var ab [3]bool
+	//var ab [3]bool //COMENTADO
+	ab := make([]bool, numJugad)  //DESCOMENTAR
 
 	for i := 0; i < numJugad; i++ { //Inicio de los jugadores DESCOMENTAR
-	//for i := 0; i < 3; i++ { //Inicio de los jugadores
+	//for i := 0; i < 3; i++ { //Inicio de los jugadores //COMENTADO
 		jugador := jugadores.CrearJugador(i, t.Mazo)
 		listaJ.Add(jugador)
 		ab[i] = false
@@ -76,7 +83,8 @@ func IniciarPartida(idPartida string, canalPartida chan string) *doublylinkedlis
 
 	espera := make(chan string)
 	wait := make(chan bool)
-	go inicio_turno(espera, wait) //Inicio de la escucha a la terminal
+	//go inicio_turno(espera, wait) //Inicio de la escucha a la terminal //COMENTADO
+	go inicio_turno(espera, wait, canalPartida) //Inicio de la escucha a la terminal //DESCOMENTAR
 
 	partida := true
 	turno := true
@@ -89,6 +97,7 @@ func IniciarPartida(idPartida string, canalPartida chan string) *doublylinkedlis
 		turno = true                   //Ponemos turno a true porque seguimos en un turno
 		carta_robada = false           //Y la carta robada a false para limitar las acciones hasta que robe una carta
 		if err {
+			/*	//COMENTADO
 			ab[0] = false //PRUEBAS
 			carta_robada = true
 			jugador.(jugadores.Jugador).Mano.Clear()
@@ -113,8 +122,11 @@ func IniciarPartida(idPartida string, canalPartida chan string) *doublylinkedlis
 			carta = cartas.Carta{3, 3, 1}
 			jugador.(jugadores.Jugador).Mano.Add(carta)
 			carta = cartas.Carta{7, 2, 1}
-			jugador.(jugadores.Jugador).Mano.Add(carta)
-			for turno { //Mientras nos encontremos en un turno
+			jugador.(jugadores.Jugador).Mano.Add(carta)*/
+
+			for turno { //Mientras nos encontremos en un turno 
+
+				/*	//COMENTADO
 				if id == 0 {
 					fmt.Println("El bot va a operar")
 
@@ -168,19 +180,22 @@ func IniciarPartida(idPartida string, canalPartida chan string) *doublylinkedlis
 					basura := <- espera
 					fmt.Println(basura)
 					wait <- false
-				} else {
+				} else { */
 					for !carta_robada { //Mientras no hayan robado una carta
 						resp := <-espera
 						if resp == "Robar_carta" { //Accion de robar una carta
-							tablero.RobarCarta(t.Mazo, jugador.(jugadores.Jugador).Mano) //Obtenemos la carta del mazo y se la damos al jugador
+							c := tablero.RobarCarta(t.Mazo, jugador.(jugadores.Jugador).Mano) //Obtenemos la carta del mazo y se la damos al jugador 
 							carta_robada = true
+							canalPartida <- strconv.Itoa(c.Valor) + "," + strconv.Itoa(c.Palo) + "," + strconv.Itoa(c.Color) //DESCOMENTAR
 							wait <- false
 						} else if resp == "Robar_carta_descartes" {
 							if t.Descartes.Size() > 0 {
-								tablero.RobarDescartes(t.Descartes, jugador.(jugadores.Jugador).Mano) //En caso de que haya, robamos la carta del mazo de descartes y se la damos al jugador
+								c := tablero.RobarDescartes(t.Descartes, jugador.(jugadores.Jugador).Mano) //En caso de que haya, robamos la carta del mazo de descartes y se la damos al jugador
 								carta_robada = true
+								canalPartida <- strconv.Itoa(c.Valor) + "," + strconv.Itoa(c.Palo) + "," + strconv.Itoa(c.Color) //DESCOMENTAR
 							} else {
 								fmt.Println("Error, no hay cartas en el descarte")
+								canalPartida <- "Error, no hay cartas en el descarte" //DESCOMENTAR
 							}
 							wait <- false
 						} else if resp == "Fin_partida" { //Final de partida por si fuera necesario
@@ -188,6 +203,7 @@ func IniciarPartida(idPartida string, canalPartida chan string) *doublylinkedlis
 							partida = false
 							turno = false
 							carta_robada = true
+							canalPartida <- "fin" //DESCOMENTAR
 							goto SALIR
 						} else if resp == "Mostrar_mano" { //Comando para mostrar la mano
 							fmt.Println("Mostrando mano: ")
@@ -198,6 +214,7 @@ func IniciarPartida(idPartida string, canalPartida chan string) *doublylinkedlis
 							wait <- false
 						} else {
 							fmt.Println("Error, primero tienes que robar una carta")
+							canalPartida <- "Error, primero tienes que robar una carta" //DESCOMENTAR
 							wait <- false
 						}
 					}
@@ -207,19 +224,34 @@ func IniciarPartida(idPartida string, canalPartida chan string) *doublylinkedlis
 						cartas.MostrarMano(jugador.(jugadores.Jugador).Mano)
 						wait <- false
 					} else if resp == "Descarte" {
+						canalPartida <- "Ok" //DESCOMENTAR
 						var input string
 						fmt.Println("¿Que carta desea devolver?") //En caso de querer devolver una carta
-						fmt.Scanln(&input)                        //El usuario deberá de introducir el ID necesario
+						//fmt.Scanln(&input)                        //El usuario deberá de introducir el ID necesario //COMENTADO
+						input = <- canalPartida //DESCOMENTAR
 						i_input, _ := strconv.Atoi(input)
 						fmt.Println("Has introducido: ", i_input)
 						aux := jugador.(jugadores.Jugador).Mano.Size()
+
+						if i_input > aux { //DESCOMENTAR el if entero
+							canalPartida <- "Valor no valido, introduzca una carta correcta"
+						} else {
+							canalPartida <- "Ok"
+						} 
 						for i_input > aux {
 							fmt.Println("Valor no valido, introduzca una carta correcta")
-							fmt.Scanln(&input) //El usuario deberá de introducir el ID necesario
+							//fmt.Scanln(&input) //El usuario deberá de introducir el ID necesario //COMENTADO
+							input = <- canalPartida //DESCOMENTAR
 							i_input, _ = strconv.Atoi(input)
 							fmt.Println("Has introducido: ", i_input)
 							aux := jugador.(jugadores.Jugador).Mano.Size()
 							fmt.Println(aux)
+
+							if i_input > aux { //DESCOMENTAR el if entero
+								canalPartida <- "Valor no valido, introduzca una carta correcta"
+							} else {
+								canalPartida <- "Ok"
+							}
 						}
 						tablero.FinTurno(t.Mazo, jugador.(jugadores.Jugador).Mano, t.Descartes, i_input) //Y esta función colocará esa carta en el mazo de descartes
 						if jugador.(jugadores.Jugador).Mano.Size() == 0 {                                //En caso de no contar con más cartas terminará la partida
@@ -227,7 +259,8 @@ func IniciarPartida(idPartida string, canalPartida chan string) *doublylinkedlis
 							partida = false
 							turno = false
 						} else { //Y en caso contrario pasaremos al turno del siguiente jugador
-							if id >= 3 {
+							//if id >= 3 { //COMENTADO
+							if id >= numJugad - 1 { //DESCOMENTAR
 								id = 0
 							} else {
 								id = id + 1
@@ -241,7 +274,9 @@ func IniciarPartida(idPartida string, canalPartida chan string) *doublylinkedlis
 					} else if resp == "Colocar_combinacion" { //Comando para colocar una nueva combinación en el tablero
 						if ab[id] == false {
 							fmt.Println("No puedes colocar una carta porque no has abierto") //En caso de no abrir da error
+							canalPartida <- "No puedes colocar una carta porque no has abierto" //DESCOMENTAR
 						} else {
+							canalPartida <- "Ok" //DESCOMENTAR
 							lista := list.New()
 							combinacion := doublylinkedlist.New()
 							var vector [13]int
@@ -251,7 +286,8 @@ func IniciarPartida(idPartida string, canalPartida chan string) *doublylinkedlis
 							cont := 0
 							cont_a := 0
 							fmt.Println("Indice los trios a probar") //Hace una petición de los id de los trios que queremos comprobar
-							fmt.Scanln(&input)
+							//fmt.Scanln(&input) //COMENTADO
+							input := <- canalPartida //DESCOMENTAR
 							input_V, _ := strconv.Atoi(input)
 							for input != "FIN" { //Hasta que no introduzca FIN no termina de añadir nuevas combinaciones
 								if input == "END" { //Hasta que no introduzca END no termina de añadir valores a las nuevas combinaciones
@@ -279,10 +315,12 @@ func IniciarPartida(idPartida string, canalPartida chan string) *doublylinkedlis
 											cartas.MostrarMano(miLista)
 										}*/
 										combinacion.Clear()
+										canalPartida <- "Ok" //DESCOMENTAR
 									} else { //Sino se elimina de la copia de la lista anterior por si se busca introducir una nueva combinación
 										fmt.Println("Combinacion no valida,intentelo de nuevo")
 										combinacion.Clear()
 										cont = cont_a
+										canalPartida <- "Combinacion no valida,intentelo de nuevo" //DESCOMENTAR
 									}
 								} else if input_V >= 0 && input_V < 15 { //En caso de que se trate de un examen de 0 a 15 lo consideramos una carta, para ello la añadimos al vector
 									i_input, _ := strconv.Atoi(input)
@@ -301,7 +339,8 @@ func IniciarPartida(idPartida string, canalPartida chan string) *doublylinkedlis
 								} else {
 									fmt.Println("Comando erroneo")
 								}
-								fmt.Scanln(&input)
+								//fmt.Scanln(&input) //COMENTADO
+								input = <- canalPartida //DESCOMENTAR
 							}
 							if lista.Len() > 0 {
 								//fmt.Println("Contenido de la lista:")
@@ -332,6 +371,7 @@ func IniciarPartida(idPartida string, canalPartida chan string) *doublylinkedlis
 
 								tablero.AnyadirCombinaciones(t, lista)
 							}
+							canalPartida <- "fin" //DESCOMENTAR
 						}
 						if jugador.(jugadores.Jugador).Mano.Size() == 0 {
 							wait <- true
@@ -342,6 +382,7 @@ func IniciarPartida(idPartida string, canalPartida chan string) *doublylinkedlis
 						}
 
 					} else if resp == "Abrir" { //El funcionamiento de abrir es similar al comentado antes, pero comprobando el total de puntos.
+						canalPartida <- "Ok" //DESCOMENTAR
 						lista := list.New()
 						combinacion := doublylinkedlist.New()
 						puntos := 0
@@ -352,7 +393,8 @@ func IniciarPartida(idPartida string, canalPartida chan string) *doublylinkedlis
 						cont := 0
 						cont_a := 0
 						fmt.Println("Indice los trios a probar")
-						fmt.Scanln(&input)
+						//fmt.Scanln(&input) //COMENTADO
+						input := <- canalPartida //DESCOMENTAR
 						input_V, _ := strconv.Atoi(input)
 						for input != "FIN" {
 							if input == "END" {
@@ -384,6 +426,7 @@ func IniciarPartida(idPartida string, canalPartida chan string) *doublylinkedlis
 									combinacion.Clear()
 									fmt.Println("Inserte más combinaciones")
 									cont_a = cont
+									canalPartida <- "Ok" //DESCOMENTAR
 								} else {
 									fmt.Println("Combinacion no valida,intentelo de nuevo")
 									combinacion.Clear()
@@ -391,6 +434,7 @@ func IniciarPartida(idPartida string, canalPartida chan string) *doublylinkedlis
 										vector[i] = -1
 									}
 									cont = cont_a
+									canalPartida <- "Combinacion no valida,intentelo de nuevo"
 								}
 							} else if input_V >= 0 && input_V < 15 {
 								i_input, _ := strconv.Atoi(input)
@@ -409,7 +453,8 @@ func IniciarPartida(idPartida string, canalPartida chan string) *doublylinkedlis
 							} else {
 								fmt.Println("Comando erroneo")
 							}
-							fmt.Scanln(&input)
+							//fmt.Scanln(&input) //COMENTADO
+							input = <- canalPartida //DESCOMENTAR
 						}
 						if puntos >= 51 {
 							/*jugadores.Abrir(jugador.(jugadores.Jugador))
@@ -446,12 +491,15 @@ func IniciarPartida(idPartida string, canalPartida chan string) *doublylinkedlis
 
 								tablero.AnyadirCombinaciones(t, lista)
 								fmt.Println("Felicidades, has abierto")
+								canalPartida <- "Felicidades, has abierto" //DESCOMENTAR
 								ab[id] = true
 							} else {
 								fmt.Println("La lista está vacía")
+								canalPartida <- "La lista está vacía" //DESCOMENTAR
 							}
 						} else {
-							fmt.Println("No has conseguido suficientes puntos, y no has podido abrir")
+							//fmt.Println("No has conseguido suficientes puntos, y no has podido abrir") //COMENTADO
+							canalPartida <- "No has conseguido suficientes puntos, y no has podido abrir" //DESCOMENTAR
 							lista.Init()
 						}
 						if jugador.(jugadores.Jugador).Mano.Size() == 0 {
@@ -464,18 +512,23 @@ func IniciarPartida(idPartida string, canalPartida chan string) *doublylinkedlis
 					} else if resp == "Colocar_carta" { //Si buscamos colocar una carta
 						if ab[id] == false {
 							fmt.Println("No puedes colocar una carta porque no has abierto")
+							canalPartida <- "No puedes colocar una carta porque no has abierto" //DESCOMENTAR
 						} else {
+							canalPartida <- "Ok" //DESCOMENTAR
 							fmt.Println("¿En que combinación desea introducir su carta?")
-							fmt.Scanln(&input)
+							//fmt.Scanln(&input) //COMENTADO
+							input = <- canalPartida //DESCOMENTAR
 							t_combinacion, _ := strconv.Atoi(input)
 							fmt.Println("¿Que carta desea introducir?")
-							fmt.Scanln(&input)
+							//fmt.Scanln(&input) //COMENTADO
+							input = <- canalPartida //DESCOMENTAR
 							i_carta, _ := strconv.Atoi(input)
 							l_aux := doublylinkedlist.New()
 							l_aux.Add(jugador.(jugadores.Jugador).Mano.Get(i_carta))
 							r := tablero.AnyadirCarta(l_aux, jugador.(jugadores.Jugador).Mano, &t, t_combinacion) //Comprobamos si no es valida, lo es, o si lo es y nos devuelve joker
 							if r != -1 {                                                                          //Si lo es la colocamos
 								fmt.Println("Carta colocada con exito")
+								canalPartida <- "Ok" //DESCOMENTAR
 								if r == 1 { //Y si es necesario recibimos el Joker
 									value := cartas.Carta{0, 4, 1}
 									jugador.(jugadores.Jugador).Mano.Add(value)
@@ -488,6 +541,7 @@ func IniciarPartida(idPartida string, canalPartida chan string) *doublylinkedlis
 								}
 							} else {
 								fmt.Println("no valido") //Sino no hacemos nada
+								canalPartida <- "no valido" //DESCOMENTAR
 							}
 
 						}
@@ -498,11 +552,12 @@ func IniciarPartida(idPartida string, canalPartida chan string) *doublylinkedlis
 						wait <- true
 						partida = false
 						turno = false
+						canalPartida <- "fin" //DESCOMENTAR
 					} else {
 						fmt.Println("Operacion no valida")
 						wait <- false
 					}
-				}
+				//} //COMENTADO
 			}
 		}
 

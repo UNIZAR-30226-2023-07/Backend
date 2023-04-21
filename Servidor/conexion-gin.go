@@ -12,8 +12,8 @@ import (
 	//"math/rand"
 	"net/http"
 	//"strconv"
-
-	//"Juego/partida"
+	"strings"
+	"Juego/partida"
 
 	"github.com/gin-contrib/static"
 	"github.com/gin-gonic/contrib/cors"
@@ -23,7 +23,7 @@ import (
 
 func main() {
 	// canales de todas las partidas -> clave: codigo_partida, valor: canal de la partida
-	//partidas := make(map[string]chan string)
+	partidas := make(map[string]chan string)
 
 	// Set the router as the default one shipped with Gin
 	router := gin.Default()
@@ -100,10 +100,10 @@ func main() {
 			//}
 
 			// Crear canal para la partida y almacenarlo en el mapa
-			//partidas["/api/ws/partida/"+code] = make(chan string)
+			partidas["/api/ws/partida/"+code] = make(chan string)
 
 			// Llamar a la función partida con el canal correspondiente
-			//go partida.IniciarPartida(code, partidas[code])
+			go partida.IniciarPartida(code, partidas["/api/ws/partida/"+code])
 			fmt.Println("Se ha iniciado la partida: ", code)
 
 			Handlers.CreatePartida(c, code)
@@ -256,25 +256,75 @@ func main() {
 		type Mensaje struct {
 			Emisor string   `json:"emisor"`
 			Tipo   string   `json:"tipo"`
-			Cartas []string `json:"cartas"`
+			Cartas []string `json:"cartas"` // que sea ["1,2,3", "4,5,6", "7,8,9""]
+			Info  string   `json:"info"`
 		}
 
 		var M Mensaje
 
 		json.Unmarshal(msg, &M)
 
-		if M.Tipo == "Robar_carta" || M.Tipo == "Robar_carta_descartes" {
-			//partidas[s.Request.URL.Path] <- M.Tipo
-			//respuesta := <-partidas[s.Request.URL.Path]
+		if M.Tipo == "jugadores" {
+			partidas[s.Request.URL.Path] <- M.Info
+			respuesta := <-partidas[s.Request.URL.Path]
+			fmt.Println("Respuesta:",respuesta)
+		} else if M.Tipo == "Robar_carta" || M.Tipo == "Robar_carta_descartes" {
+			partidas[s.Request.URL.Path] <- M.Tipo
+			respuesta := <-partidas[s.Request.URL.Path]
+			fmt.Println(respuesta)
 		} else if M.Tipo == "Fin_partida" || M.Tipo == "Mostrar_mano" || M.Tipo == "Mostrar_tablero" || M.Tipo == "FIN" || M.Tipo == "END" {
-			//partidas[s.Request.URL.Path] <- M.Tipo
-			//M.Tipo = <-partidas[s.Request.URL.Path]
-		} else if M.Tipo == "Abrir" || M.Tipo == "Colocar_carta" || M.Tipo == "Colocar_combinacion" {
-			//partidas[s.Request.URL.Path] <- M.Tipo
-
-			// recorremos el vector Cartas y enviamos cada componente por el canal
-			for i := 0; i < len(M.Cartas); i++ {
-				//partidas[s.Request.URL.Path] <- M.Cartas[i]
+			partidas[s.Request.URL.Path] <- M.Tipo
+			respuesta := <-partidas[s.Request.URL.Path]
+			fmt.Println(respuesta)
+		} else if M.Tipo == "Abrir" || M.Tipo == "Colocar_combinacion" {
+			partidas[s.Request.URL.Path] <- M.Tipo
+			respuesta := <-partidas[s.Request.URL.Path]
+			if respuesta == "Ok" {
+				for i := 0; i < len(M.Cartas); i++ {
+					// separamos M.Cartas[i] por comas y enviamos cada numero por el canal
+					nums := strings.Split(M.Cartas[i], ",")
+					for j := 0; j < len(nums); j++ {
+						partidas[s.Request.URL.Path] <- nums[j]
+					}
+					// si quedan mas componentes se envia "END"
+					if i < len(M.Cartas)-1 {
+						partidas[s.Request.URL.Path] <- "END"
+						respuesta := <-partidas[s.Request.URL.Path]
+						if respuesta != "Ok" { 
+							fmt.Println("Error:", respuesta)
+							goto SALIR
+						}
+					}
+				}
+				SALIR:
+				partidas[s.Request.URL.Path] <- "FIN"
+				respuesta := <-partidas[s.Request.URL.Path]
+				fmt.Println(respuesta)
+			} else {
+				fmt.Println(respuesta)
+			}
+		} else if M.Tipo == "Colocar_carta" {
+			partidas[s.Request.URL.Path] <- M.Tipo
+			respuesta := <-partidas[s.Request.URL.Path]
+			if respuesta == "Ok" {
+				parametros := strings.Split(M.Info, ",")
+				for i := 0; i < len(parametros); i++ {
+					partidas[s.Request.URL.Path] <- parametros[i]
+				}
+				respuesta := <-partidas[s.Request.URL.Path]
+				fmt.Println(respuesta)
+			} else {
+				fmt.Println(respuesta)
+			}
+		} else if M.Tipo == "Descarte" {
+			partidas[s.Request.URL.Path] <- M.Tipo
+			respuesta := <-partidas[s.Request.URL.Path]
+			if respuesta == "Ok" {
+				partidas[s.Request.URL.Path] <- M.Info
+				respuesta := <-partidas[s.Request.URL.Path]
+				fmt.Println(respuesta)
+			} else {
+				fmt.Println(respuesta)
 			}
 		}
 
@@ -285,7 +335,6 @@ func main() {
 		})
 
 	})
-
 	// Start and run the server
 	router.Run(":3001")
 }
