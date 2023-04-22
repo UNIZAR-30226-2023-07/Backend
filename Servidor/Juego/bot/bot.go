@@ -454,16 +454,24 @@ func separarJokers(mano *doublylinkedlist.List) (*doublylinkedlist.List, *doubly
 	mano = cartas.SortStart(mano, 0)
 	joker := doublylinkedlist.New()
 	hay_j := true
+	cartas.MostrarMano(mano)
 	fmt.Println("Me quedo aquí1")
 	for hay_j {
 		v, _ := mano.Get(mano.Size() - 1)
-		carta, _ := v.(Carta)
+		carta, _ := v.(cartas.Carta)
 		if carta.Valor == 0 {
+			v2, _ := mano.Get(mano.Size() - 2)
+			carta2, _ := v2.(cartas.Carta)
+			if carta2.Valor == 0{
+				joker.Add(carta2)
+				mano.Remove(mano.Size() - 2)
+			}
 			joker.Add(carta)
 			mano.Remove(mano.Size() - 1)
 		}
 		hay_j = false
 	}
+	cartas.MostrarMano(mano)
 	fmt.Println("Me quedo aquí2")
 	return mano, joker
 }
@@ -475,10 +483,18 @@ func descarteBot(mazo *doublylinkedlist.List, mano *doublylinkedlist.List, desca
 
 func CalcularPuntosPosibles(mano *doublylinkedlist.List) (int, *doublylinkedlist.List) { //Función encargada de revisar los puntos posibles de una mano
 	puntos := 0
+	puntos_trio := 0
 	esc := true
 	comb := doublylinkedlist.New()
+	comb_trio := doublylinkedlist.New()
 	fmt.Println("Hola")
 	mano, joker := separarJokers(mano)
+	copia_mano_trio := doublylinkedlist.New()
+	for e := 0; e < mano.Size(); e++ {
+		valor, _ := mano.Get(e)
+		copia_mano_trio.Add(valor) //Creamos copia
+	}
+	cartas.MostrarMano(mano)
 	fmt.Println("hola")
 	trio := true
 	for esc {
@@ -506,27 +522,33 @@ func CalcularPuntosPosibles(mano *doublylinkedlist.List) (int, *doublylinkedlist
 	}
 	for trio {
 		// bucle para encontrar todos los trios
-		puntos_m, combT, trioR := calcularTrios(mano)
-		puntos += puntos_m
+		puntos_m, combT, trioR := calcularTrios(copia_mano_trio)
+		puntos_trio += puntos_m
 		if trioR {
 			//añade a comb el nuevo trio encontrado
-			comb.Add(combT)
+			comb_trio.Add(combT)
 		}
 		trio = trioR
 	}
 	trio_j := true
 	for trio_j {
-		puntos_m, combT, jokerR, trioR := calcularTriosJoker(mano, joker)
-		puntos += puntos_m
+		puntos_m, combT, jokerR, trioR := calcularTriosJoker(copia_mano_trio, joker)
+		puntos_trio += puntos_m
 		if trioR {
 			//añade a comb el nuevo trio encontrado
-			comb.Add(combT)
+			comb_trio.Add(combT)
 		}
 		trio_j = trioR
 		joker = jokerR
 	}
 
-	return puntos, comb
+	if(puntos > puntos_trio){
+		fmt.Println("Mas puntos en combinacion")
+		return puntos, comb
+	}
+	fmt.Println("Mas puntos en trio")
+	return puntos_trio, comb_trio
+	
 }
 
 func ComprobarColocarCarta(m *doublylinkedlist.List, t *tablero.Tablero) {
@@ -536,15 +558,18 @@ func ComprobarColocarCarta(m *doublylinkedlist.List, t *tablero.Tablero) {
 		c_aux, _ := m.Get(i)
 		fmt.Println("Comprobamos la carta ", c_aux)
 		l_aux.Add(c_aux)
-		for j := 0; j < t.Combinaciones.Len(); j++ {
-			r := tablero.AnyadirCarta(l_aux, m, t, j)
+		//for j := 0; j < t.Combinaciones.Len(); j++ {
+			r := tablero.AnyadirCarta(l_aux, m, t, 0)
 			if r != -1 {
 				fmt.Printf("Se ha añadido una carta a una combinacion")
 				if r == 1 {
 					fmt.Println(" Y se ha obtenido un Joker \n")
 				}
+				t_aux := *t
+				tablero.MostrarTablero(t_aux)
+				break
 			}
-		}
+		//}
 	}
 }
 

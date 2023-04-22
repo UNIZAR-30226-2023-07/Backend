@@ -97,8 +97,8 @@ func IniciarPartida(idPartida string, canalPartida chan string) *doublylinkedlis
 		turno = true                   //Ponemos turno a true porque seguimos en un turno
 		carta_robada = false           //Y la carta robada a false para limitar las acciones hasta que robe una carta
 		if err {
-			/*	//COMENTADO
-			ab[0] = false //PRUEBAS
+			//COMENTADO
+			/*ab[0] = false //PRUEBAS
 			carta_robada = true
 			jugador.(jugadores.Jugador).Mano.Clear()
 			carta := cartas.Carta{13, 1, 1}
@@ -113,9 +113,9 @@ func IniciarPartida(idPartida string, canalPartida chan string) *doublylinkedlis
 			jugador.(jugadores.Jugador).Mano.Add(carta)
 			carta = cartas.Carta{8, 1, 1}
 			jugador.(jugadores.Jugador).Mano.Add(carta)
-			carta = cartas.Carta{5, 3, 1}
-			jugador.(jugadores.Jugador).Mano.Add(carta)
 			carta = cartas.Carta{13, 1, 1}
+			jugador.(jugadores.Jugador).Mano.Add(carta)
+			carta = cartas.Carta{5, 3, 1}
 			jugador.(jugadores.Jugador).Mano.Add(carta)
 			carta = cartas.Carta{4, 3, 1}
 			jugador.(jugadores.Jugador).Mano.Add(carta)
@@ -126,8 +126,8 @@ func IniciarPartida(idPartida string, canalPartida chan string) *doublylinkedlis
 
 			for turno { //Mientras nos encontremos en un turno 
 
-				/*	//COMENTADO
-				if id == 0 {
+					//COMENTADO
+				/*if id == 0 {
 					fmt.Println("El bot va a operar")
 
 					tablero.RobarCarta(t.Mazo, jugador.(jugadores.Jugador).Mano)
@@ -161,10 +161,69 @@ func IniciarPartida(idPartida string, canalPartida chan string) *doublylinkedlis
 						}
 					}
 					if(ab[id] == false){
+						p = 0
 						if(p < 51){
 							fmt.Println("No podemos abrir")
+							iterator := comb.Iterator()
+							i := 0
+							for iterator.Next() {
+								i++
+								l := iterator.Value()
+								lista := l.(*doublylinkedlist.List)
+								iterator2 := lista.Iterator()
+								for iterator2.Next() {
+									c := iterator2.Value()
+									cartas := c.(doublylinkedlist.List)
+									iterator_c := cartas.Iterator()
+									for iterator_c.Next() {
+										v := iterator_c.Value()
+										jugador.(jugadores.Jugador).Mano.Add(v)
+									}
+								}
+
+							}
+							des := jugadores.CartaMasAlta(jugador.(jugadores.Jugador).Mano)
+
+							tablero.FinTurno(t.Mazo, jugador.(jugadores.Jugador).Mano, t.Descartes, des)
+
+							cartas.MostrarMano(jugador.(jugadores.Jugador).Mano)
 						}else{
 							fmt.Println("Vamos a abrir")
+							listaA := list.New()
+							//cartas.MostrarMano(jugador.(jugadores.Jugador).Mano)
+							iterator := comb.Iterator()
+							for iterator.Next() {
+								i++
+								l := iterator.Value()
+								lista := l.(*doublylinkedlist.List)
+								iterator2 := lista.Iterator()
+								for iterator2.Next() {
+									c := iterator2.Value()
+									fmt.Println(c)
+									cartas := c.(doublylinkedlist.List)
+									iterator_c := cartas.Iterator()
+									copia := doublylinkedlist.New()
+									for iterator_c.Next() {
+										v := iterator_c.Value()
+										copia.Add(v) //Creamos copia
+										
+									}
+									listaA.PushBack(copia)
+								}
+							}
+							fmt.Println(listaA)
+							tablero.AnyadirCombinaciones(t, listaA)
+							tablero.MostrarTablero(t)
+
+							bot.ComprobarColocarCarta(jugador.(jugadores.Jugador).Mano, &t)
+
+							cartas.MostrarMano(jugador.(jugadores.Jugador).Mano)
+
+							des := jugadores.CartaMasAlta(jugador.(jugadores.Jugador).Mano)
+
+							tablero.FinTurno(t.Mazo, jugador.(jugadores.Jugador).Mano, t.Descartes, des)
+
+							cartas.MostrarMano(jugador.(jugadores.Jugador).Mano)
 						}
 					}else{
 						bot.ComprobarColocarCarta(jugador.(jugadores.Jugador).Mano, &t)
@@ -596,7 +655,7 @@ func IniciarPartida(idPartida string, canalPartida chan string) *doublylinkedlis
 					} else if resp == "Colocar_carta" { //Si buscamos colocar una carta
 						if ab[id] == false {
 							fmt.Println("No puedes colocar una carta porque no has abierto")
-							canalPartida <- "No puedes colocar una carta porque no has abierto" //DESCOMENTAR
+							//canalPartida <- "No puedes colocar una carta porque no has abierto" //DESCOMENTAR
 						} else {
 							canalPartida <- "Ok" //DESCOMENTAR
 							fmt.Println("¿En que combinación desea introducir su carta?")
