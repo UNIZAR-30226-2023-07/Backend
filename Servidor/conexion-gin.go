@@ -260,9 +260,35 @@ func main() {
 			Info  string   `json:"info"`
 		}
 
+		type Respuesta struct {
+			Emisor string `json:"emisor"`
+			Receptor string `json:"receptor"`
+			Tipo   string `json:"tipo"`
+			Cartas []string `json:"cartas"` 
+			Info  string   `json:"info"`
+		}
+
+		type RespuestaTablero struct {
+			Emisor string `json:"emisor"`
+			Receptor string `json:"receptor"`
+			Tipo   string `json:"tipo"`
+			Mazo []string `json:"mazo"`
+			Descartes []string `json:"descartes"`
+			Combinaciones [][]string `json:"combinaciones"`
+			
+		}
+
 		var M Mensaje
+		var R Respuesta
+		var RT RespuestaTablero
 
 		json.Unmarshal(msg, &M)
+
+		R.Emisor = "Servidor"
+		R.Receptor = M.Emisor
+		R.Tipo = M.Tipo
+		R.Cartas = M.Cartas
+		R.Info = M.Info
 
 		if M.Tipo == "jugadores" {
 			partidas[s.Request.URL.Path] <- M.Info
@@ -272,7 +298,8 @@ func main() {
 			partidas[s.Request.URL.Path] <- M.Tipo
 			respuesta := <-partidas[s.Request.URL.Path]
 			fmt.Println(respuesta)
-		} else if M.Tipo == "Fin_partida" || M.Tipo == "Mostrar_mano" || M.Tipo == "Mostrar_tablero" || M.Tipo == "FIN" || M.Tipo == "END" {
+			R.Info = respuesta
+		} else if M.Tipo == "Fin_partida" || M.Tipo == "FIN" || M.Tipo == "END" {
 			partidas[s.Request.URL.Path] <- M.Tipo
 			respuesta := <-partidas[s.Request.URL.Path]
 			fmt.Println(respuesta)
@@ -300,8 +327,10 @@ func main() {
 				partidas[s.Request.URL.Path] <- "FIN"
 				respuesta := <-partidas[s.Request.URL.Path]
 				fmt.Println(respuesta)
+				R.Info = respuesta
 			} else {
 				fmt.Println(respuesta)
+				R.Info = respuesta
 			}
 		} else if M.Tipo == "Colocar_carta" {
 			partidas[s.Request.URL.Path] <- M.Tipo
@@ -313,8 +342,10 @@ func main() {
 				}
 				respuesta := <-partidas[s.Request.URL.Path]
 				fmt.Println(respuesta)
+				R.Info = respuesta
 			} else {
 				fmt.Println(respuesta)
+				R.Info = respuesta
 			}
 		} else if M.Tipo == "Descarte" {
 			partidas[s.Request.URL.Path] <- M.Tipo
@@ -323,12 +354,51 @@ func main() {
 				partidas[s.Request.URL.Path] <- M.Info
 				respuesta := <-partidas[s.Request.URL.Path]
 				fmt.Println(respuesta)
+				R.Info = respuesta
 			} else {
 				fmt.Println(respuesta)
+				R.Info = respuesta
+			}
+		} else if M.Tipo == "Mostrar_mano" {
+			partidas[s.Request.URL.Path] <- M.Tipo
+			respuesta := <-partidas[s.Request.URL.Path]
+			for respuesta != "fin" {
+				R.Cartas = append(R.Cartas, respuesta)
+				respuesta = <-partidas[s.Request.URL.Path]
+			}
+			fmt.Println(respuesta)
+		} else if M.Tipo == "Mostrar_tablero" {
+			partidas[s.Request.URL.Path] <- M.Tipo
+			respuesta := <-partidas[s.Request.URL.Path]
+			for respuesta != "fin" {
+				RT.Mazo = append(RT.Mazo, respuesta)
+				respuesta = <-partidas[s.Request.URL.Path]
+			}
+			respuesta = <-partidas[s.Request.URL.Path]
+			for respuesta != "fin" {
+				RT.Descartes = append(RT.Descartes, respuesta)
+				respuesta = <-partidas[s.Request.URL.Path]
+			}
+			respuesta = <-partidas[s.Request.URL.Path]
+			for respuesta != "fin" {	
+				var comb []string
+				for respuesta != "finC" {
+					comb = append(comb, respuesta)
+					respuesta = <-partidas[s.Request.URL.Path]
+				}
+				RT.Combinaciones = append(RT.Combinaciones, comb)
+				respuesta = <-partidas[s.Request.URL.Path]
 			}
 		}
 
-		msg, _ = json.MarshalIndent(&M, "", "\t")
+		if M.Tipo == "Mostrar_tablero" {
+			RT.Emisor = "Servidor"
+			RT.Receptor = M.Emisor
+			RT.Tipo = M.Tipo
+			msg, _ = json.MarshalIndent(&RT, "", "\t")
+		} else {
+			msg, _ = json.MarshalIndent(&R, "", "\t")
+		}
 
 		partidaNueva.BroadcastFilter(msg, func(q *melody.Session) bool { //Envia la información a todos con la misma url
 			return q.Request.URL.Path == s.Request.URL.Path

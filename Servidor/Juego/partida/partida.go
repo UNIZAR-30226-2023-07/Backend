@@ -184,13 +184,15 @@ func IniciarPartida(idPartida string, canalPartida chan string) *doublylinkedlis
 					for !carta_robada { //Mientras no hayan robado una carta
 						resp := <-espera
 						if resp == "Robar_carta" { //Accion de robar una carta
-							c := tablero.RobarCarta(t.Mazo, jugador.(jugadores.Jugador).Mano) //Obtenemos la carta del mazo y se la damos al jugador 
+							//tablero.RobarCarta(t.Mazo, jugador.(jugadores.Jugador).Mano)  //COMENTADO
+							c := tablero.RobarCarta(t.Mazo, jugador.(jugadores.Jugador).Mano) //Obtenemos la carta del mazo y se la damos al jugador //DESCOMENTAR
 							carta_robada = true
 							canalPartida <- strconv.Itoa(c.Valor) + "," + strconv.Itoa(c.Palo) + "," + strconv.Itoa(c.Color) //DESCOMENTAR
 							wait <- false
 						} else if resp == "Robar_carta_descartes" {
 							if t.Descartes.Size() > 0 {
-								c := tablero.RobarDescartes(t.Descartes, jugador.(jugadores.Jugador).Mano) //En caso de que haya, robamos la carta del mazo de descartes y se la damos al jugador
+								//tablero.RobarDescartes(t.Descartes, jugador.(jugadores.Jugador).Mano) //COMENTADO
+								c := tablero.RobarDescartes(t.Descartes, jugador.(jugadores.Jugador).Mano) //En caso de que haya, robamos la carta del mazo de descartes y se la damos al jugador //DESCOMENTAR
 								carta_robada = true
 								canalPartida <- strconv.Itoa(c.Valor) + "," + strconv.Itoa(c.Palo) + "," + strconv.Itoa(c.Color) //DESCOMENTAR
 							} else {
@@ -208,9 +210,50 @@ func IniciarPartida(idPartida string, canalPartida chan string) *doublylinkedlis
 						} else if resp == "Mostrar_mano" { //Comando para mostrar la mano
 							fmt.Println("Mostrando mano: ")
 							cartas.MostrarMano(jugador.(jugadores.Jugador).Mano) //Función que muestra la mano del jugador actual
+
+							// recorrer jugador.(jugadores.Jugador).Mano y pasar cada componente a string
+							for i := 0; i < jugador.(jugadores.Jugador).Mano.Size(); i++ { //DESCOMENTAR todo el for
+								carta,_ := jugador.(jugadores.Jugador).Mano.Get(i)
+								carta2 := carta.(cartas.Carta)
+								cartaString := strconv.Itoa(carta2.Valor) + "," + strconv.Itoa(carta2.Palo) + "," + strconv.Itoa(carta2.Color)
+								canalPartida <- cartaString
+							}
+							canalPartida <- "fin" //DESCOMENTAR
+
 							wait <- false
 						} else if resp == "Mostrar_tablero" { //Comando para mostrar el tablero
 							tablero.MostrarTablero(t) //Función para mostrar el tablero
+							// recorrer el mazo y pasar cada componente a string
+							for i := 0; i < t.Mazo.Size(); i++ { //DESCOMENTAR todo el for
+								carta,_ := t.Mazo.Get(i)
+								carta2 := carta.(cartas.Carta)
+								cartaString := strconv.Itoa(carta2.Valor) + "," + strconv.Itoa(carta2.Palo) + "," + strconv.Itoa(carta2.Color)
+								canalPartida <- cartaString
+							}
+							canalPartida <- "fin" //DESCOMENTAR
+							
+							// recorrer el mazo de descartes y pasar cada componente a string
+							for i := 0; i < t.Descartes.Size(); i++ { //DESCOMENTAR todo el for
+								carta,_ := t.Descartes.Get(i)
+								carta2 := carta.(cartas.Carta)
+								cartaString := strconv.Itoa(carta2.Valor) + "," + strconv.Itoa(carta2.Palo) + "," + strconv.Itoa(carta2.Color)
+								canalPartida <- cartaString
+							}
+							canalPartida <- "fin" //DESCOMENTAR
+
+							// recorrer las combinaciones y pasar cada componente a string
+							for e := t.Combinaciones.Back(); e != nil; e = e.Next() { //DESCOMENTAR todo el for
+								combinacion := e.Value.(*doublylinkedlist.List) 
+								for j := 0; j < combinacion.Size(); j++ {
+									carta,_ := combinacion.Get(j)
+									carta2 := carta.(cartas.Carta)
+									cartaString := strconv.Itoa(carta2.Valor) + "," + strconv.Itoa(carta2.Palo) + "," + strconv.Itoa(carta2.Color)
+									canalPartida <- cartaString
+								}
+								canalPartida <- "finC" //DESCOMENTAR
+							}
+							canalPartida <- "fin" //DESCOMENTAR
+
 							wait <- false
 						} else {
 							fmt.Println("Error, primero tienes que robar una carta")
@@ -222,6 +265,15 @@ func IniciarPartida(idPartida string, canalPartida chan string) *doublylinkedlis
 					if resp == "Mostrar_mano" {
 						fmt.Println("Mostrando mano: ")
 						cartas.MostrarMano(jugador.(jugadores.Jugador).Mano)
+						
+						// recorrer jugador.(jugadores.Jugador).Mano y pasar cada componente a string
+						for i := 0; i < jugador.(jugadores.Jugador).Mano.Size(); i++ { //DESCOMENTAR todo el for
+							carta,_ := jugador.(jugadores.Jugador).Mano.Get(i)
+							carta2 := carta.(cartas.Carta)
+							cartaString := strconv.Itoa(carta2.Valor) + "," + strconv.Itoa(carta2.Palo) + "," + strconv.Itoa(carta2.Color)
+							canalPartida <- cartaString
+						}
+						canalPartida <- "fin" //DESCOMENTAR
 						wait <- false
 					} else if resp == "Descarte" {
 						canalPartida <- "Ok" //DESCOMENTAR
@@ -270,6 +322,38 @@ func IniciarPartida(idPartida string, canalPartida chan string) *doublylinkedlis
 						}
 					} else if resp == "Mostrar_tablero" {
 						tablero.MostrarTablero(t)
+
+						// recorrer el mazo y pasar cada componente a string
+						for i := 0; i < t.Mazo.Size(); i++ { //DESCOMENTAR todo el for
+							carta,_ := t.Mazo.Get(i)
+							carta2 := carta.(cartas.Carta)
+							cartaString := strconv.Itoa(carta2.Valor) + "," + strconv.Itoa(carta2.Palo) + "," + strconv.Itoa(carta2.Color)
+							canalPartida <- cartaString
+						}
+						canalPartida <- "fin" //DESCOMENTAR
+						
+						// recorrer el mazo de descartes y pasar cada componente a string
+						for i := 0; i < t.Descartes.Size(); i++ { //DESCOMENTAR todo el for
+							carta,_ := t.Descartes.Get(i)
+							carta2 := carta.(cartas.Carta)
+							cartaString := strconv.Itoa(carta2.Valor) + "," + strconv.Itoa(carta2.Palo) + "," + strconv.Itoa(carta2.Color)
+							canalPartida <- cartaString
+						}
+						canalPartida <- "fin" //DESCOMENTAR
+
+						// recorrer las combinaciones y pasar cada componente a string
+						for e := t.Combinaciones.Back(); e != nil; e = e.Next() { //DESCOMENTAR todo el for
+							combinacion := e.Value.(*doublylinkedlist.List) 
+							for j := 0; j < combinacion.Size(); j++ {
+								carta,_ := combinacion.Get(j)
+								carta2 := carta.(cartas.Carta)
+								cartaString := strconv.Itoa(carta2.Valor) + "," + strconv.Itoa(carta2.Palo) + "," + strconv.Itoa(carta2.Color)
+								canalPartida <- cartaString
+							}
+							canalPartida <- "finC" //DESCOMENTAR
+						}
+						canalPartida <- "fin" //DESCOMENTAR
+
 						wait <- false
 					} else if resp == "Colocar_combinacion" { //Comando para colocar una nueva combinación en el tablero
 						if ab[id] == false {
