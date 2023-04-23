@@ -12,8 +12,8 @@ import (
 	//"math/rand"
 	"net/http"
 	//"strconv"
-	"strings"
 	"Juego/partida"
+	"strings"
 
 	"github.com/gin-contrib/static"
 	"github.com/gin-gonic/contrib/cors"
@@ -77,6 +77,9 @@ func main() {
 		//Modifica nombre, foto y descripción de un jugador
 		api.POST("/jugador/mod", Handlers.PostModJug)
 
+		//Devulve las partidas pendientes en las que participa el usuario
+		api.GET("/partidas/pausadas/get/:code", Handlers.GetPausadas)
+
 		//Devulve los mensajes de un usuario
 		api.GET("/msg/get/:code", Handlers.GetMsgList)
 
@@ -92,49 +95,36 @@ func main() {
 		api.POST("/partida/crear", func(c *gin.Context) {
 			// Generar identificador único para la partida que no sea ninguna clave existente
 			var code string
-			//for {
-			code = strconv.Itoa(rand.Intn(9999))
-			//if _, ok := partidas[code]; !ok {
-			//	break
-			//}
-			//}
+			for {
+				code = strconv.Itoa(rand.Intn(9999))
+				if _, ok := partidas[code]; !ok {
+					break
+				}
+			}
 
 			// Crear canal para la partida y almacenarlo en el mapa
 			partidas["/api/ws/partida/"+code] = make(chan string)
 
 			// Llamar a la función partida con el canal correspondiente
 			go partida.IniciarPartida(code, partidas["/api/ws/partida/"+code])
-			fmt.Println("Se ha iniciado la partida: ", code)
 
 			Handlers.CreatePartida(c, code)
 		})
 
 		//Unirse a un partida existente
-		api.POST("/partida/join", Handlers.JoinPartida)
+		api.POST("/partida/join", func(c *gin.Context) {
+			Handlers.JoinPartida(c, partidaNueva)
+		})
 
 		//Inicia una partida creada
 		api.GET("/partida/iniciar/:clave", func(c *gin.Context) {
-			//Retrasmitir mensaje a todo el ws
-			type Mensaje struct {
-				Emisor string   `json:"emisor"`
-				Tipo   string   `json:"tipo"`
-				Cartas []string `json:"cartas"`
-			}
+			Handlers.IniciarPartida(c, partidaNueva)
+		})
 
-			var M Mensaje
-
-			M.Emisor = "Servidor"
-			M.Tipo = "Patida Iniciada"
-
-			msg, _ := json.MarshalIndent(&M, "", "\t")
-
-			clave := c.Param("clave")
-
-			partidaNueva.BroadcastFilter(msg, func(q *melody.Session) bool { //Envia la información a todos con la misma url
-				return q.Request.URL.Path == "/api/ws/partida/"+clave
-			})
-
-			Handlers.IniciarPartida(c)
+		//Pausa una partida inciada
+		api.GET("/partida/pausar/:clave", func(c *gin.Context) {
+			//Faltará guardas en la BD las cartas que devuelva el juego
+			Handlers.PausarPartida(c, partidaNueva)
 		})
 
 		//ws para transmitir la inforación del juego
@@ -150,15 +140,6 @@ func main() {
 		})
 
 		//----------------Ejemplos-----------------------------//
-
-		//Ejemplo de paso de parametros por url
-		api.GET("/prueba/:param", getParam)
-
-		//Ejemplo para devolver más de un dato
-		api.GET("/prueba/names", getNames)
-
-		//Ejemplo para devolver structs de datos
-		//api.GET("/prueba/users", getUsers)
 
 		//Carga la página del chat/lobby
 		api.GET("/channel/:lobby", func(c *gin.Context) {
@@ -257,25 +238,24 @@ func main() {
 			Emisor string   `json:"emisor"`
 			Tipo   string   `json:"tipo"`
 			Cartas []string `json:"cartas"` // que sea ["1,2,3", "4,5,6", "7,8,9""]
-			Info  string   `json:"info"`
+			Info   string   `json:"info"`
 		}
 
 		type Respuesta struct {
-			Emisor string `json:"emisor"`
-			Receptor string `json:"receptor"`
-			Tipo   string `json:"tipo"`
-			Cartas []string `json:"cartas"` 
-			Info  string   `json:"info"`
+			Emisor   string   `json:"emisor"`
+			Receptor string   `json:"receptor"`
+			Tipo     string   `json:"tipo"`
+			Cartas   []string `json:"cartas"`
+			Info     string   `json:"info"`
 		}
 
 		type RespuestaTablero struct {
-			Emisor string `json:"emisor"`
-			Receptor string `json:"receptor"`
-			Tipo   string `json:"tipo"`
-			Mazo []string `json:"mazo"`
-			Descartes []string `json:"descartes"`
+			Emisor        string     `json:"emisor"`
+			Receptor      string     `json:"receptor"`
+			Tipo          string     `json:"tipo"`
+			Mazo          []string   `json:"mazo"`
+			Descartes     []string   `json:"descartes"`
 			Combinaciones [][]string `json:"combinaciones"`
-			
 		}
 
 		var M Mensaje
@@ -293,7 +273,7 @@ func main() {
 		if M.Tipo == "jugadores" {
 			partidas[s.Request.URL.Path] <- M.Info
 			respuesta := <-partidas[s.Request.URL.Path]
-			fmt.Println("Respuesta:",respuesta)
+			fmt.Println("Respuesta:", respuesta)
 		} else if M.Tipo == "Robar_carta" || M.Tipo == "Robar_carta_descartes" {
 			partidas[s.Request.URL.Path] <- M.Tipo
 			respuesta := <-partidas[s.Request.URL.Path]
@@ -317,13 +297,13 @@ func main() {
 					if i < len(M.Cartas)-1 {
 						partidas[s.Request.URL.Path] <- "END"
 						respuesta := <-partidas[s.Request.URL.Path]
-						if respuesta != "Ok" { 
+						if respuesta != "Ok" {
 							fmt.Println("Error:", respuesta)
 							goto SALIR
 						}
 					}
 				}
-				SALIR:
+			SALIR:
 				partidas[s.Request.URL.Path] <- "FIN"
 				respuesta := <-partidas[s.Request.URL.Path]
 				fmt.Println(respuesta)
@@ -380,7 +360,7 @@ func main() {
 				respuesta = <-partidas[s.Request.URL.Path]
 			}
 			respuesta = <-partidas[s.Request.URL.Path]
-			for respuesta != "fin" {	
+			for respuesta != "fin" {
 				var comb []string
 				for respuesta != "finC" {
 					comb = append(comb, respuesta)
@@ -408,28 +388,3 @@ func main() {
 	// Start and run the server
 	router.Run(":3001")
 }
-
-func getParam(c *gin.Context) {
-	param := c.Param("param")
-	c.JSON(http.StatusOK, gin.H{
-		"name": param,
-	})
-
-}
-
-func getNames(c *gin.Context) {
-	var param = []string{"Adolfo", "Adrián", "Agustín", "Aitor", "Aitor-tilla"}
-	c.JSON(http.StatusOK, gin.H{
-		"name": param,
-	})
-
-}
-
-/*
-func getUsers(c *gin.Context) {
-	var users = []Login{{"a@gmail.com", "1234"}, {"b@gmail.com", "5678"}, {"c@gmail.com", "91011"}, {"d@gmail.com", "1234"}}
-	c.JSON(http.StatusOK, gin.H{
-		"users": users,
-	})
-}
-*/

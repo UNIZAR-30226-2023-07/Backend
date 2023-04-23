@@ -1,24 +1,24 @@
 package VO
 
 type CartasVO struct {
-	numero int
-	palo   string
-	foto   []byte
+	valor   int
+	palo    int
+	reverso int
 }
 
-func NewCartasVO(numero int, palo string, foto []byte) *CartasVO {
-	c := CartasVO{numero: numero, palo: palo, foto: foto}
+func NewCartasVO(valor int, palo int, reverso int) *CartasVO {
+	c := CartasVO{valor: valor, palo: palo, reverso: reverso}
 	return &c
 }
 
-func (c *CartasVO) GetNumero() int {
-	return c.numero
+func (c *CartasVO) GetValor() int {
+	return c.valor
 }
 
-func (c *CartasVO) GetPalo() string {
+func (c *CartasVO) GetPalo() int {
 	return c.palo
 }
 
-func (c *CartasVO) GetFoto() []byte {
-	return c.foto
+func (c *CartasVO) GetReverso() int {
+	return c.reverso
 }
