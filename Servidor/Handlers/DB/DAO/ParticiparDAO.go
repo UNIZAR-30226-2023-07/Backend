@@ -67,8 +67,8 @@ func (pDAO *ParticiparDAO) ModLobby(p string, l int) {
 
 }
 
-// Crea una participación en la BD
-func (pDAO *ParticiparDAO) AsignarPuntos(pVO VO.ParticiparVO) {
+// Devuelve true si esa partida es un torneo
+func (pDAO *ParticiparDAO) EstaParticipando(p string, j string) bool {
 	//String para la conexión
 	psqlcon := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable", host, port, user, password, dbname)
 
@@ -79,9 +79,18 @@ func (pDAO *ParticiparDAO) AsignarPuntos(pVO VO.ParticiparVO) {
 	//cerrar base de datos
 	defer db.Close()
 
-	//Actualiazmos los puntos del usuario
-	puntos := "UPDATE PARTICIPAR SET puntos_resultado = ($1) WHERE partida = $2 AND jugador = $3"
-	_, e := db.Exec(puntos, pVO.GetPuntos(), pVO.GetPartida(), pVO.GetJugador())
-	CheckError(e)
+	res := false
+
+	//Buscamos si el jugador esta participando
+	isp := "SELECT * FROM PARTICIPAR WHERE partida = $1 AND jugador = $2"
+	rows, err := db.Query(isp, p, j)
+	CheckError(err)
+
+	defer rows.Close()
+	if rows.Next() {
+		res = true
+	}
+
+	return res
 
 }

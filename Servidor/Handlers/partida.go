@@ -4,7 +4,9 @@ import (
 	"DB/DAO"
 	"DB/VO"
 	"encoding/json"
+	"math/rand"
 	"net/http"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 	"github.com/olahol/melody"
@@ -36,9 +38,26 @@ func CreatePartida(c *gin.Context, clave string) {
 		return
 	}
 
-	pVO := VO.NewPartidasVO(clave, p.Anfitrion, p.Tipo, "")
-
 	pDAO := DAO.PartidasDAO{}
+
+	var pVO *VO.PartidasVO
+
+	if p.Tipo == "torneo" {
+
+		torneo := strconv.Itoa(rand.Intn(9999))
+		for pDAO.HayPartida(torneo) {
+			torneo = strconv.Itoa(rand.Intn(9999))
+		}
+
+		tVO := VO.NewPartidasVO(torneo, p.Anfitrion, p.Tipo, "", "")
+
+		pDAO.AddPartida(*tVO)
+
+		pVO = VO.NewPartidasVO(clave, p.Anfitrion, "amistosa", "", "")
+
+	} else {
+		pVO = VO.NewPartidasVO(clave, p.Anfitrion, p.Tipo, "", "")
+	}
 
 	pDAO.AddPartida(*pVO)
 
@@ -54,47 +73,113 @@ func CreatePartida(c *gin.Context, clave string) {
 
 }
 
-func JoinPartida(c *gin.Context, partidaNueva *melody.Melody) {
+func JoinPartida(c *gin.Context, partidaNueva *melody.Melody, nuevoLobby string) bool {
 
 	p := JoinPart{}
 
 	if err := c.BindJSON(&p); err != nil {
 		c.AbortWithError(http.StatusBadRequest, err)
-		return
+		return false
 	}
 
 	pDAO := DAO.PartidasDAO{}
 	parDAO := DAO.ParticiparDAO{}
 
-	if !pDAO.EstaLlena(p.Clave) {
+	if pDAO.EsTorneo(p.Clave) {
+		//Comprobamos si hay alguna sala vacía dentro del torneo
+		hay, sala := pDAO.HayPartidaTorneo(p.Clave)
 
-		if pDAO.EstaPausada(p.Clave) {
-			parDAO.ModLobbyJug(p.Codigo, p.Clave, 1)
-		} else {
-			parVO := VO.NewParticiparVO(p.Clave, p.Codigo, 1)
+		if hay { //Si hay una sala disponible lo añadimos
+
+			parVO := VO.NewParticiparVO(sala, p.Codigo, 1)
 			parDAO.AddParticipar(*parVO)
+
+			var M Mensaje
+
+			M.Emisor = "Servidor"
+			M.Tipo = "Nuevo_Jugador : " + p.Codigo
+
+			msg, _ := json.MarshalIndent(&M, "", "\t")
+
+			partidaNueva.BroadcastFilter(msg, func(q *melody.Session) bool { //Envia la información a todos con la misma url
+				return q.Request.URL.Path == "/api/ws/partida/"+p.Clave
+			})
+
+			c.JSON(http.StatusOK, gin.H{
+				"res": "ok",
+			})
+
+			return false
+
+		} else { //Si no hay salas disponibles creamos una
+
+			tVO := pDAO.GetPartida(p.Clave)
+
+			pVO := VO.NewPartidasVO(nuevoLobby, tVO.GetCreador(), "amistosa", "", p.Clave)
+			pDAO.AddPartida(*pVO)
+
+			parVO := VO.NewParticiparVO(nuevoLobby, p.Codigo, 1)
+			parDAO.AddParticipar(*parVO)
+
+			//Como será el primero entrar no hay que avisar de que entra
+			c.JSON(http.StatusOK, gin.H{
+				"res": nuevoLobby,
+			})
+
+			return true
 		}
 
-		var M Mensaje
+	} else { //Esta parte será comun en las partidas normales y en las continuadas
 
-		M.Emisor = "Servidor"
-		M.Tipo = "Nuevo_Jugador : " + p.Codigo
+		if pDAO.EstaPausada(p.Clave) && parDAO.EstaParticipando(p.Clave, p.Codigo) {
+			parDAO.ModLobbyJug(p.Codigo, p.Clave, 1)
 
-		msg, _ := json.MarshalIndent(&M, "", "\t")
+			var M Mensaje
 
-		partidaNueva.BroadcastFilter(msg, func(q *melody.Session) bool { //Envia la información a todos con la misma url
-			return q.Request.URL.Path == "/api/ws/partida/"+p.Clave
-		})
+			M.Emisor = "Servidor"
+			M.Tipo = "Nuevo_Jugador : " + p.Codigo
 
-		c.JSON(http.StatusOK, gin.H{
-			"res": "ok",
-		})
+			msg, _ := json.MarshalIndent(&M, "", "\t")
 
-	} else {
+			partidaNueva.BroadcastFilter(msg, func(q *melody.Session) bool { //Envia la información a todos con la misma url
+				return q.Request.URL.Path == "/api/ws/partida/"+p.Clave
+			})
 
-		c.JSON(http.StatusBadRequest, gin.H{
-			"res": "Sala llena",
-		})
+			c.JSON(http.StatusOK, gin.H{
+				"res": "ok",
+			})
+
+		} else {
+
+			if !pDAO.EstaLlena(p.Clave) {
+				parVO := VO.NewParticiparVO(p.Clave, p.Codigo, 1)
+				parDAO.AddParticipar(*parVO)
+
+				var M Mensaje
+
+				M.Emisor = "Servidor"
+				M.Tipo = "Nuevo_Jugador : " + p.Codigo
+
+				msg, _ := json.MarshalIndent(&M, "", "\t")
+
+				partidaNueva.BroadcastFilter(msg, func(q *melody.Session) bool { //Envia la información a todos con la misma url
+					return q.Request.URL.Path == "/api/ws/partida/"+p.Clave
+				})
+
+				c.JSON(http.StatusOK, gin.H{
+					"res": "ok",
+				})
+
+			} else {
+
+				c.JSON(http.StatusBadRequest, gin.H{
+					"res": "Sala llena",
+				})
+			}
+		}
+
+		return false
+
 	}
 
 }
@@ -119,17 +204,37 @@ func IniciarPartida(c *gin.Context, partidaNueva *melody.Melody) {
 
 		msg, _ := json.MarshalIndent(&M, "", "\t")
 
-		partidaNueva.BroadcastFilter(msg, func(q *melody.Session) bool { //Envia la información a todos con la misma url
-			return q.Request.URL.Path == "/api/ws/partida/"+p.Clave
-		})
+		if pDAO.EsTorneo(p.Clave) {
 
-		pDAO.IniciarPartida(p.Clave)
+			partidas := pDAO.GetPartidasTorneo(p.Clave)
 
-		if pDAO.EstaPausada(p.Clave) {
-			//Recuperar las cartas
-			//pDAO.DelTableroGuardado(p.Clave)	//Una vez recuperadas borramos la informacion
+			for i := 0; i < len(partidas); i++ {
+
+				partidaNueva.BroadcastFilter(msg, func(q *melody.Session) bool { //Envia la información a todos con la misma url
+					return q.Request.URL.Path == "/api/ws/partida/"+partidas[i]
+				})
+
+				pDAO.IniciarPartida(partidas[i])
+
+			}
+
+			//Repartir las cartas -> los torneos no se pueden parar
+
 		} else {
-			//Repartir las cartas
+
+			partidaNueva.BroadcastFilter(msg, func(q *melody.Session) bool { //Envia la información a todos con la misma url
+				return q.Request.URL.Path == "/api/ws/partida/"+p.Clave
+			})
+
+			pDAO.IniciarPartida(p.Clave)
+
+			if pDAO.EstaPausada(p.Clave) {
+				//Recuperar las cartas
+				//pDAO.DelTableroGuardado(p.Clave)	//Una vez recuperadas borramos la informacion
+			} else {
+				//Repartir las cartas
+			}
+
 		}
 
 		c.JSON(http.StatusOK, gin.H{
@@ -158,7 +263,9 @@ func PausarPartida(c *gin.Context, partidaNueva *melody.Melody) {
 	pDAO := DAO.PartidasDAO{}
 	parDAO := DAO.ParticiparDAO{}
 
-	if pDAO.HayPartida(p.Clave) && pDAO.EsCreador(p.Clave, p.Codigo) {
+	//POR AHORA LOS TONEOS NO SE PUEDEN PARAR!!
+
+	if pDAO.HayPartida(p.Clave) && pDAO.EsCreador(p.Clave, p.Codigo) && !pDAO.EsTorneo(p.Clave) {
 		pDAO.PausarPartida(p.Clave) //Marcamos partida como pausada
 
 		//Habrá que guardar las combinaciones, cada carta de cada jugador y el descarte

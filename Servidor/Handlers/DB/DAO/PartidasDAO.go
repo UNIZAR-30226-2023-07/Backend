@@ -23,8 +23,8 @@ func (pDAO *PartidasDAO) AddPartida(pVO VO.PartidasVO) {
 	defer db.Close()
 
 	//Añadir partida
-	addp := "INSERT INTO PARTIDAS VALUES ($1, $2, $3, 'creando')"
-	_, e := db.Exec(addp, pVO.GetClave(), pVO.GetCreador(), pVO.GetTipo())
+	addp := "INSERT INTO PARTIDAS VALUES ($1, $2, $3, 'creando', $4)"
+	_, e := db.Exec(addp, pVO.GetClave(), pVO.GetCreador(), pVO.GetTipo(), pVO.GetTorneo())
 	CheckError(e)
 
 }
@@ -54,6 +54,138 @@ func (pDAO *PartidasDAO) HayPartida(clave string) bool {
 	}
 
 	return res
+
+}
+
+// Devuelve true si esa partida es un torneo
+func (pDAO *PartidasDAO) EsTorneo(clave string) bool {
+	//String para la conexión
+	psqlcon := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable", host, port, user, password, dbname)
+
+	//abrir base de datos
+	db, err := sql.Open("postgres", psqlcon)
+	CheckError(err)
+
+	//cerrar base de datos
+	defer db.Close()
+
+	res := false
+
+	//Buscamos si existe ya alguna partida con esa clave y es torneo
+	isp := "SELECT * FROM PARTIDAS WHERE clave = $1 AND tipo = torneo"
+	rows, err := db.Query(isp, clave)
+	CheckError(err)
+
+	defer rows.Close()
+	if rows.Next() {
+		res = true
+	}
+
+	return res
+
+}
+
+// Devuelve true si hay hueco en una partida de un torneo
+func (pDAO *PartidasDAO) HayPartidaTorneo(torneo string) (bool, string) {
+	//String para la conexión
+	psqlcon := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable", host, port, user, password, dbname)
+
+	//abrir base de datos
+	db, err := sql.Open("postgres", psqlcon)
+	CheckError(err)
+
+	//cerrar base de datos
+	defer db.Close()
+
+	res := false
+	lobby := ""
+
+	//Buscamos si hay alguna sala con gente libre en el torneo
+	isp := "SELECT clave FROM PARTIDAS WHERE torneo = $1 AND torneo in not null AND EXISTS " +
+		"(SELECT COUNT(*) FROM PARTICIPAR WHERE partida = clave HAVING COUNT(*) < 5)"
+	rows, err := db.Query(isp, torneo)
+	CheckError(err)
+
+	defer rows.Close()
+	if rows.Next() {
+
+		err := rows.Scan(&lobby)
+		CheckError(err)
+		res = true
+	}
+
+	return res, lobby
+
+}
+
+// Devuelve la partida con clave clave
+func (pDAO *PartidasDAO) GetPartida(clave string) *VO.PartidasVO {
+	//String para la conexión
+	psqlcon := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable", host, port, user, password, dbname)
+
+	//abrir base de datos
+	db, err := sql.Open("postgres", psqlcon)
+	CheckError(err)
+
+	//cerrar base de datos
+	defer db.Close()
+
+	//Buscamos el creador del torneo
+	isp := "SELECT creador, tipo, estado, torneo FROM PARTIDAS WHERE clave = $1"
+	rows, err := db.Query(isp, clave)
+	CheckError(err)
+
+	var partida *VO.PartidasVO
+	defer rows.Close()
+	if rows.Next() {
+
+		var creador string
+		var tipo string
+		var estado string
+		var torneo string
+
+		err := rows.Scan(&creador, &tipo, &estado, &torneo)
+
+		partida = VO.NewPartidasVO(clave, creador, tipo, estado, torneo)
+		CheckError(err)
+
+	}
+
+	return partida
+
+}
+
+// Devuelve las claves de las partidas de un torneo
+func (pDAO *PartidasDAO) GetPartidasTorneo(clave string) []string {
+	//String para la conexión
+	psqlcon := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable", host, port, user, password, dbname)
+
+	//abrir base de datos
+	db, err := sql.Open("postgres", psqlcon)
+	CheckError(err)
+
+	//cerrar base de datos
+	defer db.Close()
+
+	//Buscamos el creador del torneo
+	isp := "SELECT clave FROM PARTIDAS WHERE torneo = $1"
+	rows, err := db.Query(isp, clave)
+	CheckError(err)
+
+	var partidas []string
+	defer rows.Close()
+	if rows.Next() {
+
+		var clave string
+
+		err := rows.Scan(&clave)
+		CheckError(err)
+
+		partidas = append(partidas, clave)
+
+	}
+
+	return partidas
 
 }
 

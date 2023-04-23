@@ -113,7 +113,25 @@ func main() {
 
 		//Unirse a un partida existente
 		api.POST("/partida/join", func(c *gin.Context) {
-			Handlers.JoinPartida(c, partidaNueva)
+
+			// Generar identificador único para la partida que no sea ninguna clave existente
+			var nuevoLobby string
+			for {
+				nuevoLobby = strconv.Itoa(rand.Intn(9999))
+				if _, ok := partidas[nuevoLobby]; !ok {
+					break
+				}
+			}
+
+			if Handlers.JoinPartida(c, partidaNueva, nuevoLobby) {
+
+				// Crear canal para la partida y almacenarlo en el mapa
+				partidas["/api/ws/partida/"+nuevoLobby] = make(chan string)
+
+				// Llamar a la función partida con el canal correspondiente
+				go partida.IniciarPartida(nuevoLobby, partidas["/api/ws/partida/"+nuevoLobby])
+
+			}
 		})
 
 		//Inicia una partida creada

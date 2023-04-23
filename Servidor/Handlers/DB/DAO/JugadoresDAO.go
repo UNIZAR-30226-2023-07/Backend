@@ -370,7 +370,7 @@ func (jDAO *JugadoresDAO) PartidasPausadas(j string) []*VO.PartidasVO {
 	defer db.Close()
 
 	//Obtenemos todos las partidas pausadas
-	qPausa := "SELECT p.clave, p.creador, p.tipo " +
+	qPausa := "SELECT p.clave, p.creador, p.tipo, p.torneo " +
 		"FROM PARTIDAS AS p JOIN PARTICIPAR AS pr ON p.clave = pr.partida " +
 		"WHERE p.estado = 'pausada' AND pr.jugador = $1 "
 	rows, err := db.Query(qPausa, j)
@@ -383,15 +383,34 @@ func (jDAO *JugadoresDAO) PartidasPausadas(j string) []*VO.PartidasVO {
 		var clave string
 		var creador string
 		var tipo string
+		var torneo string
 
-		err := rows.Scan(&clave, &creador, &tipo)
+		err := rows.Scan(&clave, &creador, &tipo, &torneo)
 		CheckError(err)
 
-		p := VO.NewPartidasVO(clave, clave, tipo, "pausada")
+		p := VO.NewPartidasVO(clave, clave, tipo, "pausada", torneo)
 		res = append(res, p)
 
 	}
 
 	return res
 
+}
+
+// Actualiza los puntos
+func (JDAO *JugadoresDAO) AddPuntos(code string, puntos int) {
+	//String para la conexión
+	psqlcon := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable", host, port, user, password, dbname)
+
+	//abrir base de datos
+	db, err := sql.Open("postgres", psqlcon)
+	CheckError(err)
+
+	//cerrar base de datos
+	defer db.Close()
+
+	//Actualizamos los puntos de un usuario
+	ap := "UPDATE JUGADORES SET puntos = ($1) WHERE codigo = $2"
+	_, e := db.Exec(ap, puntos, code)
+	CheckError(e)
 }
