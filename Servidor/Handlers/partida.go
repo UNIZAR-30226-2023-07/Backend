@@ -4,6 +4,7 @@ import (
 	"DB/DAO"
 	"DB/VO"
 	"encoding/json"
+	"fmt"
 	"math/rand"
 	"net/http"
 	"strconv"
@@ -53,10 +54,19 @@ func CreatePartida(c *gin.Context, clave string) {
 
 		pDAO.AddPartida(*tVO)
 
-		pVO = VO.NewPartidasVO(clave, p.Anfitrion, "amistosa", "", "")
+		pVO = VO.NewPartidasVO(clave, p.Anfitrion, "amistosa", "", torneo)
+
+		c.JSON(http.StatusOK, gin.H{
+			"clave": torneo,
+		})
 
 	} else {
+
 		pVO = VO.NewPartidasVO(clave, p.Anfitrion, p.Tipo, "", "")
+
+		c.JSON(http.StatusOK, gin.H{
+			"clave": clave,
+		})
 	}
 
 	pDAO.AddPartida(*pVO)
@@ -66,10 +76,6 @@ func CreatePartida(c *gin.Context, clave string) {
 	parVO := VO.NewParticiparVO(clave, p.Anfitrion, 0)
 
 	parDAO.AddParticipar(*parVO)
-
-	c.JSON(http.StatusOK, gin.H{
-		"clave": clave,
-	})
 
 }
 
@@ -149,16 +155,17 @@ func JoinPartida(c *gin.Context, partidaNueva *melody.Melody, nuevoLobby string)
 				"res": "ok",
 			})
 
-		} else {
+		} else if !pDAO.EstaPausada(p.Clave) {
 
 			if !pDAO.EstaLlena(p.Clave) {
+
 				parVO := VO.NewParticiparVO(p.Clave, p.Codigo, 1)
 				parDAO.AddParticipar(*parVO)
 
 				var M Mensaje
 
 				M.Emisor = "Servidor"
-				M.Tipo = "Nuevo_Jugador : " + p.Codigo
+				M.Tipo = "Nuevo_Jugador: " + p.Codigo
 
 				msg, _ := json.MarshalIndent(&M, "", "\t")
 
@@ -176,6 +183,12 @@ func JoinPartida(c *gin.Context, partidaNueva *melody.Melody, nuevoLobby string)
 					"res": "Sala llena",
 				})
 			}
+
+		} else {
+
+			c.JSON(http.StatusBadRequest, gin.H{
+				"res": "error",
+			})
 		}
 
 		return false
@@ -207,6 +220,8 @@ func IniciarPartida(c *gin.Context, partidaNueva *melody.Melody) {
 		if pDAO.EsTorneo(p.Clave) {
 
 			partidas := pDAO.GetPartidasTorneo(p.Clave)
+
+			fmt.Println(partidas)
 
 			for i := 0; i < len(partidas); i++ {
 
@@ -265,7 +280,10 @@ func PausarPartida(c *gin.Context, partidaNueva *melody.Melody) {
 
 	//POR AHORA LOS TONEOS NO SE PUEDEN PARAR!!
 
-	if pDAO.HayPartida(p.Clave) && pDAO.EsCreador(p.Clave, p.Codigo) && !pDAO.EsTorneo(p.Clave) {
+	pVO := pDAO.GetPartida(p.Clave)
+	fmt.Println(pVO)
+
+	if pVO.GetCreador() == p.Codigo && pVO.GetTorneo() == "" && pVO.GetTipo() != "torneo" {
 		pDAO.PausarPartida(p.Clave) //Marcamos partida como pausada
 
 		//Habrá que guardar las combinaciones, cada carta de cada jugador y el descarte
@@ -297,33 +315,4 @@ func PausarPartida(c *gin.Context, partidaNueva *melody.Melody) {
 		})
 	}
 
-}
-
-func GetPausadas(c *gin.Context) {
-	code := c.Param("code")
-
-	jDAO := DAO.JugadoresDAO{}
-
-	part := jDAO.PartidasPausadas(code)
-
-	type Partida struct {
-		Tipo    string
-		Creador string
-		Clave   string
-	}
-
-	var partidas []Partida
-
-	for i := 0; i < len(part); i++ {
-		p := Partida{
-			Tipo:    part[i].GetTipo(),
-			Creador: part[i].GetCreador(),
-			Clave:   part[i].GetClave(),
-		}
-		partidas = append(partidas, p)
-	}
-
-	c.JSON(http.StatusOK, gin.H{
-		"partidas": partidas,
-	})
 }

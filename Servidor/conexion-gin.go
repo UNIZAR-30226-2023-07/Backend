@@ -135,12 +135,12 @@ func main() {
 		})
 
 		//Inicia una partida creada
-		api.GET("/partida/iniciar/:clave", func(c *gin.Context) {
+		api.POST("/partida/iniciar", func(c *gin.Context) {
 			Handlers.IniciarPartida(c, partidaNueva)
 		})
 
 		//Pausa una partida inciada
-		api.GET("/partida/pausar/:clave", func(c *gin.Context) {
+		api.POST("/partida/pausar", func(c *gin.Context) {
 			//Faltará guardas en la BD las cartas que devuelva el juego
 			Handlers.PausarPartida(c, partidaNueva)
 		})

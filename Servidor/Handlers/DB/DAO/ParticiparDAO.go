@@ -42,7 +42,7 @@ func (pDAO *ParticiparDAO) ModLobbyJug(j string, p string, l int) {
 	defer db.Close()
 
 	//Modifica enlobby de un jugador
-	modL := "UPDATE PARTICIPAR SET (enlobby) = $3 WHERE partida = $2 AND jugador = $1"
+	modL := "UPDATE PARTICIPAR SET enlobby = $3 WHERE partida = $2 AND jugador = $1"
 	_, e := db.Exec(modL, j, p, l)
 	CheckError(e)
 
@@ -61,7 +61,7 @@ func (pDAO *ParticiparDAO) ModLobby(p string, l int) {
 	defer db.Close()
 
 	//Modifica enlobby de todos los jugadores de una partida
-	modL := "UPDATE PARTICIPAR SET (enlobby) = $2 WHERE partida = $1"
+	modL := "UPDATE PARTICIPAR SET enlobby = $2 WHERE partida = $1"
 	_, e := db.Exec(modL, p, l)
 	CheckError(e)
 

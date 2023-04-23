@@ -72,7 +72,7 @@ func (pDAO *PartidasDAO) EsTorneo(clave string) bool {
 	res := false
 
 	//Buscamos si existe ya alguna partida con esa clave y es torneo
-	isp := "SELECT * FROM PARTIDAS WHERE clave = $1 AND tipo = torneo"
+	isp := "SELECT * FROM PARTIDAS WHERE clave = $1 AND tipo = 'torneo'"
 	rows, err := db.Query(isp, clave)
 	CheckError(err)
 
@@ -101,7 +101,7 @@ func (pDAO *PartidasDAO) HayPartidaTorneo(torneo string) (bool, string) {
 	lobby := ""
 
 	//Buscamos si hay alguna sala con gente libre en el torneo
-	isp := "SELECT clave FROM PARTIDAS WHERE torneo = $1 AND torneo in not null AND EXISTS " +
+	isp := "SELECT clave FROM PARTIDAS WHERE torneo = $1 AND torneo is not null AND EXISTS " +
 		"(SELECT COUNT(*) FROM PARTICIPAR WHERE partida = clave HAVING COUNT(*) < 5)"
 	rows, err := db.Query(isp, torneo)
 	CheckError(err)
@@ -142,7 +142,7 @@ func (pDAO *PartidasDAO) GetPartida(clave string) *VO.PartidasVO {
 		var creador string
 		var tipo string
 		var estado string
-		var torneo string
+		torneo := ""
 
 		err := rows.Scan(&creador, &tipo, &estado, &torneo)
 
@@ -174,7 +174,7 @@ func (pDAO *PartidasDAO) GetPartidasTorneo(clave string) []string {
 
 	var partidas []string
 	defer rows.Close()
-	if rows.Next() {
+	for rows.Next() {
 
 		var clave string
 
@@ -260,7 +260,7 @@ func (pDAO *PartidasDAO) EstaLlena(clave string) bool {
 	res := false
 
 	//Buscamos si hay mas de cinco jugadores
-	fullp := "SELECT COUNT(*) FROM PARTICIPAR WHERE partida = $1 HAVING COUNT(*) > 5"
+	fullp := "SELECT COUNT(*) FROM PARTICIPAR WHERE partida = $1 HAVING COUNT(*) > 4"
 	rows, err := db.Query(fullp, clave)
 	CheckError(err)
 
@@ -288,7 +288,7 @@ func (pDAO *PartidasDAO) EstaPausada(p string) bool {
 	res := false
 
 	//Comprobamos si j es el creador de la partida
-	esp := "SELECT * FROM PARTIDAS WHERE clave = $1 AND estado = pausada"
+	esp := "SELECT * FROM PARTIDAS WHERE clave = $1 AND estado = 'pausada'"
 	rows, err := db.Query(esp, p)
 	CheckError(err)
 
@@ -316,7 +316,7 @@ func (pDAO *PartidasDAO) EsCreador(p string, j string) bool {
 	res := false
 
 	//Comprobamos si j es el creador de la partida
-	esc := "SELECT COUNT(*) FROM PARTIDAS WHERE clave = $1 AND creador = $2"
+	esc := "SELECT * FROM PARTIDAS WHERE clave = $1 AND creador = $2"
 	rows, err := db.Query(esc, p, j)
 	CheckError(err)
 

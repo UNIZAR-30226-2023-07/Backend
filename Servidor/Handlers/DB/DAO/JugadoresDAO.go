@@ -9,7 +9,7 @@ import (
 )
 
 const (
-	host     = "52.174.124.24"
+	host     = "192.168.56.5"
 	port     = "5432"
 	user     = "frances"
 	password = "1234"
@@ -388,7 +388,7 @@ func (jDAO *JugadoresDAO) PartidasPausadas(j string) []*VO.PartidasVO {
 		err := rows.Scan(&clave, &creador, &tipo, &torneo)
 		CheckError(err)
 
-		p := VO.NewPartidasVO(clave, clave, tipo, "pausada", torneo)
+		p := VO.NewPartidasVO(clave, creador, tipo, "pausada", torneo)
 		res = append(res, p)
 
 	}

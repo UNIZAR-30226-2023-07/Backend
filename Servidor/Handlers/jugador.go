@@ -79,3 +79,32 @@ func GetInfoUsuario2(c *gin.Context) {
 	}
 
 }
+
+func GetPausadas(c *gin.Context) {
+	code := c.Param("code")
+
+	jDAO := DAO.JugadoresDAO{}
+
+	part := jDAO.PartidasPausadas(code)
+
+	type Partida struct {
+		Tipo    string
+		Creador string
+		Clave   string
+	}
+
+	var partidas []Partida
+
+	for i := 0; i < len(part); i++ {
+		p := Partida{
+			Tipo:    part[i].GetTipo(),
+			Creador: part[i].GetCreador(),
+			Clave:   part[i].GetClave(),
+		}
+		partidas = append(partidas, p)
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"partidas": partidas,
+	})
+}
