@@ -142,7 +142,8 @@ func main() {
 		//Pausa una partida inciada
 		api.POST("/partida/pausar", func(c *gin.Context) {
 			//Faltará guardas en la BD las cartas que devuelva el juego
-			Handlers.PausarPartida(c, partidaNueva)
+			code := c.Param("clave")
+			Handlers.PausarPartida(c, partidaNueva, partidas["api/ws/partida/"+code])
 		})
 
 		//ws para transmitir la inforación del juego

@@ -266,7 +266,7 @@ func IniciarPartida(c *gin.Context, partidaNueva *melody.Melody) {
 
 }
 
-func PausarPartida(c *gin.Context, partidaNueva *melody.Melody) {
+func PausarPartida(c *gin.Context, partidaNueva *melody.Melody, partida chan string) {
 
 	p := JoinPart{}
 	//Con el binding guardamos el json de la petición en u que es de tipo login
@@ -285,6 +285,49 @@ func PausarPartida(c *gin.Context, partidaNueva *melody.Melody) {
 
 	if pVO.GetCreador() == p.Codigo && pVO.GetTorneo() == "" && pVO.GetTipo() != "torneo" {
 		pDAO.PausarPartida(p.Clave) //Marcamos partida como pausada
+
+		var Mazo []string
+		var Descartes []string
+		var Combinaciones [][]string
+		var Manos [][]string
+		partida <- "Pausar"
+		// Devuelve el tablero: mazo, descartes y combinaciones
+		respuesta := <-partida
+		for respuesta != "fin" {
+			Mazo = append(Mazo, respuesta)
+			respuesta = <-partida
+		}
+		respuesta = <-partida
+		for respuesta != "fin" {
+			Descartes = append(Descartes, respuesta)
+			respuesta = <-partida
+		}
+		respuesta = <-partida
+		for respuesta != "fin" {
+			var comb []string
+			for respuesta != "finC" {
+				comb = append(comb, respuesta)
+				respuesta = <-partida
+			}
+			Combinaciones = append(Combinaciones, comb)
+			respuesta = <-partida
+		}
+
+		// Lista con la mano de cada jugador --> [["1,2,3","4,5,6"],["1,2,3","4,5,6]] --> cada string es valor,palo,color y cada lista es una mano
+		respuesta = <-partida
+		for respuesta != "fin" {
+			var mano []string
+			for respuesta != "finJ" {
+				mano = append(mano, respuesta)
+				respuesta = <-partida
+			}
+			Manos = append(Manos, mano)
+			respuesta = <-partida
+		}
+
+		// no se que funcion del dao sería pero habria que guardar el mazo para robar(Mazo), el descarte(Descartes) y las combinaciones(Combinaciones), y tambien
+		// las manos de cada jugador(Manos). Los jugadores están ordenados segun el turno que tienen.
+
 
 		//Habrá que guardar las combinaciones, cada carta de cada jugador y el descarte
 		//pDAO.AddCartaMazo(m)
