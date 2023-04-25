@@ -8,6 +8,7 @@ import (
 	"math/rand"
 	"net/http"
 	"strconv"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 	"github.com/olahol/melody"
@@ -73,7 +74,7 @@ func CreatePartida(c *gin.Context, clave string) {
 
 	parDAO := DAO.ParticiparDAO{}
 
-	parVO := VO.NewParticiparVO(clave, p.Anfitrion, 0)
+	parVO := VO.NewParticiparVO(clave, p.Anfitrion, 1, 0)
 
 	parDAO.AddParticipar(*parVO)
 
@@ -97,7 +98,7 @@ func JoinPartida(c *gin.Context, partidaNueva *melody.Melody, nuevoLobby string)
 
 		if hay { //Si hay una sala disponible lo añadimos
 
-			parVO := VO.NewParticiparVO(sala, p.Codigo, 1)
+			parVO := VO.NewParticiparVO(sala, p.Codigo, 1, pDAO.NJugadoresPartida(p.Clave)+1)
 			parDAO.AddParticipar(*parVO)
 
 			var M Mensaje
@@ -124,7 +125,7 @@ func JoinPartida(c *gin.Context, partidaNueva *melody.Melody, nuevoLobby string)
 			pVO := VO.NewPartidasVO(nuevoLobby, tVO.GetCreador(), "amistosa", "", p.Clave)
 			pDAO.AddPartida(*pVO)
 
-			parVO := VO.NewParticiparVO(nuevoLobby, p.Codigo, 1)
+			parVO := VO.NewParticiparVO(nuevoLobby, p.Codigo, 1, 0)
 			parDAO.AddParticipar(*parVO)
 
 			//Como será el primero entrar no hay que avisar de que entra
@@ -157,9 +158,10 @@ func JoinPartida(c *gin.Context, partidaNueva *melody.Melody, nuevoLobby string)
 
 		} else if !pDAO.EstaPausada(p.Clave) {
 
-			if !pDAO.EstaLlena(p.Clave) {
+			n := pDAO.NJugadoresPartida(p.Clave)
+			if n <= 4 {
 
-				parVO := VO.NewParticiparVO(p.Clave, p.Codigo, 1)
+				parVO := VO.NewParticiparVO(p.Clave, p.Codigo, 1, n+1)
 				parDAO.AddParticipar(*parVO)
 
 				var M Mensaje
@@ -266,7 +268,7 @@ func IniciarPartida(c *gin.Context, partidaNueva *melody.Melody) {
 
 }
 
-func PausarPartida(c *gin.Context, partidaNueva *melody.Melody, partida chan string) {
+func PausarPartida(c *gin.Context, partidaNueva *melody.Melody, partidas map[string]chan string) {
 
 	p := JoinPart{}
 	//Con el binding guardamos el json de la petición en u que es de tipo login
@@ -274,6 +276,8 @@ func PausarPartida(c *gin.Context, partidaNueva *melody.Melody, partida chan str
 		c.AbortWithError(http.StatusBadRequest, err)
 		return
 	}
+
+	partida := partidas["api/ws/partida/"+p.Clave]
 
 	pDAO := DAO.PartidasDAO{}
 	parDAO := DAO.ParticiparDAO{}
@@ -325,14 +329,33 @@ func PausarPartida(c *gin.Context, partidaNueva *melody.Melody, partida chan str
 			respuesta = <-partida
 		}
 
-		// no se que funcion del dao sería pero habria que guardar el mazo para robar(Mazo), el descarte(Descartes) y las combinaciones(Combinaciones), y tambien
-		// las manos de cada jugador(Manos). Los jugadores están ordenados segun el turno que tienen.
+		//Guardamos combinaciones en la BD
+		for i := 0; i < len(Combinaciones); i++ {
+			for j := 0; j < len(Combinaciones[i]); j++ {
+				comb := strings.Split(Combinaciones[i][j], ",")
+				carta, _ := strconv.Atoi((comb[0] + comb[1] + comb[2]))
+				c := VO.NewCombinacionesVO(p.Clave, carta, i)
+				pDAO.AddCombinacion(*c)
+			}
+		}
 
+		//Guardamos los descartes en la BD
+		for j := 0; j < len(Descartes); j++ {
+			desc := strings.Split(Descartes[j], ",")
+			carta, _ := strconv.Atoi((desc[0] + desc[1] + desc[2]))
+			d := VO.NewDescartesVO(p.Clave, carta)
+			pDAO.AddDescarte(*d)
+		}
 
-		//Habrá que guardar las combinaciones, cada carta de cada jugador y el descarte
-		//pDAO.AddCartaMazo(m)
-		//pDAO.AddCombinacion(c)
-		//pDAO.AddDescarte(d)
+		//Guardamos el mazo de cada jugador (Por ahora no guardamos turno)
+		for i := 0; i < len(Manos); i++ {
+			for j := 0; j < len(Manos[i]); j++ {
+				man := strings.Split(Manos[i][j], ",")
+				carta, _ := strconv.Atoi((man[0] + man[1] + man[2]))
+				m := VO.NewMazosVO(i, p.Clave, carta)
+				pDAO.AddCartaMazo(*m)
+			}
+		}
 
 		parDAO.ModLobby(p.Clave, 0) //Guardamos que los jugadores ya no estan en lobby o jugando
 

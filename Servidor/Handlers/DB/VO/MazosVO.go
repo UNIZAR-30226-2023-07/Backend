@@ -1,18 +1,18 @@
 package VO
 
 type MazosVO struct {
-	jugador string
+	turno   int
 	partida string
 	carta   int
 }
 
-func NewMazosVO(jugador string, partida string, carta int) *MazosVO {
-	m := MazosVO{jugador: jugador, partida: partida, carta: carta}
+func NewMazosVO(turno int, partida string, carta int) *MazosVO {
+	m := MazosVO{turno: turno, partida: partida, carta: carta}
 	return &m
 }
 
-func (m *MazosVO) GetJugador() string {
-	return m.jugador
+func (m *MazosVO) GetTurno() int {
+	return m.turno
 }
 
 func (m *MazosVO) GetPartida() string {

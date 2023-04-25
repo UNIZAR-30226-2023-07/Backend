@@ -246,7 +246,7 @@ func (pDAO *PartidasDAO) IniciarPartida(clave string) {
 }
 
 // Devuelve true si la partida esta llena
-func (pDAO *PartidasDAO) EstaLlena(clave string) bool {
+func (pDAO *PartidasDAO) NJugadoresPartida(clave string) int {
 	//String para la conexión
 	psqlcon := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable", host, port, user, password, dbname)
 
@@ -257,16 +257,17 @@ func (pDAO *PartidasDAO) EstaLlena(clave string) bool {
 	//cerrar base de datos
 	defer db.Close()
 
-	res := false
+	res := 0
 
 	//Buscamos si hay mas de cinco jugadores
-	fullp := "SELECT COUNT(*) FROM PARTICIPAR WHERE partida = $1 HAVING COUNT(*) > 4"
+	fullp := "SELECT COUNT(*) FROM PARTICIPAR WHERE partida = $1"
 	rows, err := db.Query(fullp, clave)
 	CheckError(err)
 
 	defer rows.Close()
 	if rows.Next() {
-		res = true
+		err := rows.Scan(&res)
+		CheckError(err)
 	}
 
 	return res
@@ -402,7 +403,7 @@ func (pDAO *PartidasDAO) AddCartaMazo(m VO.MazosVO) {
 
 	//Añadimos una nueva carta al mazo de un jugador en la BD
 	addm := "INSERT INTO MAZOS VALUES (DEFAULT, $1, $2, $3)"
-	_, err = db.Exec(addm, m.GetPartida(), m.GetCarta(), m.GetJugador())
+	_, err = db.Exec(addm, m.GetPartida(), m.GetCarta(), m.GetTurno())
 	CheckError(err)
 }
 
@@ -476,7 +477,9 @@ func (pDAO *PartidasDAO) GetMazo(p string, j string) []*VO.CartasVO {
 	defer db.Close()
 
 	//Obtenemos todas las combinaciones de una partida
-	qMaz := "SELECT carta FROM MAZOS WHERE partida = $1 and jugador = $2"
+	qMaz := "SELECT m.carta " +
+		"FROM MAZOS AS m JOIN PARTICIPAR AS p ON m.turno = p.turno AND m.partida = p.partida " +
+		"WHERE m.partida = $1 and p.jugador = $2"
 	rows, err := db.Query(qMaz, p, j)
 	CheckError(err)
 

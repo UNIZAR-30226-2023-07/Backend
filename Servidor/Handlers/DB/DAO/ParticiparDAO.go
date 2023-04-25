@@ -23,8 +23,8 @@ func (pDAO *ParticiparDAO) AddParticipar(pVO VO.ParticiparVO) {
 	defer db.Close()
 
 	//Añadir participación
-	addp := "INSERT INTO PARTICIPAR (partida, jugador, puntos_resultado, enlobby) VALUES ($1, $2, 0, 1)"
-	_, e := db.Exec(addp, pVO.GetPartida(), pVO.GetJugador())
+	addp := "INSERT INTO PARTICIPAR (partida, jugador, puntos_resultado, enlobby) VALUES ($1, $2, 0, 1, $3)"
+	_, e := db.Exec(addp, pVO.GetPartida(), pVO.GetJugador(), pVO.GetTurno())
 	CheckError(e)
 
 }

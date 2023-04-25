@@ -36,6 +36,7 @@ CREATE TABLE PARTICIPAR (
 	jugador 	text REFERENCES JUGADORES (codigo),
 	puntos_resultado integer NOT NULL,
 	enlobby 	integer NOT NULL,
+	turno 		integer NOT NULL,
 	UNIQUE (partida, jugador),
 	PRIMARY KEY (id)
 );
@@ -80,7 +81,7 @@ CREATE TABLE MAZOS (
 	id 			serial,
 	partida 	text REFERENCES PARTIDAS (clave),
 	carta 		serial REFERENCES CARTAS (id),
-	jugador 	text REFERENCES JUGADORES (codigo),
+	turno 		integer REFERENCES PARTICIPAR (turno),
 	UNIQUE(partida, carta),
 	PRIMARY KEY (id)
 );
