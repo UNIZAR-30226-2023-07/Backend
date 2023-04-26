@@ -37,6 +37,7 @@ CREATE TABLE PARTICIPAR (
 	puntos_resultado integer NOT NULL,
 	enlobby 	integer NOT NULL,
 	turno 		integer NOT NULL,
+	UNIQUE (partida, turno),
 	UNIQUE (partida, jugador),
 	PRIMARY KEY (id)
 );
