@@ -276,9 +276,22 @@ func main() {
 			Combinaciones [][]string `json:"combinaciones"`
 		}
 
+		type RespuestaDescarte struct {
+			Emisor        string     `json:"emisor"`
+			Receptor      string     `json:"receptor"`
+			Tipo          string     `json:"tipo"`
+			Info     	  string   	 `json:"info"`
+			Descartes     []string   `json:"descartes"`
+			Combinaciones [][]string `json:"combinaciones"`
+			Turno		  string	 `json:"turno"`
+			Abrir		  string 	 `json:"abrir"`
+			Ganador		  string 	 `json:"ganador"`
+		}
+
 		var M Mensaje
 		var R Respuesta
 		var RT RespuestaTablero
+		var RD RespuestaDescarte
 
 		json.Unmarshal(msg, &M)
 
@@ -335,7 +348,8 @@ func main() {
 			respuesta := <-partidas[s.Request.URL.Path]
 			if respuesta == "Ok" {
 				parametros := strings.Split(M.Info, ",")
-				for i := 0; i < len(parametros); i++ {
+				partidas[s.Request.URL.Path] <- parametros[0]
+				for i := 1; i < len(parametros); i++ {
 					partidas[s.Request.URL.Path] <- parametros[i]
 				}
 				respuesta := <-partidas[s.Request.URL.Path]
@@ -348,14 +362,42 @@ func main() {
 		} else if M.Tipo == "Descarte" {
 			partidas[s.Request.URL.Path] <- M.Tipo
 			respuesta := <-partidas[s.Request.URL.Path]
+			fmt.Println(respuesta)
+			RD.Info = respuesta
 			if respuesta == "Ok" {
 				partidas[s.Request.URL.Path] <- M.Info
-				respuesta := <-partidas[s.Request.URL.Path]
+				respuesta := <-partidas[s.Request.URL.Path] // info
 				fmt.Println(respuesta)
-				R.Info = respuesta
-			} else {
-				fmt.Println(respuesta)
-				R.Info = respuesta
+				RD.Info = respuesta
+				if respuesta == "Ok" {
+					respuesta = <-partidas[s.Request.URL.Path]
+					for respuesta != "fin" {	// Descartes
+						RD.Descartes = append(RD.Descartes, respuesta)
+						respuesta = <-partidas[s.Request.URL.Path]
+					}
+					respuesta = <-partidas[s.Request.URL.Path]
+					for respuesta != "fin" { // Combinaciones
+						var comb []string
+						for respuesta != "finC" {
+							comb = append(comb, respuesta)
+							respuesta = <-partidas[s.Request.URL.Path]
+						}
+						RD.Combinaciones = append(RD.Combinaciones, comb)
+						respuesta = <-partidas[s.Request.URL.Path]
+					}
+					respuesta = <-partidas[s.Request.URL.Path] // ganador
+					if respuesta == "ganador" {
+						respuesta = <-partidas[s.Request.URL.Path] 
+						RD.Ganador = respuesta 
+					} else {
+						respuesta = <-partidas[s.Request.URL.Path] // turno
+						RD.Turno = respuesta
+						respuesta = <-partidas[s.Request.URL.Path] // abrir
+						RD.Abrir = respuesta
+					}
+
+					fmt.Println(RD.Info)
+				}
 			}
 		} else if M.Tipo == "Mostrar_mano" {
 			partidas[s.Request.URL.Path] <- M.Tipo
@@ -365,7 +407,7 @@ func main() {
 				respuesta = <-partidas[s.Request.URL.Path]
 			}
 			fmt.Println(respuesta)
-		} else if M.Tipo == "Mostrar_tablero" {
+		} else if M.Tipo == "Mostrar_tablero" { // este no se usa
 			partidas[s.Request.URL.Path] <- M.Tipo
 			respuesta := <-partidas[s.Request.URL.Path]
 			for respuesta != "fin" {
@@ -394,6 +436,11 @@ func main() {
 			RT.Receptor = M.Emisor
 			RT.Tipo = M.Tipo
 			msg, _ = json.MarshalIndent(&RT, "", "\t")
+		} else if M.Tipo == "Descartes" {
+			RD.Emisor = "Servidor"
+			RD.Receptor = "todos"
+			RD.Tipo = M.Tipo
+			msg, _ = json.MarshalIndent(&RD, "", "\t")
 		} else {
 			msg, _ = json.MarshalIndent(&R, "", "\t")
 		}

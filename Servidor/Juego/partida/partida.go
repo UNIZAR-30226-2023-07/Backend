@@ -40,9 +40,7 @@ func inicio_turno(espera chan string, wait chan bool, canalPartida chan string) 
 		if input == "Fin_partida" {
 			fin = true
 			fmt.Println("FINAL")
-			//canalPartida <- "fin" //DESCOMENTAR
 		} else if input == "Pausar" {
-			//pausar(t, canalPartida, listaJ) //DESCOMENTAR
 			fmt.Println("hola")
 			fin = true
 			fmt.Println("FINAL")
@@ -359,7 +357,7 @@ func IniciarPartida(idPartida string, canalPartida chan string) *doublylinkedlis
 						} else {
 							canalPartida <- "Ok"
 						} 
-						for i_input > aux {
+						/*for i_input > aux {
 							fmt.Println("Valor no valido, introduzca una carta correcta")
 							//fmt.Scanln(&input) //El usuario deberá de introducir el ID necesario //COMENTADO
 							input = <- canalPartida //DESCOMENTAR
@@ -373,18 +371,52 @@ func IniciarPartida(idPartida string, canalPartida chan string) *doublylinkedlis
 							} else {
 								canalPartida <- "Ok"
 							}
+						}*/
+						
+						// devolver descartes y combinaciones
+						// recorrer el mazo de descartes y pasar cada componente a string
+						for i := 0; i < t.Descartes.Size(); i++ { //DESCOMENTAR todo el for
+							carta,_ := t.Descartes.Get(i)
+							carta2 := carta.(cartas.Carta)
+							cartaString := strconv.Itoa(carta2.Valor) + "," + strconv.Itoa(carta2.Palo) + "," + strconv.Itoa(carta2.Color)
+							canalPartida <- cartaString
 						}
+						canalPartida <- "fin" //DESCOMENTAR
+
+						// recorrer las combinaciones y pasar cada componente a string
+						for e := t.Combinaciones.Back(); e != nil; e = e.Next() { //DESCOMENTAR todo el for
+							combinacion := e.Value.(*doublylinkedlist.List) 
+							for j := 0; j < combinacion.Size(); j++ {
+								carta,_ := combinacion.Get(j)
+								carta2 := carta.(cartas.Carta)
+								cartaString := strconv.Itoa(carta2.Valor) + "," + strconv.Itoa(carta2.Palo) + "," + strconv.Itoa(carta2.Color)
+								canalPartida <- cartaString
+							}
+							canalPartida <- "finC" //DESCOMENTAR
+						}
+						canalPartida <- "fin" //DESCOMENTAR
+
+						// Devolver siguiente turno y si ha abierto, si hay ganador devolverlo
 						tablero.FinTurno(t.Mazo, jugador.(jugadores.Jugador).Mano, t.Descartes, i_input) //Y esta función colocará esa carta en el mazo de descartes
-						if jugador.(jugadores.Jugador).Mano.Size() == 0 {                                //En caso de no contar con más cartas terminará la partida
+						if jugador.(jugadores.Jugador).Mano.Size() == 0 {    
+							canalPartida <- "ganador"                            //En caso de no contar con más cartas terminará la partida
+							canalPartida <- strconv.Itoa(id)
 							wait <- true
 							partida = false
 							turno = false
 						} else { //Y en caso contrario pasaremos al turno del siguiente jugador
 							//if id >= 3 { //COMENTADO
+							canalPartida <- "no"
 							if id >= numJugad - 1 { //DESCOMENTAR
 								id = 0
 							} else {
 								id = id + 1
+							}
+							canalPartida <- strconv.Itoa(id)
+							if ab[id] {
+								canalPartida <- "si"
+							} else {
+								canalPartida <- "no"
 							}
 							turno = false
 							wait <- false
@@ -665,7 +697,7 @@ func IniciarPartida(idPartida string, canalPartida chan string) *doublylinkedlis
 					} else if resp == "Colocar_carta" { //Si buscamos colocar una carta
 						if ab[id] == false {
 							fmt.Println("No puedes colocar una carta porque no has abierto")
-							//canalPartida <- "No puedes colocar una carta porque no has abierto" //DESCOMENTAR
+							canalPartida <- "No puedes colocar una carta porque no has abierto" //DESCOMENTAR
 						} else {
 							canalPartida <- "Ok" //DESCOMENTAR
 							fmt.Println("¿En que combinación desea introducir su carta?")
