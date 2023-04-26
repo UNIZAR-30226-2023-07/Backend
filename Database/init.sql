@@ -26,7 +26,7 @@ CREATE TABLE PARTIDAS (
 	creador 	text REFERENCES JUGADORES (codigo),
 	tipo 		text NOT NULL CHECK(tipo = 'amistosa' OR tipo = 'torneo'),
 	estado 		text NOT NULL CHECK(estado = 'terminada' OR estado = 'pausada' OR estado = 'iniciada' OR estado = 'creando'),
-	torneo 		text,
+	pactual 	text,
 	PRIMARY KEY (clave)
 );
 

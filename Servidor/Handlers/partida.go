@@ -3,6 +3,7 @@ package Handlers
 import (
 	"DB/DAO"
 	"DB/VO"
+	"Juego/partida"
 	"encoding/json"
 	"fmt"
 	"math/rand"
@@ -29,9 +30,34 @@ type Mensaje struct {
 	Emisor string   `json:"emisor"`
 	Tipo   string   `json:"tipo"`
 	Cartas []string `json:"cartas"`
+	Info   string   `json:"info"`
 }
 
-func CreatePartida(c *gin.Context, clave string) {
+type Turnos struct {
+	Emisor string     `json:"emisor"`
+	Tipo   string     `json:"tipo"`
+	Turnos [][]string `json:"turnos"`
+}
+
+func CreatePartida(c *gin.Context, partidas map[string]chan string, torneos map[string]string) {
+
+	pDAO := DAO.PartidasDAO{}
+	parDAO := DAO.ParticiparDAO{}
+
+	// Generar identificador único para la partida que no sea ninguna clave existente
+	var code string
+	for {
+		code = strconv.Itoa(rand.Intn(9999))
+		if _, ok := partidas[code]; !ok && !pDAO.HayPartida(code) {
+			break
+		}
+	}
+
+	// Crear canal para la partida y almacenarlo en el mapa
+	partidas["/api/ws/partida/"+code] = make(chan string)
+
+	// Llamar a la función partida con el canal correspondiente
+	go partida.IniciarPartida(code, partidas["/api/ws/partida/"+code])
 
 	p := CrearPart{}
 	//Con el binding guardamos el json de la petición en u que es de tipo login
@@ -40,166 +66,102 @@ func CreatePartida(c *gin.Context, clave string) {
 		return
 	}
 
-	pDAO := DAO.PartidasDAO{}
+	pVO := VO.NewPartidasVO(code, p.Anfitrion, p.Tipo, "", "")
 
-	var pVO *VO.PartidasVO
-
-	if p.Tipo == "torneo" {
-
-		torneo := strconv.Itoa(rand.Intn(9999))
-		for pDAO.HayPartida(torneo) {
-			torneo = strconv.Itoa(rand.Intn(9999))
-		}
-
-		tVO := VO.NewPartidasVO(torneo, p.Anfitrion, p.Tipo, "", "")
-
-		pDAO.AddPartida(*tVO)
-
-		pVO = VO.NewPartidasVO(clave, p.Anfitrion, "amistosa", "", torneo)
-
-		c.JSON(http.StatusOK, gin.H{
-			"clave": torneo,
-		})
-
-	} else {
-
-		pVO = VO.NewPartidasVO(clave, p.Anfitrion, p.Tipo, "", "")
-
-		c.JSON(http.StatusOK, gin.H{
-			"clave": clave,
-		})
+	if p.Tipo == "torneo" { //Guardamos la partida actual del torneo, en la BD puede ser la primera
+		pVO = VO.NewPartidasVO(code, p.Anfitrion, p.Tipo, "", code)
+		torneos[code] = "/api/ws/partida/" + code
 	}
 
 	pDAO.AddPartida(*pVO)
 
-	parDAO := DAO.ParticiparDAO{}
-
-	parVO := VO.NewParticiparVO(clave, p.Anfitrion, 1, 0)
+	parVO := VO.NewParticiparVO(code, p.Anfitrion, 1, 0)
 
 	parDAO.AddParticipar(*parVO)
 
+	c.JSON(http.StatusOK, gin.H{
+		"clave": code,
+	})
+
 }
 
-func JoinPartida(c *gin.Context, partidaNueva *melody.Melody, nuevoLobby string) bool {
+func JoinPartida(c *gin.Context, partidaNueva *melody.Melody, torneoNuevo *melody.Melody) {
 
 	p := JoinPart{}
 
 	if err := c.BindJSON(&p); err != nil {
 		c.AbortWithError(http.StatusBadRequest, err)
-		return false
 	}
 
 	pDAO := DAO.PartidasDAO{}
 	parDAO := DAO.ParticiparDAO{}
 
-	if pDAO.EsTorneo(p.Clave) {
-		//Comprobamos si hay alguna sala vacía dentro del torneo
-		hay, sala := pDAO.HayPartidaTorneo(p.Clave)
+	if pDAO.EstaPausada(p.Clave) && parDAO.EstaParticipando(p.Clave, p.Codigo) { //Si estaba pausada y el jugador estaba participando
 
-		if hay { //Si hay una sala disponible lo añadimos
+		parDAO.ModLobbyJug(p.Codigo, p.Clave, 1) //Marcamos que ha llegado el jugador al lobby
 
-			parVO := VO.NewParticiparVO(sala, p.Codigo, 1, pDAO.NJugadoresPartida(p.Clave)+1)
-			parDAO.AddParticipar(*parVO)
+		var M Mensaje
 
-			var M Mensaje
+		M.Emisor = "Servidor"
+		M.Tipo = "Nuevo_Jugador : " + p.Codigo
 
-			M.Emisor = "Servidor"
-			M.Tipo = "Nuevo_Jugador : " + p.Codigo
+		msg, _ := json.MarshalIndent(&M, "", "\t")
 
-			msg, _ := json.MarshalIndent(&M, "", "\t")
-
+		if pDAO.EsTorneo(p.Clave) {
+			torneoNuevo.BroadcastFilter(msg, func(q *melody.Session) bool { //Envia la información a todos con la misma url
+				return q.Request.URL.Path == "/api/ws/torneo/"+p.Clave
+			})
+		} else {
 			partidaNueva.BroadcastFilter(msg, func(q *melody.Session) bool { //Envia la información a todos con la misma url
 				return q.Request.URL.Path == "/api/ws/partida/"+p.Clave
 			})
-
-			c.JSON(http.StatusOK, gin.H{
-				"res": "ok",
-			})
-
-			return false
-
-		} else { //Si no hay salas disponibles creamos una
-
-			tVO := pDAO.GetPartida(p.Clave)
-
-			pVO := VO.NewPartidasVO(nuevoLobby, tVO.GetCreador(), "amistosa", "", p.Clave)
-			pDAO.AddPartida(*pVO)
-
-			parVO := VO.NewParticiparVO(nuevoLobby, p.Codigo, 1, 0)
-			parDAO.AddParticipar(*parVO)
-
-			//Como será el primero entrar no hay que avisar de que entra
-			c.JSON(http.StatusOK, gin.H{
-				"res": nuevoLobby,
-			})
-
-			return true
 		}
 
-	} else { //Esta parte será comun en las partidas normales y en las continuadas
+		c.JSON(http.StatusOK, gin.H{
+			"res": "ok",
+		})
 
-		if pDAO.EstaPausada(p.Clave) && parDAO.EstaParticipando(p.Clave, p.Codigo) {
-			parDAO.ModLobbyJug(p.Codigo, p.Clave, 1)
+	} else if !pDAO.EstaPausada(p.Clave) {
+
+		n := pDAO.NJugadoresPartida(p.Clave)
+		estor := pDAO.EsTorneo(p.Clave)
+		if estor || n < 4 {
+
+			parVO := VO.NewParticiparVO(p.Clave, p.Codigo, 1, n+1)
+			parDAO.AddParticipar(*parVO)
 
 			var M Mensaje
 
 			M.Emisor = "Servidor"
-			M.Tipo = "Nuevo_Jugador : " + p.Codigo
+			M.Tipo = "Nuevo_Jugador: " + p.Codigo
 
 			msg, _ := json.MarshalIndent(&M, "", "\t")
 
-			partidaNueva.BroadcastFilter(msg, func(q *melody.Session) bool { //Envia la información a todos con la misma url
-				return q.Request.URL.Path == "/api/ws/partida/"+p.Clave
-			})
-
-			c.JSON(http.StatusOK, gin.H{
-				"res": "ok",
-			})
-
-		} else if !pDAO.EstaPausada(p.Clave) {
-
-			n := pDAO.NJugadoresPartida(p.Clave)
-			if n <= 4 {
-
-				parVO := VO.NewParticiparVO(p.Clave, p.Codigo, 1, n+1)
-				parDAO.AddParticipar(*parVO)
-
-				var M Mensaje
-
-				M.Emisor = "Servidor"
-				M.Tipo = "Nuevo_Jugador: " + p.Codigo
-
-				msg, _ := json.MarshalIndent(&M, "", "\t")
-
+			if estor {
+				torneoNuevo.BroadcastFilter(msg, func(q *melody.Session) bool { //Envia la información a todos con la misma url
+					return q.Request.URL.Path == "/api/ws/torneo/"+p.Clave
+				})
+			} else {
 				partidaNueva.BroadcastFilter(msg, func(q *melody.Session) bool { //Envia la información a todos con la misma url
 					return q.Request.URL.Path == "/api/ws/partida/"+p.Clave
 				})
-
-				c.JSON(http.StatusOK, gin.H{
-					"res": "ok",
-				})
-
-			} else {
-
-				c.JSON(http.StatusBadRequest, gin.H{
-					"res": "Sala llena",
-				})
 			}
+
+			c.JSON(http.StatusOK, gin.H{
+				"res": "ok",
+			})
 
 		} else {
 
 			c.JSON(http.StatusBadRequest, gin.H{
-				"res": "error",
+				"res": "Sala llena",
 			})
 		}
-
-		return false
-
 	}
 
 }
 
-func IniciarPartida(c *gin.Context, partidaNueva *melody.Melody) {
+func IniciarPartida(c *gin.Context, partidaNueva *melody.Melody, torneoNuevo *melody.Melody) {
 
 	p := JoinPart{}
 
@@ -209,49 +171,50 @@ func IniciarPartida(c *gin.Context, partidaNueva *melody.Melody) {
 	}
 
 	pDAO := DAO.PartidasDAO{}
+	parDAO := DAO.ParticiparDAO{}
 
 	if pDAO.HayPartida(p.Clave) && pDAO.EsCreador(p.Clave, p.Codigo) && pDAO.JugadoresEnLobby(p.Clave) {
 
-		var M Mensaje
+		turnos := parDAO.GetJugadoresTurnos(p.Clave)
+		njug := pDAO.NJugadoresPartida(p.Clave)
 
-		M.Emisor = "Servidor"
-		M.Tipo = "Partida_Iniciada"
+		var M1 Turnos
+		M1.Emisor = "Servidor"
+		M1.Tipo = "Partida_Iniciada"
+		M1.Turnos = turnos
+		msg1, _ := json.MarshalIndent(&M1, "", "\t")
 
-		msg, _ := json.MarshalIndent(&M, "", "\t")
+		var M2 Mensaje
+		M2.Emisor = "Servidor"
+		M2.Tipo = "jugadores"
+		M2.Info = strconv.Itoa(njug)
+		msg2, _ := json.MarshalIndent(&M2, "", "\t")
+
+		pDAO.IniciarPartida(p.Clave)
 
 		if pDAO.EsTorneo(p.Clave) {
-
-			partidas := pDAO.GetPartidasTorneo(p.Clave)
-
-			fmt.Println(partidas)
-
-			for i := 0; i < len(partidas); i++ {
-
-				partidaNueva.BroadcastFilter(msg, func(q *melody.Session) bool { //Envia la información a todos con la misma url
-					return q.Request.URL.Path == "/api/ws/partida/"+partidas[i]
-				})
-
-				pDAO.IniciarPartida(partidas[i])
-
-			}
-
-			//Repartir las cartas -> los torneos no se pueden parar
+			torneoNuevo.BroadcastFilter(msg1, func(q *melody.Session) bool { //Envia la información a todos con la misma url
+				return q.Request.URL.Path == "/api/ws/torneo/"+p.Clave
+			})
+			torneoNuevo.BroadcastFilter(msg2, func(q *melody.Session) bool { //Envia la información a todos con la misma url
+				return q.Request.URL.Path == "/api/ws/torneo/"+p.Clave
+			})
 
 		} else {
-
-			partidaNueva.BroadcastFilter(msg, func(q *melody.Session) bool { //Envia la información a todos con la misma url
+			partidaNueva.BroadcastFilter(msg1, func(q *melody.Session) bool { //Envia la información a todos con la misma url
 				return q.Request.URL.Path == "/api/ws/partida/"+p.Clave
 			})
 
-			pDAO.IniciarPartida(p.Clave)
+			partidaNueva.BroadcastFilter(msg2, func(q *melody.Session) bool { //Envia la información a todos con la misma url
+				return q.Request.URL.Path == "/api/ws/partida/"+p.Clave
+			})
+		}
 
-			if pDAO.EstaPausada(p.Clave) {
-				//Recuperar las cartas
-				//pDAO.DelTableroGuardado(p.Clave)	//Una vez recuperadas borramos la informacion
-			} else {
-				//Repartir las cartas
-			}
-
+		if pDAO.EstaPausada(p.Clave) {
+			//Recuperar las cartas
+			//pDAO.DelTableroGuardado(p.Clave) //Una vez recuperadas borramos la informacion
+		} else {
+			//Repartir las cartas
 		}
 
 		c.JSON(http.StatusOK, gin.H{
@@ -282,12 +245,10 @@ func PausarPartida(c *gin.Context, partidaNueva *melody.Melody, partidas map[str
 	pDAO := DAO.PartidasDAO{}
 	parDAO := DAO.ParticiparDAO{}
 
-	//POR AHORA LOS TONEOS NO SE PUEDEN PARAR!!
-
 	pVO := pDAO.GetPartida(p.Clave)
 	fmt.Println(pVO)
 
-	if pVO.GetCreador() == p.Codigo && pVO.GetTorneo() == "" && pVO.GetTipo() != "torneo" {
+	if pVO.GetCreador() == p.Codigo {
 		pDAO.PausarPartida(p.Clave) //Marcamos partida como pausada
 
 		var Mazo []string

@@ -67,7 +67,7 @@ func (pDAO *ParticiparDAO) ModLobby(p string, l int) {
 
 }
 
-// Devuelve true si esa partida es un torneo
+// Devuelve true si esta participando en la partida
 func (pDAO *ParticiparDAO) EstaParticipando(p string, j string) bool {
 	//String para la conexión
 	psqlcon := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable", host, port, user, password, dbname)
@@ -89,6 +89,44 @@ func (pDAO *ParticiparDAO) EstaParticipando(p string, j string) bool {
 	defer rows.Close()
 	if rows.Next() {
 		res = true
+	}
+
+	return res
+
+}
+
+// Devuelve los jugadores junto a su turno
+func (pDAO *ParticiparDAO) GetJugadoresTurnos(p string) [][]string {
+	//String para la conexión
+	psqlcon := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable", host, port, user, password, dbname)
+
+	//abrir base de datos
+	db, err := sql.Open("postgres", psqlcon)
+	CheckError(err)
+
+	//cerrar base de datos
+	defer db.Close()
+
+	var res [][]string
+
+	//Buscamos los jugadores junto a su turno
+	isp := "SELECT jugador, turno FROM PARTICIPAR WHERE partida = $1"
+	rows, err := db.Query(isp, p)
+	CheckError(err)
+
+	defer rows.Close()
+	for rows.Next() {
+		var jugador string
+		var turno string
+
+		err := rows.Scan(&jugador, &turno)
+		CheckError(err)
+
+		var tmp []string
+		tmp = append(tmp, jugador)
+		tmp = append(tmp, turno)
+
+		res = append(res, tmp)
 	}
 
 	return res

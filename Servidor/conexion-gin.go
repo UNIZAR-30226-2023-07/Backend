@@ -6,13 +6,11 @@ import (
 	"Handlers"
 	"encoding/json"
 	"fmt"
-	"math/rand"
-	"strconv"
 
 	//"math/rand"
 	"net/http"
 	//"strconv"
-	"Juego/partida"
+
 	"strings"
 
 	"github.com/gin-contrib/static"
@@ -24,6 +22,7 @@ import (
 func main() {
 	// canales de todas las partidas -> clave: codigo_partida, valor: canal de la partida
 	partidas := make(map[string]chan string)
+	torneos := make(map[string]string)
 
 	// Set the router as the default one shipped with Gin
 	router := gin.Default()
@@ -34,6 +33,7 @@ func main() {
 	prueba := melody.New()
 	chat := melody.New()
 	partidaNueva := melody.New()
+	torneoNuevo := melody.New()
 
 	router.LoadHTMLFiles("chan.html")
 	router.Use(static.Serve("/", static.LocalFile(".", true)))
@@ -93,62 +93,34 @@ func main() {
 
 		//Crea una nueva partida
 		api.POST("/partida/crear", func(c *gin.Context) {
-			// Generar identificador único para la partida que no sea ninguna clave existente
-			var code string
-			for {
-				code = strconv.Itoa(rand.Intn(9999))
-				if _, ok := partidas[code]; !ok {
-					break
-				}
-			}
-
-			// Crear canal para la partida y almacenarlo en el mapa
-			partidas["/api/ws/partida/"+code] = make(chan string)
-
-			// Llamar a la función partida con el canal correspondiente
-			go partida.IniciarPartida(code, partidas["/api/ws/partida/"+code])
-
-			Handlers.CreatePartida(c, code)
+			Handlers.CreatePartida(c, partidas, torneos)
 		})
 
 		//Unirse a un partida existente
 		api.POST("/partida/join", func(c *gin.Context) {
-
-			// Generar identificador único para la partida que no sea ninguna clave existente
-			var nuevoLobby string
-			for {
-				nuevoLobby = strconv.Itoa(rand.Intn(9999))
-				if _, ok := partidas[nuevoLobby]; !ok {
-					break
-				}
-			}
-
-			if Handlers.JoinPartida(c, partidaNueva, nuevoLobby) {
-
-				// Crear canal para la partida y almacenarlo en el mapa
-				partidas["/api/ws/partida/"+nuevoLobby] = make(chan string)
-
-				// Llamar a la función partida con el canal correspondiente
-				go partida.IniciarPartida(nuevoLobby, partidas["/api/ws/partida/"+nuevoLobby])
-
-			}
+			Handlers.JoinPartida(c, partidaNueva, torneoNuevo)
 		})
 
 		//Inicia una partida creada
 		api.POST("/partida/iniciar", func(c *gin.Context) {
-			Handlers.IniciarPartida(c, partidaNueva)
+			Handlers.IniciarPartida(c, partidaNueva, torneoNuevo)
 		})
 
 		//Pausa una partida inciada
 		api.POST("/partida/pausar", func(c *gin.Context) {
-
 			Handlers.PausarPartida(c, partidaNueva, partidas)
 		})
 
-		//ws para transmitir la inforación del juego
+		//ws para transmitir la información del juego en una partida normal
 		api.GET("/ws/partida/:lobby", func(c *gin.Context) {
 			//Pasa la petición al ws
 			partidaNueva.HandleRequest(c.Writer, c.Request)
+		})
+
+		//ws para transmitir la información del juego en torneo
+		api.GET("/ws/torneo/:lobby", func(c *gin.Context) {
+			//Pasa la petición al ws
+			torneoNuevo.HandleRequest(c.Writer, c.Request)
 		})
 
 		//ws para el chat de partida
@@ -280,12 +252,12 @@ func main() {
 			Emisor        string     `json:"emisor"`
 			Receptor      string     `json:"receptor"`
 			Tipo          string     `json:"tipo"`
-			Info     	  string   	 `json:"info"`
+			Info          string     `json:"info"`
 			Descartes     []string   `json:"descartes"`
 			Combinaciones [][]string `json:"combinaciones"`
-			Turno		  string	 `json:"turno"`
-			Abrir		  string 	 `json:"abrir"`
-			Ganador		  string 	 `json:"ganador"`
+			Turno         string     `json:"turno"`
+			Abrir         string     `json:"abrir"`
+			Ganador       string     `json:"ganador"`
 		}
 
 		var M Mensaje
@@ -371,7 +343,7 @@ func main() {
 				RD.Info = respuesta
 				if respuesta == "Ok" {
 					respuesta = <-partidas[s.Request.URL.Path]
-					for respuesta != "fin" {	// Descartes
+					for respuesta != "fin" { // Descartes
 						RD.Descartes = append(RD.Descartes, respuesta)
 						respuesta = <-partidas[s.Request.URL.Path]
 					}
@@ -387,8 +359,8 @@ func main() {
 					}
 					respuesta = <-partidas[s.Request.URL.Path] // ganador
 					if respuesta == "ganador" {
-						respuesta = <-partidas[s.Request.URL.Path] 
-						RD.Ganador = respuesta 
+						respuesta = <-partidas[s.Request.URL.Path]
+						RD.Ganador = respuesta
 					} else {
 						respuesta = <-partidas[s.Request.URL.Path] // turno
 						RD.Turno = respuesta
@@ -441,6 +413,163 @@ func main() {
 			RD.Receptor = "todos"
 			RD.Tipo = M.Tipo
 			msg, _ = json.MarshalIndent(&RD, "", "\t")
+		} else {
+			msg, _ = json.MarshalIndent(&R, "", "\t")
+		}
+
+		partidaNueva.BroadcastFilter(msg, func(q *melody.Session) bool { //Envia la información a todos con la misma url
+			return q.Request.URL.Path == s.Request.URL.Path
+		})
+
+	})
+
+	torneoNuevo.HandleMessage(func(s *melody.Session, msg []byte) {
+		msgs := string(msg)
+		fmt.Println(msgs)
+
+		type Mensaje struct {
+			Emisor string   `json:"emisor"`
+			Tipo   string   `json:"tipo"`
+			Cartas []string `json:"cartas"` // que sea ["1,2,3", "4,5,6", "7,8,9""]
+			Info   string   `json:"info"`
+		}
+
+		type Respuesta struct {
+			Emisor   string   `json:"emisor"`
+			Receptor string   `json:"receptor"`
+			Tipo     string   `json:"tipo"`
+			Cartas   []string `json:"cartas"`
+			Info     string   `json:"info"`
+		}
+
+		type RespuestaTablero struct {
+			Emisor        string     `json:"emisor"`
+			Receptor      string     `json:"receptor"`
+			Tipo          string     `json:"tipo"`
+			Mazo          []string   `json:"mazo"`
+			Descartes     []string   `json:"descartes"`
+			Combinaciones [][]string `json:"combinaciones"`
+		}
+
+		var M Mensaje
+		var R Respuesta
+		var RT RespuestaTablero
+
+		json.Unmarshal(msg, &M)
+
+		R.Emisor = "Servidor"
+		R.Receptor = M.Emisor
+		R.Tipo = M.Tipo
+		R.Cartas = M.Cartas
+		R.Info = M.Info
+
+		p := torneos[s.Request.URL.Path]
+		if M.Tipo == "jugadores" {
+			partidas[p] <- M.Info
+			respuesta := <-partidas[p]
+			fmt.Println("Respuesta:", respuesta)
+		} else if M.Tipo == "Robar_carta" || M.Tipo == "Robar_carta_descartes" {
+			partidas[p] <- M.Tipo
+			respuesta := <-partidas[p]
+			fmt.Println(respuesta)
+			R.Info = respuesta
+		} else if M.Tipo == "Fin_partida" || M.Tipo == "FIN" || M.Tipo == "END" {
+			partidas[p] <- M.Tipo
+			respuesta := <-partidas[p]
+			fmt.Println(respuesta)
+		} else if M.Tipo == "Abrir" || M.Tipo == "Colocar_combinacion" {
+			partidas[p] <- M.Tipo
+			respuesta := <-partidas[p]
+			if respuesta == "Ok" {
+				for i := 0; i < len(M.Cartas); i++ {
+					// separamos M.Cartas[i] por comas y enviamos cada numero por el canal
+					nums := strings.Split(M.Cartas[i], ",")
+					for j := 0; j < len(nums); j++ {
+						partidas[p] <- nums[j]
+					}
+					// si quedan mas componentes se envia "END"
+					if i < len(M.Cartas)-1 {
+						partidas[p] <- "END"
+						respuesta := <-partidas[p]
+						if respuesta != "Ok" {
+							fmt.Println("Error:", respuesta)
+							goto SALIR
+						}
+					}
+				}
+			SALIR:
+				partidas[p] <- "FIN"
+				respuesta := <-partidas[p]
+				fmt.Println(respuesta)
+				R.Info = respuesta
+			} else {
+				fmt.Println(respuesta)
+				R.Info = respuesta
+			}
+		} else if M.Tipo == "Colocar_carta" {
+			partidas[p] <- M.Tipo
+			respuesta := <-partidas[p]
+			if respuesta == "Ok" {
+				parametros := strings.Split(M.Info, ",")
+				for i := 0; i < len(parametros); i++ {
+					partidas[p] <- parametros[i]
+				}
+				respuesta := <-partidas[p]
+				fmt.Println(respuesta)
+				R.Info = respuesta
+			} else {
+				fmt.Println(respuesta)
+				R.Info = respuesta
+			}
+		} else if M.Tipo == "Descarte" {
+			partidas[p] <- M.Tipo
+			respuesta := <-partidas[p]
+			if respuesta == "Ok" {
+				partidas[p] <- M.Info
+				respuesta := <-partidas[p]
+				fmt.Println(respuesta)
+				R.Info = respuesta
+			} else {
+				fmt.Println(respuesta)
+				R.Info = respuesta
+			}
+		} else if M.Tipo == "Mostrar_mano" {
+			partidas[p] <- M.Tipo
+			respuesta := <-partidas[p]
+			for respuesta != "fin" {
+				R.Cartas = append(R.Cartas, respuesta)
+				respuesta = <-partidas[p]
+			}
+			fmt.Println(respuesta)
+		} else if M.Tipo == "Mostrar_tablero" {
+			partidas[p] <- M.Tipo
+			respuesta := <-partidas[p]
+			for respuesta != "fin" {
+				RT.Mazo = append(RT.Mazo, respuesta)
+				respuesta = <-partidas[p]
+			}
+			respuesta = <-partidas[p]
+			for respuesta != "fin" {
+				RT.Descartes = append(RT.Descartes, respuesta)
+				respuesta = <-partidas[p]
+			}
+			respuesta = <-partidas[p]
+			for respuesta != "fin" {
+				var comb []string
+				for respuesta != "finC" {
+					comb = append(comb, respuesta)
+					respuesta = <-partidas[p]
+				}
+				RT.Combinaciones = append(RT.Combinaciones, comb)
+				respuesta = <-partidas[p]
+			}
+		}
+
+		if M.Tipo == "Mostrar_tablero" {
+			RT.Emisor = "Servidor"
+			RT.Receptor = M.Emisor
+			RT.Tipo = M.Tipo
+			msg, _ = json.MarshalIndent(&RT, "", "\t")
 		} else {
 			msg, _ = json.MarshalIndent(&R, "", "\t")
 		}

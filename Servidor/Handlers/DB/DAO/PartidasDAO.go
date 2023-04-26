@@ -24,7 +24,7 @@ func (pDAO *PartidasDAO) AddPartida(pVO VO.PartidasVO) {
 
 	//Añadir partida
 	addp := "INSERT INTO PARTIDAS VALUES ($1, $2, $3, 'creando', $4)"
-	_, e := db.Exec(addp, pVO.GetClave(), pVO.GetCreador(), pVO.GetTipo(), pVO.GetTorneo())
+	_, e := db.Exec(addp, pVO.GetClave(), pVO.GetCreador(), pVO.GetTipo(), pVO.GetPactual())
 	CheckError(e)
 
 }
@@ -85,8 +85,8 @@ func (pDAO *PartidasDAO) EsTorneo(clave string) bool {
 
 }
 
-// Devuelve true si hay hueco en una partida de un torneo
-func (pDAO *PartidasDAO) HayPartidaTorneo(torneo string) (bool, string) {
+// Devuelve la partida actual de un torneo
+func (pDAO *PartidasDAO) PartidaActualTorneo(torneo string) string {
 	//String para la conexión
 	psqlcon := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable", host, port, user, password, dbname)
 
@@ -97,24 +97,21 @@ func (pDAO *PartidasDAO) HayPartidaTorneo(torneo string) (bool, string) {
 	//cerrar base de datos
 	defer db.Close()
 
-	res := false
-	lobby := ""
+	pcatual := ""
 
 	//Buscamos si hay alguna sala con gente libre en el torneo
-	isp := "SELECT clave FROM PARTIDAS WHERE torneo = $1 AND torneo is not null AND EXISTS " +
-		"(SELECT COUNT(*) FROM PARTICIPAR WHERE partida = clave HAVING COUNT(*) < 5)"
+	isp := "SELECT pactual FROM PARTIDAS WHERE clave = $1"
 	rows, err := db.Query(isp, torneo)
 	CheckError(err)
 
 	defer rows.Close()
 	if rows.Next() {
 
-		err := rows.Scan(&lobby)
+		err := rows.Scan(&pcatual)
 		CheckError(err)
-		res = true
 	}
 
-	return res, lobby
+	return pcatual
 
 }
 
@@ -131,7 +128,7 @@ func (pDAO *PartidasDAO) GetPartida(clave string) *VO.PartidasVO {
 	defer db.Close()
 
 	//Buscamos el creador del torneo
-	isp := "SELECT creador, tipo, estado, torneo FROM PARTIDAS WHERE clave = $1"
+	isp := "SELECT creador, tipo, estado, pactual FROM PARTIDAS WHERE clave = $1"
 	rows, err := db.Query(isp, clave)
 	CheckError(err)
 
@@ -142,11 +139,11 @@ func (pDAO *PartidasDAO) GetPartida(clave string) *VO.PartidasVO {
 		var creador string
 		var tipo string
 		var estado string
-		torneo := ""
+		var pactual string
 
-		err := rows.Scan(&creador, &tipo, &estado, &torneo)
+		err := rows.Scan(&creador, &tipo, &estado, &pactual)
 
-		partida = VO.NewPartidasVO(clave, creador, tipo, estado, torneo)
+		partida = VO.NewPartidasVO(clave, creador, tipo, estado, pactual)
 		CheckError(err)
 
 	}
@@ -155,41 +152,7 @@ func (pDAO *PartidasDAO) GetPartida(clave string) *VO.PartidasVO {
 
 }
 
-// Devuelve las claves de las partidas de un torneo
-func (pDAO *PartidasDAO) GetPartidasTorneo(clave string) []string {
-	//String para la conexión
-	psqlcon := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable", host, port, user, password, dbname)
-
-	//abrir base de datos
-	db, err := sql.Open("postgres", psqlcon)
-	CheckError(err)
-
-	//cerrar base de datos
-	defer db.Close()
-
-	//Buscamos el creador del torneo
-	isp := "SELECT clave FROM PARTIDAS WHERE torneo = $1"
-	rows, err := db.Query(isp, clave)
-	CheckError(err)
-
-	var partidas []string
-	defer rows.Close()
-	for rows.Next() {
-
-		var clave string
-
-		err := rows.Scan(&clave)
-		CheckError(err)
-
-		partidas = append(partidas, clave)
-
-	}
-
-	return partidas
-
-}
-
-// Asigna como pausada aquella partida cuya clave sea la misma que la pVO
+// Asigna como pausada aquella partida que tenga clave como clave
 func (pDAO *PartidasDAO) PausarPartida(clave string) {
 	//String para la conexión
 	psqlcon := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable", host, port, user, password, dbname)
@@ -208,7 +171,7 @@ func (pDAO *PartidasDAO) PausarPartida(clave string) {
 
 }
 
-// Asigna como terminada aquella partida cuya clave sea la misma que la pVO
+// Asigna como terminada aquella partida que tenga clave como clave
 func (pDAO *PartidasDAO) TerminarPartida(clave string) {
 	//String para la conexión
 	psqlcon := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable", host, port, user, password, dbname)
@@ -227,7 +190,7 @@ func (pDAO *PartidasDAO) TerminarPartida(clave string) {
 
 }
 
-// Asigna como iniciada aquella partida cuya clave sea la misma que la pVO
+// Asigna como iniciada aquella partida que tenga clave como clave
 func (pDAO *PartidasDAO) IniciarPartida(clave string) {
 	//String para la conexión
 	psqlcon := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable", host, port, user, password, dbname)
@@ -245,7 +208,7 @@ func (pDAO *PartidasDAO) IniciarPartida(clave string) {
 	CheckError(e)
 }
 
-// Devuelve true si la partida esta llena
+// Devuelve el numero de jugadores que estan en la partida
 func (pDAO *PartidasDAO) NJugadoresPartida(clave string) int {
 	//String para la conexión
 	psqlcon := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable", host, port, user, password, dbname)
@@ -259,7 +222,7 @@ func (pDAO *PartidasDAO) NJugadoresPartida(clave string) int {
 
 	res := 0
 
-	//Buscamos si hay mas de cinco jugadores
+	//Numero de jugadores
 	fullp := "SELECT COUNT(*) FROM PARTICIPAR WHERE partida = $1"
 	rows, err := db.Query(fullp, clave)
 	CheckError(err)
