@@ -125,9 +125,9 @@ func JoinPartida(c *gin.Context, partidaNueva *melody.Melody, torneoNuevo *melod
 
 		n := pDAO.NJugadoresPartida(p.Clave)
 		estor := pDAO.EsTorneo(p.Clave)
-		if estor || n < 4 {
+		if estor || n <= 4 {
 
-			parVO := VO.NewParticiparVO(p.Clave, p.Codigo, 1, n+1)
+			parVO := VO.NewParticiparVO(p.Clave, p.Codigo, 0, n)
 			parDAO.AddParticipar(*parVO)
 
 			var M Mensaje
@@ -161,7 +161,7 @@ func JoinPartida(c *gin.Context, partidaNueva *melody.Melody, torneoNuevo *melod
 
 }
 
-func IniciarPartida(c *gin.Context, partidaNueva *melody.Melody, torneoNuevo *melody.Melody) {
+func IniciarPartida(c *gin.Context, partidaNueva *melody.Melody, torneoNuevo *melody.Melody, partidas map[string]chan string, torneos map[string]string) {
 
 	p := JoinPart{}
 
@@ -184,30 +184,23 @@ func IniciarPartida(c *gin.Context, partidaNueva *melody.Melody, torneoNuevo *me
 		M1.Turnos = turnos
 		msg1, _ := json.MarshalIndent(&M1, "", "\t")
 
-		var M2 Mensaje
-		M2.Emisor = "Servidor"
-		M2.Tipo = "jugadores"
-		M2.Info = strconv.Itoa(njug)
-		msg2, _ := json.MarshalIndent(&M2, "", "\t")
-
 		pDAO.IniciarPartida(p.Clave)
 
 		if pDAO.EsTorneo(p.Clave) {
 			torneoNuevo.BroadcastFilter(msg1, func(q *melody.Session) bool { //Envia la información a todos con la misma url
 				return q.Request.URL.Path == "/api/ws/torneo/"+p.Clave
 			})
-			torneoNuevo.BroadcastFilter(msg2, func(q *melody.Session) bool { //Envia la información a todos con la misma url
-				return q.Request.URL.Path == "/api/ws/torneo/"+p.Clave
-			})
+
+			partidas[torneos["/api/ws/torneo/"+p.Clave]] <- strconv.Itoa(njug)
 
 		} else {
 			partidaNueva.BroadcastFilter(msg1, func(q *melody.Session) bool { //Envia la información a todos con la misma url
 				return q.Request.URL.Path == "/api/ws/partida/"+p.Clave
 			})
 
-			partidaNueva.BroadcastFilter(msg2, func(q *melody.Session) bool { //Envia la información a todos con la misma url
-				return q.Request.URL.Path == "/api/ws/partida/"+p.Clave
-			})
+			fmt.Println(partidas)
+
+			partidas["/api/ws/partida/"+p.Clave] <- strconv.Itoa(njug)
 		}
 
 		if pDAO.EstaPausada(p.Clave) {

@@ -103,7 +103,7 @@ func main() {
 
 		//Inicia una partida creada
 		api.POST("/partida/iniciar", func(c *gin.Context) {
-			Handlers.IniciarPartida(c, partidaNueva, torneoNuevo)
+			Handlers.IniciarPartida(c, partidaNueva, torneoNuevo, partidas, torneos)
 		})
 
 		//Pausa una partida inciada

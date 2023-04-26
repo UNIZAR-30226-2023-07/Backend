@@ -25,5 +25,5 @@ func (p *ParticiparVO) GetPuntos() int {
 }
 
 func (p *ParticiparVO) GetTurno() int {
-	return p.puntos
+	return p.turno
 }
