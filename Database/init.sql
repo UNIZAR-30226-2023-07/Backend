@@ -82,7 +82,8 @@ CREATE TABLE MAZOS (
 	id 			serial,
 	partida 	text REFERENCES PARTIDAS (clave),
 	carta 		serial REFERENCES CARTAS (id),
-	turno 		integer REFERENCES PARTICIPAR (turno),
+	turno 		integer NOT NULL,
+	UNIQUE (partida, turno)
 	UNIQUE(partida, carta),
 	PRIMARY KEY (id)
 );
