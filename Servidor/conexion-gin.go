@@ -408,7 +408,7 @@ func main() {
 			RT.Receptor = M.Emisor
 			RT.Tipo = M.Tipo
 			msg, _ = json.MarshalIndent(&RT, "", "\t")
-		} else if M.Tipo == "Descartes" {
+		} else if M.Tipo == "Descarte" {
 			RD.Emisor = "Servidor"
 			RD.Receptor = "todos"
 			RD.Tipo = M.Tipo

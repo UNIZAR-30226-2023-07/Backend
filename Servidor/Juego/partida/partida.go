@@ -62,7 +62,6 @@ func IniciarPartida(idPartida string, canalPartida chan string) *doublylinkedlis
 	fmt.Println("Partida creada")
 	var parametrosPartida string	//DESCOMENTAR
 	parametrosPartida = <-canalPartida	//DESCOMENTAR
-	canalPartida <- "ok" //DESCOMENTAR
 
 	//separar los parametros por el caracter ","
 	param := strings.Split(parametrosPartida, ",")	//DESCOMENTAR
