@@ -53,34 +53,113 @@ func inicio_turno(espera chan string, wait chan bool, canalPartida chan string) 
 }
 
 //func IniciarPartida() *doublylinkedlist.List { //COMENTADO
-
-func IniciarPartida(idPartida string, canalPartida chan string) *doublylinkedlist.List { //DESCOMENTAR
+func IniciarPartida(idPartida string, canalPartida chan string, estabaPausada bool) *doublylinkedlist.List { //DESCOMENTAR
 	//jugad, err := strconv.Atoi(os.Args[1])
-	//torn, err := strconv.Atoi(os.Args[2])			
+	//torn, err := strconv.Atoi(os.Args[2])
 	//bots, err := strconv.Atoi(os.Args[3])
-
-	fmt.Println("Partida creada")
-	var parametrosPartida string	//DESCOMENTAR
-	parametrosPartida = <-canalPartida	//DESCOMENTAR
+	fmt.Println("Iniciando")
+	input := ""
+	parametrosPartida := <-canalPartida //DESCOMENTAR
 
 	//separar los parametros por el caracter ","
-	param := strings.Split(parametrosPartida, ",")	//DESCOMENTAR
-	numJugad, _ := strconv.Atoi(param[0])	//DESCOMENTAR
-
-	input := ""
-
-	t := tablero.IniciarTablero() //función de inicio de tablero para la partida
-
+	param := strings.Split(parametrosPartida, ",") //DESCOMENTAR
+	numJugad, _ := strconv.Atoi(param[0])          //DESCOMENTAR
 	listaJ := doublylinkedlist.New()
-
+	fmt.Println("Numero de jugadores: ", numJugad)
 	//var ab [3]bool //COMENTADO
-	ab := make([]bool, numJugad)  //DESCOMENTAR
+	ab := make([]bool, numJugad) //DESCOMENTAR
 
-	for i := 0; i < numJugad; i++ { //Inicio de los jugadores DESCOMENTAR
-	//for i := 0; i < 3; i++ { //Inicio de los jugadores //COMENTADO
-		jugador := jugadores.CrearJugador(i, t.Mazo)
-		listaJ.Add(jugador)
-		ab[i] = false
+	t := tablero.Tablero{doublylinkedlist.New(), doublylinkedlist.New(), list.New()} //DESCOMENTAR
+
+	if !estabaPausada {
+		fmt.Println("Partida creada")
+		t = tablero.IniciarTablero() //función de inicio de tablero para la partida
+
+		for i := 0; i < numJugad; i++ { //Inicio de los jugadores DESCOMENTAR
+			//for i := 0; i < 3; i++ { //Inicio de los jugadores //COMENTADO
+			jugador := jugadores.CrearJugador(i, t.Mazo)
+			listaJ.Add(jugador)
+			ab[i] = false
+		}
+	} else {
+		fmt.Println("Partida reanudada")
+
+		// llegan las cartas del mazo del tablero por el canal, hay que guardarlas en t.Mazo
+		respuesta := <-canalPartida
+		for respuesta != "Fin_mazo" {
+			// separar el string por el caracter ","
+			V_P_C := strings.Split(respuesta, ",")
+			valor, _ := strconv.Atoi(V_P_C[0])
+			palo, _ := strconv.Atoi(V_P_C[1])
+			color, _ := strconv.Atoi(V_P_C[2])
+			carta := cartas.Carta{valor, palo, color}
+			t.Mazo.Add(carta)
+			respuesta = <-canalPartida
+		}
+		fmt.Println("Mazo recibido")
+
+		// llegan las cartas de descartes del tablero por el canal, hay que guardarlas en t.Descartes
+		respuesta = <-canalPartida
+		for respuesta != "Fin_descartes" {
+			// separar el string por el caracter ","
+			V_P_C := strings.Split(respuesta, ",")
+			valor, _ := strconv.Atoi(V_P_C[0])
+			palo, _ := strconv.Atoi(V_P_C[1])
+			color, _ := strconv.Atoi(V_P_C[2])
+			carta := cartas.Carta{valor, palo, color}
+			t.Descartes.Add(carta)
+			respuesta = <-canalPartida
+		}
+		fmt.Println("Descartes recibidos")
+
+		// llegan las cartas de las combinaciones del tablero por el canal, hay que guardarlas en t.Combinaciones (lista de listas)
+		respuesta = <-canalPartida
+		for respuesta != "Fin_combinaciones" {
+			comb := doublylinkedlist.New()
+			for respuesta != "Fin_combinacion" {
+				// separar el string por el caracter ","
+				V_P_C := strings.Split(respuesta, ",")
+				valor, _ := strconv.Atoi(V_P_C[0])
+				palo, _ := strconv.Atoi(V_P_C[1])
+				color, _ := strconv.Atoi(V_P_C[2])
+				carta := cartas.Carta{valor, palo, color}
+				comb.Add(carta)
+				respuesta = <-canalPartida
+			}
+			t.Combinaciones.PushBack(comb)
+			respuesta = <-canalPartida
+		}
+		fmt.Println("Combinaciones recibidas")
+
+		// llegan las cartas de los jugadores por el canal, hay que guardarlas en jugadores.Jugador.Mano
+		for i := 0; i < numJugad; i++ {
+			respuesta = <-canalPartida
+			mano := doublylinkedlist.New()
+			for respuesta != "Fin_mano" {
+				// separar el string por el caracter ","
+				V_P_C := strings.Split(respuesta, ",")
+				valor, _ := strconv.Atoi(V_P_C[0])
+				palo, _ := strconv.Atoi(V_P_C[1])
+				color, _ := strconv.Atoi(V_P_C[2])
+				carta := cartas.Carta{valor, palo, color}
+				mano.Add(carta)
+				respuesta = <-canalPartida
+			}
+			j := jugadores.Jugador{i, mano, 0}
+			listaJ.Add(j)
+		}
+		fmt.Println("Manos recibidas")
+
+		// llega si han abierto o no los jugadores por el canal, hay que guardarlos en ab
+		for i := 0; i < numJugad; i++ {
+			respuesta = <-canalPartida
+			if respuesta == "si" {
+				ab[i] = true
+			} else {
+				ab[i] = false
+			}
+		}
+		fmt.Println("Ya empieza la partida")
 	}
 
 	espera := make(chan string)
@@ -269,7 +348,7 @@ func IniciarPartida(idPartida string, canalPartida chan string) *doublylinkedlis
 							carta_robada = true
 							goto SALIR
 						} else if resp == "Pausar" {
-							pausar(t, canalPartida, listaJ) //DESCOMENTAR
+							pausar(t, canalPartida, listaJ,ab) //DESCOMENTAR
 							wait <- true
 							partida = false
 							turno = false
@@ -372,6 +451,7 @@ func IniciarPartida(idPartida string, canalPartida chan string) *doublylinkedlis
 							}
 						}*/
 						
+						tablero.FinTurno(t.Mazo, jugador.(jugadores.Jugador).Mano, t.Descartes, i_input) //Y esta función colocará esa carta en el mazo de descartes
 						// devolver descartes y combinaciones
 						// recorrer el mazo de descartes y pasar cada componente a string
 						for i := 0; i < t.Descartes.Size(); i++ { //DESCOMENTAR todo el for
@@ -395,8 +475,7 @@ func IniciarPartida(idPartida string, canalPartida chan string) *doublylinkedlis
 						}
 						canalPartida <- "fin" //DESCOMENTAR
 
-						// Devolver siguiente turno y si ha abierto, si hay ganador devolverlo
-						tablero.FinTurno(t.Mazo, jugador.(jugadores.Jugador).Mano, t.Descartes, i_input) //Y esta función colocará esa carta en el mazo de descartes
+						// Devolver siguiente turno y si ha abierto, si hay ganador devolverlo 
 						if jugador.(jugadores.Jugador).Mano.Size() == 0 {    
 							canalPartida <- "ganador"                            //En caso de no contar con más cartas terminará la partida
 							canalPartida <- strconv.Itoa(id)
@@ -738,7 +817,7 @@ func IniciarPartida(idPartida string, canalPartida chan string) *doublylinkedlis
 						partida = false
 						turno = false
 					} else if resp == "Pausar" {
-						pausar(t, canalPartida, listaJ) //DESCOMENTAR
+						pausar(t, canalPartida, listaJ,ab) //DESCOMENTAR
 						wait <- true
 						partida = false
 						turno = false
@@ -782,7 +861,7 @@ SALIR: //Al acabar la partida terminamos contando los puntos de los jugadores qu
 }
 
 
-func pausar(t tablero.Tablero, canalPartida chan string, listaJ *doublylinkedlist.List) {
+func pausar(t tablero.Tablero, canalPartida chan string, listaJ *doublylinkedlist.List, ab []bool) {
 	// recorrer el mazo y pasar cada componente a string
 	for i := 0; i < t.Mazo.Size(); i++ {
 		carta, _ := t.Mazo.Get(i)
@@ -825,6 +904,16 @@ func pausar(t tablero.Tablero, canalPartida chan string, listaJ *doublylinkedlis
 			canalPartida <- cartaString
 		}
 		canalPartida <- "finJ"
+	}
+	canalPartida <- "fin"
+
+	// recorrer vector ab
+	for i := 0; i < len(ab); i++ {
+		if ab[i] == true {
+			canalPartida <- "si"
+		} else {
+			canalPartida <- "no"
+		}
 	}
 	canalPartida <- "fin"
 }

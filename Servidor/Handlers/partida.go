@@ -57,7 +57,7 @@ func CreatePartida(c *gin.Context, partidas map[string]chan string, torneos map[
 	partidas["/api/ws/partida/"+code] = make(chan string)
 
 	// Llamar a la función partida con el canal correspondiente
-	go partida.IniciarPartida(code, partidas["/api/ws/partida/"+code])
+	go partida.IniciarPartida(code, partidas["/api/ws/partida/"+code],false) // el bool indica que no se ha pausado
 
 	p := CrearPart{}
 	//Con el binding guardamos el json de la petición en u que es de tipo login
@@ -201,6 +201,57 @@ func IniciarPartida(c *gin.Context, partidaNueva *melody.Melody, torneoNuevo *me
 			fmt.Println(partidas)
 
 			partidas["/api/ws/partida/"+p.Clave] <- strconv.Itoa(njug)
+
+			if pDAO.EstaPausada(p.Clave) {
+				//falta mazo del tablero
+				descarte := pDAO.GetDescarte(p.Clave)
+				//combinaciones := pDAO.GetCombinaciones(p.Clave)
+
+				/* DESCOMENTAR CUANDO ESTÉ EL MAZO
+				for i := 0; i < len(mazo); i++ {
+					partidas["/api/ws/partida/"+p.Clave] <- mazo[i]
+				}
+				partidas["/api/ws/partida/"+p.Clave] <- "Fin_mazo"
+				*/
+
+				cartaDescarte := strconv.Itoa(descarte.GetValor()) + strconv.Itoa(descarte.GetPalo()) + strconv.Itoa(descarte.GetReverso())
+				partidas["/api/ws/partida/"+p.Clave] <- cartaDescarte
+				partidas["/api/ws/partida/"+p.Clave] <- "Fin_descartes"
+
+				/* No se como pasar del vo a un [][]string pero combinaciones tiene que ser asi:
+					[["valor,palo,reverso","valor,palo,reverso","valor,palo,reverso"],["valor,palo,reverso","valor,palo,reverso","valor,palo,reverso"]]
+					Ese ejemplo serían dos combinaciones.
+
+					Y despues de pasarlo a eso hay que descomentar esto de abajo
+
+				for i := 0; i < len(combinaciones); i++ {
+					for j := 0; j < len(combinaciones[i]); j++ {
+						partidas["/api/ws/partida/"+p.Clave] <- combinaciones[i][j]
+					}
+					partidas["/api/ws/partida/"+p.Clave] <- "Fin_combinacion"
+				}
+				partidas["/api/ws/partida/"+p.Clave] <- "Fin_combinaciones"
+				*/
+
+
+				/* Con los jugadores tampoco lo sé :(
+					Habría que descomentar esto para enviarlo.
+
+				for i := 0; i < len(jugadores); i++ {
+					for j := 0; j < len(jugadores[i]); j++ {
+						partidas["/api/ws/partida/"+p.Clave] <- jugadores[i][j]
+					}
+					partidas["/api/ws/partida/"+p.Clave] <- "Fin_mano"
+				}
+				*/
+
+				/* DESCOMENTAR CUANDO ESTÉ EL VECTOR DE QUIÉN HA ABIERTO
+				for i := 0; i < len(abiertos); i++ {
+				partidas["/api/ws/partida/"+p.Clave] <- strconv.FormatBool(abiertos[i])
+				}
+				*/
+
+			}
 		}
 
 		if pDAO.EstaPausada(p.Clave) {
@@ -283,7 +334,19 @@ func PausarPartida(c *gin.Context, partidaNueva *melody.Melody, partidas map[str
 			respuesta = <-partida
 		}
 
-		//Guardamos combinaciones en la BD
+		// Lista de qué jugadores han abierto o no
+		/* 
+		var ab []string
+		respuesta = <-partida
+		for respuesta != "fin" {
+			ab = append(ab,respuesta)
+			respuesta = <-partida
+		}
+		*/
+
+
+
+		//Guardamos combinaciones en la BD -> [["1,2,3","2,3,1","1,2,3"]]
 		for i := 0; i < len(Combinaciones); i++ {
 			for j := 0; j < len(Combinaciones[i]); j++ {
 				comb := strings.Split(Combinaciones[i][j], ",")
