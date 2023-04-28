@@ -5,7 +5,6 @@ import (
 	"DB/VO"
 	"Juego/partida"
 	"encoding/json"
-	"fmt"
 	"math/rand"
 	"net/http"
 	"strconv"
@@ -202,8 +201,6 @@ func IniciarPartida(c *gin.Context, partidaNueva *melody.Melody, torneoNuevo *me
 				return q.Request.URL.Path == "/api/ws/partida/"+p.Clave
 			})
 
-			fmt.Println(partidas)
-
 			partidas["/api/ws/partida/"+p.Clave] <- strconv.Itoa(njug)
 
 			if pDAO.EstaPausada(p.Clave) {
@@ -250,6 +247,8 @@ func IniciarPartida(c *gin.Context, partidaNueva *melody.Melody, torneoNuevo *me
 					partidas["/api/ws/partida/"+p.Clave] <- abiertos[i]
 				}
 
+				//pDAO.DelTableroGuardado(p.Clave)
+
 			}
 		}
 
@@ -282,7 +281,6 @@ func PausarPartida(c *gin.Context, partidaNueva *melody.Melody, partidas map[str
 	parDAO := DAO.ParticiparDAO{}
 
 	pVO := pDAO.GetPartida(p.Clave)
-	fmt.Println(pVO)
 
 	if pVO.GetCreador() == p.Codigo {
 		pDAO.PausarPartida(p.Clave) //Marcamos partida como pausada
@@ -313,7 +311,6 @@ func PausarPartida(c *gin.Context, partidaNueva *melody.Melody, partidas map[str
 			Combinaciones = append(Combinaciones, comb)
 			respuesta = <-partida
 		}
-
 		// Lista con la mano de cada jugador --> [["1,2,3","4,5,6"],["1,2,3","4,5,6]] --> cada string es valor,palo,color y cada lista es una mano
 		respuesta = <-partida
 		for respuesta != "fin" {
