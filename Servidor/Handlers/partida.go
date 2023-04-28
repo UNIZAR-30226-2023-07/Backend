@@ -56,9 +56,6 @@ func CreatePartida(c *gin.Context, partidas map[string]chan string, torneos map[
 	// Crear canal para la partida y almacenarlo en el mapa
 	partidas["/api/ws/partida/"+code] = make(chan string)
 
-	// Llamar a la función partida con el canal correspondiente
-	go partida.IniciarPartida(code, partidas["/api/ws/partida/"+code],false) // el bool indica que no se ha pausado
-
 	p := CrearPart{}
 	//Con el binding guardamos el json de la petición en u que es de tipo login
 	if err := c.BindJSON(&p); err != nil {
@@ -75,7 +72,7 @@ func CreatePartida(c *gin.Context, partidas map[string]chan string, torneos map[
 
 	pDAO.AddPartida(*pVO)
 
-	parVO := VO.NewParticiparVO(code, p.Anfitrion, 1, 0)
+	parVO := VO.NewParticiparVO(code, p.Anfitrion, 1, 0, "no")
 
 	parDAO.AddParticipar(*parVO)
 
@@ -95,6 +92,8 @@ func JoinPartida(c *gin.Context, partidaNueva *melody.Melody, torneoNuevo *melod
 
 	pDAO := DAO.PartidasDAO{}
 	parDAO := DAO.ParticiparDAO{}
+
+	j := parDAO.GetJugadoresEnLobby(p.Clave)
 
 	if pDAO.EstaPausada(p.Clave) && parDAO.EstaParticipando(p.Clave, p.Codigo) { //Si estaba pausada y el jugador estaba participando
 
@@ -118,7 +117,8 @@ func JoinPartida(c *gin.Context, partidaNueva *melody.Melody, torneoNuevo *melod
 		}
 
 		c.JSON(http.StatusOK, gin.H{
-			"res": "ok",
+			"res":       "ok",
+			"jugadores": j,
 		})
 
 	} else if !pDAO.EstaPausada(p.Clave) {
@@ -127,7 +127,7 @@ func JoinPartida(c *gin.Context, partidaNueva *melody.Melody, torneoNuevo *melod
 		estor := pDAO.EsTorneo(p.Clave)
 		if estor || n <= 4 {
 
-			parVO := VO.NewParticiparVO(p.Clave, p.Codigo, 0, n)
+			parVO := VO.NewParticiparVO(p.Clave, p.Codigo, 0, n, "no")
 			parDAO.AddParticipar(*parVO)
 
 			var M Mensaje
@@ -148,7 +148,8 @@ func JoinPartida(c *gin.Context, partidaNueva *melody.Melody, torneoNuevo *melod
 			}
 
 			c.JSON(http.StatusOK, gin.H{
-				"res": "ok",
+				"res":       "ok",
+				"jugadores": j,
 			})
 
 		} else {
@@ -186,6 +187,9 @@ func IniciarPartida(c *gin.Context, partidaNueva *melody.Melody, torneoNuevo *me
 
 		pDAO.IniciarPartida(p.Clave)
 
+		// Llamar a la función partida con el canal correspondiente
+		go partida.IniciarPartida(p.Clave, partidas["/api/ws/partida/"+p.Clave], false) // el bool indica que no se ha pausado
+
 		if pDAO.EsTorneo(p.Clave) {
 			torneoNuevo.BroadcastFilter(msg1, func(q *melody.Session) bool { //Envia la información a todos con la misma url
 				return q.Request.URL.Path == "/api/ws/torneo/"+p.Clave
@@ -203,62 +207,50 @@ func IniciarPartida(c *gin.Context, partidaNueva *melody.Melody, torneoNuevo *me
 			partidas["/api/ws/partida/"+p.Clave] <- strconv.Itoa(njug)
 
 			if pDAO.EstaPausada(p.Clave) {
-				//falta mazo del tablero
+				mazo := pDAO.GetMazo(p.Clave)
 				descarte := pDAO.GetDescarte(p.Clave)
-				//combinaciones := pDAO.GetCombinaciones(p.Clave)
+				combinaciones := pDAO.GetCombinaciones(p.Clave)
 
-				/* DESCOMENTAR CUANDO ESTÉ EL MAZO
+				//Recuperar el mazo
 				for i := 0; i < len(mazo); i++ {
-					partidas["/api/ws/partida/"+p.Clave] <- mazo[i]
+					partidas["/api/ws/partida/"+p.Clave] <- strconv.Itoa(mazo[i].GetValor()) + "," + strconv.Itoa(mazo[i].GetPalo()) + "," + strconv.Itoa(mazo[i].GetReverso())
 				}
 				partidas["/api/ws/partida/"+p.Clave] <- "Fin_mazo"
-				*/
 
-				cartaDescarte := strconv.Itoa(descarte.GetValor()) + strconv.Itoa(descarte.GetPalo()) + strconv.Itoa(descarte.GetReverso())
+				//Recuperar el descarte
+				cartaDescarte := strconv.Itoa(descarte.GetValor()) + "," + strconv.Itoa(descarte.GetPalo()) + "," + strconv.Itoa(descarte.GetReverso())
 				partidas["/api/ws/partida/"+p.Clave] <- cartaDescarte
 				partidas["/api/ws/partida/"+p.Clave] <- "Fin_descartes"
 
-				/* No se como pasar del vo a un [][]string pero combinaciones tiene que ser asi:
-					[["valor,palo,reverso","valor,palo,reverso","valor,palo,reverso"],["valor,palo,reverso","valor,palo,reverso","valor,palo,reverso"]]
-					Ese ejemplo serían dos combinaciones.
-
-					Y despues de pasarlo a eso hay que descomentar esto de abajo
-
+				//Recuperar combinaciones
+				ncomb := 0
 				for i := 0; i < len(combinaciones); i++ {
-					for j := 0; j < len(combinaciones[i]); j++ {
-						partidas["/api/ws/partida/"+p.Clave] <- combinaciones[i][j]
+					partidas["/api/ws/partida/"+p.Clave] <- strconv.Itoa((combinaciones[i].GetCarta()/10)/10) + "," + strconv.Itoa((combinaciones[i].GetCarta()/10)%10) + "," + strconv.Itoa(combinaciones[i].GetCarta()%10)
+					if i+1 < len(combinaciones) && ncomb != combinaciones[i+1].GetNcomb() {
+						ncomb = combinaciones[i+1].GetNcomb()
+						partidas["/api/ws/partida/"+p.Clave] <- "Fin_combinacion"
 					}
-					partidas["/api/ws/partida/"+p.Clave] <- "Fin_combinacion"
 				}
-				partidas["/api/ws/partida/"+p.Clave] <- "Fin_combinaciones"
-				*/
+				partidas["/api/ws/partida/"+p.Clave] <- "Fin_combinacion"
 
-
-				/* Con los jugadores tampoco lo sé :(
-					Habría que descomentar esto para enviarlo.
-
+				//Recuperar manos
+				//Como todos los jugadores de antes deben de estar en el lobby podemos usar esta funcion
+				jugadores := parDAO.GetJugadoresEnLobby(p.Clave)
 				for i := 0; i < len(jugadores); i++ {
-					for j := 0; j < len(jugadores[i]); j++ {
-						partidas["/api/ws/partida/"+p.Clave] <- jugadores[i][j]
+					mano := pDAO.GetMano(p.Clave, jugadores[i])
+					for j := 0; j < len(mano); j++ {
+						partidas["/api/ws/partida/"+p.Clave] <- strconv.Itoa(mano[i].GetValor()) + "," + strconv.Itoa(mano[i].GetPalo()) + "," + strconv.Itoa(mano[i].GetReverso())
 					}
 					partidas["/api/ws/partida/"+p.Clave] <- "Fin_mano"
 				}
-				*/
 
-				/* DESCOMENTAR CUANDO ESTÉ EL VECTOR DE QUIÉN HA ABIERTO
+				//Recuperamos abiertos
+				abiertos := parDAO.GetAbierto(p.Clave)
 				for i := 0; i < len(abiertos); i++ {
-				partidas["/api/ws/partida/"+p.Clave] <- strconv.FormatBool(abiertos[i])
+					partidas["/api/ws/partida/"+p.Clave] <- abiertos[i]
 				}
-				*/
 
 			}
-		}
-
-		if pDAO.EstaPausada(p.Clave) {
-			//Recuperar las cartas
-			//pDAO.DelTableroGuardado(p.Clave) //Una vez recuperadas borramos la informacion
-		} else {
-			//Repartir las cartas
 		}
 
 		c.JSON(http.StatusOK, gin.H{
@@ -334,17 +326,18 @@ func PausarPartida(c *gin.Context, partidaNueva *melody.Melody, partidas map[str
 			respuesta = <-partida
 		}
 
-		// Lista de qué jugadores han abierto o no
-		/* 
+		// Lista de qué jugadores han abierto o no ordenados por turnos
 		var ab []string
 		respuesta = <-partida
 		for respuesta != "fin" {
-			ab = append(ab,respuesta)
+			ab = append(ab, respuesta)
 			respuesta = <-partida
 		}
-		*/
 
-
+		//Guardamos en la BD
+		for i := 0; i < len(ab); i++ {
+			parDAO.UpdateAbierto(p.Clave, i, ab[i])
+		}
 
 		//Guardamos combinaciones en la BD -> [["1,2,3","2,3,1","1,2,3"]]
 		for i := 0; i < len(Combinaciones); i++ {
@@ -364,14 +357,22 @@ func PausarPartida(c *gin.Context, partidaNueva *melody.Melody, partidas map[str
 			pDAO.AddDescarte(*d)
 		}
 
-		//Guardamos el mazo de cada jugador (Por ahora no guardamos turno)
+		//Guardamos las manos de cada jugador
 		for i := 0; i < len(Manos); i++ {
 			for j := 0; j < len(Manos[i]); j++ {
 				man := strings.Split(Manos[i][j], ",")
 				carta, _ := strconv.Atoi((man[0] + man[1] + man[2]))
-				m := VO.NewMazosVO(i, p.Clave, carta)
-				pDAO.AddCartaMazo(*m)
+				m := VO.NewManosVO(i, p.Clave, carta)
+				pDAO.AddCartaMano(*m)
 			}
+		}
+
+		//Guardamos el mazo de la partida
+		for j := 0; j < len(Mazo); j++ {
+			maz := strings.Split(Mazo[j], ",")
+			carta, _ := strconv.Atoi((maz[0] + maz[1] + maz[2]))
+			m := VO.NewMazosVO(p.Clave, carta)
+			pDAO.AddCartaMazo(*m)
 		}
 
 		parDAO.ModLobby(p.Clave, 0) //Guardamos que los jugadores ya no estan en lobby o jugando

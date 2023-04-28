@@ -5,10 +5,11 @@ type ParticiparVO struct {
 	jugador string
 	puntos  int
 	turno   int
+	abierto string
 }
 
-func NewParticiparVO(partida string, jugador string, puntos int, turno int) *ParticiparVO {
-	p := ParticiparVO{partida: partida, jugador: jugador, puntos: puntos, turno: turno}
+func NewParticiparVO(partida string, jugador string, puntos int, turno int, abierto string) *ParticiparVO {
+	p := ParticiparVO{partida: partida, jugador: jugador, puntos: puntos, turno: turno, abierto: abierto}
 	return &p
 }
 
@@ -26,4 +27,8 @@ func (p *ParticiparVO) GetPuntos() int {
 
 func (p *ParticiparVO) GetTurno() int {
 	return p.turno
+}
+
+func (p *ParticiparVO) GetAbierto() string {
+	return p.abierto
 }

@@ -35,8 +35,9 @@ CREATE TABLE PARTICIPAR (
 	partida 	text REFERENCES PARTIDAS (clave),
 	jugador 	text REFERENCES JUGADORES (codigo),
 	puntos_resultado integer NOT NULL,
-	enlobby 	integer NOT NULL,
+	enlobby 	integer NOT NULL CHECK(enlobby = 1 OR enlobby = 0),
 	turno 		integer NOT NULL,
+	abierto		text NOT NULL CHECK(abierto = 'si' OR abierto = 'no'),
 	UNIQUE (partida, turno),
 	UNIQUE (partida, jugador),
 	PRIMARY KEY (id)
@@ -78,7 +79,7 @@ CREATE TABLE DESCARTES (
 	PRIMARY KEY (id)
 );
 
-CREATE TABLE MAZOS (
+CREATE TABLE MANOS (
 	id 			serial,
 	partida 	text REFERENCES PARTIDAS (clave),
 	carta 		serial REFERENCES CARTAS (id),
@@ -87,6 +88,15 @@ CREATE TABLE MAZOS (
 	UNIQUE (partida, carta),
 	PRIMARY KEY (id)
 );
+
+CREATE TABLE MAZOS (
+	id 			serial,
+	partida 	text REFERENCES PARTIDAS (clave),
+	carta 		serial REFERENCES CARTAS (id),
+	UNIQUE(partida, carta),
+	PRIMARY KEY (id)
+);
+
 	
 insert into JUGADORES (nombre, contra, foto, descrp, pjugadas, pganadas, puntos, email, codigo) values ('Max', '03ac674216f3e15c761ee1a5e255f067953623c8b388b4459e13f978d7c846f4', 7, 'Aliquam sit amet diam in magna bibendum imperdiet. Nullam orci pede, venenatis non, sodales sed, tincidunt eu, felis. Fusce posuere felis sed lacus.', 9, 14, 1000, 'max@gmail.com', 1);
 insert into JUGADORES (nombre, contra, foto, descrp, pjugadas, pganadas, puntos, email, codigo) values ('Eugenio', '03ac674216f3e15c761ee1a5e255f067953623c8b388b4459e13f978d7c846f4', 1, 'Proin at turpis a pede posuere nonummy. Integer non velit.', 12, 87, 900, 'eu@gmail.com', 2);

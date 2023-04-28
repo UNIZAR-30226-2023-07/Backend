@@ -23,7 +23,7 @@ func (pDAO *ParticiparDAO) AddParticipar(pVO VO.ParticiparVO) {
 	defer db.Close()
 
 	//Añadir participación
-	addp := "INSERT INTO PARTICIPAR (partida, jugador, puntos_resultado, enlobby, turno) VALUES ($1, $2, 0, 1, $3)"
+	addp := "INSERT INTO PARTICIPAR (partida, jugador, puntos_resultado, enlobby, turno, abierto) VALUES ($1, $2, 0, 1, $3, 'no')"
 	_, e := db.Exec(addp, pVO.GetPartida(), pVO.GetJugador(), pVO.GetTurno())
 	CheckError(e)
 
@@ -63,6 +63,25 @@ func (pDAO *ParticiparDAO) ModLobby(p string, l int) {
 	//Modifica enlobby de todos los jugadores de una partida
 	modL := "UPDATE PARTICIPAR SET enlobby = $2 WHERE partida = $1"
 	_, e := db.Exec(modL, p, l)
+	CheckError(e)
+
+}
+
+// Actualiza si un jugador ha abierto
+func (pDAO *ParticiparDAO) UpdateAbierto(p string, turno int, a string) {
+	//String para la conexión
+	psqlcon := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable", host, port, user, password, dbname)
+
+	//abrir base de datos
+	db, err := sql.Open("postgres", psqlcon)
+	CheckError(err)
+
+	//cerrar base de datos
+	defer db.Close()
+
+	//Modifica si un jugador ha abierto
+	moda := "UPDATE PARTICIPAR SET abierto = $3 WHERE partida = $2 AND turno = $1"
+	_, e := db.Exec(moda, turno, p, a)
 	CheckError(e)
 
 }
@@ -127,6 +146,92 @@ func (pDAO *ParticiparDAO) GetJugadoresTurnos(p string) [][]string {
 		tmp = append(tmp, turno)
 
 		res = append(res, tmp)
+	}
+
+	return res
+
+}
+
+// Devuelve los jugadores que están en el lobby
+func (pDAO *ParticiparDAO) GetJugadoresEnLobby(p string) []string {
+	//String para la conexión
+	psqlcon := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable", host, port, user, password, dbname)
+
+	//abrir base de datos
+	db, err := sql.Open("postgres", psqlcon)
+	CheckError(err)
+
+	//cerrar base de datos
+	defer db.Close()
+
+	var res []string
+
+	//Buscamos los jugadores junto a su turno
+	isp := "SELECT jugador FROM PARTICIPAR WHERE partida = $1 AND enlobby = 1"
+	rows, err := db.Query(isp, p)
+	CheckError(err)
+
+	defer rows.Close()
+	for rows.Next() {
+		var jugador string
+
+		err := rows.Scan(&jugador)
+		CheckError(err)
+
+		res = append(res, jugador)
+	}
+
+	return res
+
+}
+
+// Actualiza los puntos del torneo en curso
+func (pDAO *ParticiparDAO) UpdatePuntos(p string, j string, puntos string) {
+	//String para la conexión
+	psqlcon := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable", host, port, user, password, dbname)
+
+	//abrir base de datos
+	db, err := sql.Open("postgres", psqlcon)
+	CheckError(err)
+
+	//cerrar base de datos
+	defer db.Close()
+
+	//Modifica los puntos de un jugador
+	modp := "UPDATE PARTICIPAR SET puntos_resultado = $3 WHERE partida = $2 AND jugador = $1"
+	_, e := db.Exec(modp, j, p, puntos)
+	CheckError(e)
+
+}
+
+// Recupera si un jugados ha abierto o no ordenados por turno
+func (pDAO *ParticiparDAO) GetAbierto(p string) []string {
+	//String para la conexión
+	psqlcon := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable", host, port, user, password, dbname)
+
+	//abrir base de datos
+	db, err := sql.Open("postgres", psqlcon)
+	CheckError(err)
+
+	//cerrar base de datos
+	defer db.Close()
+
+	var res []string
+
+	//Seleccionamos si ha abierto o no ordenador por turno
+	a := "SELECT turno, abierto FROM PARTICIPAR WHERE partida = $1 ORDER BY turno ASC"
+	rows, err := db.Query(a, p)
+	CheckError(err)
+
+	defer rows.Close()
+	for rows.Next() {
+		var turno int
+		var abierto string
+
+		err := rows.Scan(&turno, &abierto)
+		CheckError(err)
+
+		res = append(res, abierto)
 	}
 
 	return res

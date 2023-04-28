@@ -352,7 +352,7 @@ func (pDAO *PartidasDAO) AddCombinacion(c VO.CombinacionesVO) {
 	CheckError(err)
 }
 
-// Añade una carta del mazo de un jugador en la BD
+// Añade una combinación en la BD
 func (pDAO *PartidasDAO) AddCartaMazo(m VO.MazosVO) {
 	//String para la conexión
 	psqlcon := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable", host, port, user, password, dbname)
@@ -364,8 +364,26 @@ func (pDAO *PartidasDAO) AddCartaMazo(m VO.MazosVO) {
 	//cerrar base de datos
 	defer db.Close()
 
-	//Añadimos una nueva carta al mazo de un jugador en la BD
-	addm := "INSERT INTO MAZOS VALUES (DEFAULT, $1, $2, $3)"
+	//Añadimos una nueva combinación a la BD
+	addc := "INSERT INTO MAZOS VALUES (DEFAULT, $1, $2)"
+	_, err = db.Exec(addc, m.GetPartida(), m.GetCarta())
+	CheckError(err)
+}
+
+// Añade una carta a la mano de un jugador en la BD
+func (pDAO *PartidasDAO) AddCartaMano(m VO.ManosVO) {
+	//String para la conexión
+	psqlcon := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable", host, port, user, password, dbname)
+
+	//abrir base de datos
+	db, err := sql.Open("postgres", psqlcon)
+	CheckError(err)
+
+	//cerrar base de datos
+	defer db.Close()
+
+	//Añadimos una nueva carta a la mano de un jugador en la BD
+	addm := "INSERT INTO MANOS VALUES (DEFAULT, $1, $2, $3)"
 	_, err = db.Exec(addm, m.GetPartida(), m.GetCarta(), m.GetTurno())
 	CheckError(err)
 }
@@ -427,8 +445,43 @@ func (pDAO *PartidasDAO) GetCombinaciones(p string) []*VO.CombinacionesVO {
 
 }
 
-// Recupera el mazo de un jugador
-func (pDAO *PartidasDAO) GetMazo(p string, j string) []*VO.CartasVO {
+// Recupera el Mazo de la partida
+func (pDAO *PartidasDAO) GetMazo(p string) []*VO.CartasVO {
+	//String para la conexión
+	psqlcon := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable", host, port, user, password, dbname)
+
+	//abrir base de datos
+	db, err := sql.Open("postgres", psqlcon)
+	CheckError(err)
+
+	//cerrar base de datos
+	defer db.Close()
+
+	//Obtenemos todas las combinaciones de una partida
+	qMaz := "SELECT carta FROM MAZOS WHERE partida = $1"
+	rows, err := db.Query(qMaz, p)
+	CheckError(err)
+
+	var res []*VO.CartasVO
+
+	defer rows.Close()
+	for rows.Next() {
+		var carta int
+
+		err := rows.Scan(&carta)
+		CheckError(err)
+
+		c := VO.NewCartasVO((carta/10)/10, (carta/10)%10, carta%10)
+		res = append(res, c)
+
+	}
+
+	return res
+
+}
+
+// Recupera la Mano de un jugador
+func (pDAO *PartidasDAO) GetMano(p string, j string) []*VO.CartasVO {
 	//String para la conexión
 	psqlcon := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable", host, port, user, password, dbname)
 
@@ -441,7 +494,7 @@ func (pDAO *PartidasDAO) GetMazo(p string, j string) []*VO.CartasVO {
 
 	//Obtenemos todas las combinaciones de una partida
 	qMaz := "SELECT m.carta " +
-		"FROM MAZOS AS m JOIN PARTICIPAR AS p ON m.turno = p.turno AND m.partida = p.partida " +
+		"FROM MANOS AS m JOIN PARTICIPAR AS p ON m.turno = p.turno AND m.partida = p.partida " +
 		"WHERE m.partida = $1 and p.jugador = $2"
 	rows, err := db.Query(qMaz, p, j)
 	CheckError(err)
@@ -497,7 +550,7 @@ func (pDAO *PartidasDAO) GetDescarte(p string) *VO.CartasVO {
 
 }
 
-// Elimina las combinaciones, descartes y mazos de una partida
+// Elimina las combinaciones, descartes, manos y mazo de una partida
 func (pDAO *PartidasDAO) DelTableroGuardado(p string) {
 	//String para la conexión
 	psqlcon := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable", host, port, user, password, dbname)
@@ -514,13 +567,18 @@ func (pDAO *PartidasDAO) DelTableroGuardado(p string) {
 	_, err = db.Exec(delc, p)
 	CheckError(err)
 
-	//Eliminamos mazos de una partida
-	delm := "DELETE FROM MAZOS WHERE partida = $1"
+	//Eliminamos las manos de una partida
+	delm := "DELETE FROM MANOS WHERE partida = $1"
 	_, err = db.Exec(delm, p)
 	CheckError(err)
 
 	//Eliminamos combinaciones de una partida
 	deld := "DELETE FROM DESCARTES WHERE partida = $1"
 	_, err = db.Exec(deld, p)
+	CheckError(err)
+
+	//Eliminamos el mazo de una partida
+	delmz := "DELETE FROM MAZOS WHERE partida = $1"
+	_, err = db.Exec(delmz, p)
 	CheckError(err)
 }
