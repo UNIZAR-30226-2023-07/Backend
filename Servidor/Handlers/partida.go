@@ -187,7 +187,11 @@ func IniciarPartida(c *gin.Context, partidaNueva *melody.Melody, torneoNuevo *me
 		pDAO.IniciarPartida(p.Clave)
 
 		// Llamar a la función partida con el canal correspondiente
-		go partida.IniciarPartida(p.Clave, partidas["/api/ws/partida/"+p.Clave], false) // el bool indica que no se ha pausado
+		if pDAO.EstaPausada(p.Clave) {
+			go partida.IniciarPartida(p.Clave, partidas["/api/ws/partida/"+p.Clave], true) // el bool indica que se ha pausado
+		} else {
+			go partida.IniciarPartida(p.Clave, partidas["/api/ws/partida/"+p.Clave], false) // el bool indica que no se ha pausado
+		}
 
 		if pDAO.EsTorneo(p.Clave) {
 			torneoNuevo.BroadcastFilter(msg1, func(q *melody.Session) bool { //Envia la información a todos con la misma url
@@ -275,7 +279,7 @@ func PausarPartida(c *gin.Context, partidaNueva *melody.Melody, partidas map[str
 		return
 	}
 
-	partida := partidas["api/ws/partida/"+p.Clave]
+	partida := partidas["/api/ws/partida/"+p.Clave]
 
 	pDAO := DAO.PartidasDAO{}
 	parDAO := DAO.ParticiparDAO{}

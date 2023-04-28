@@ -41,7 +41,6 @@ func inicio_turno(espera chan string, wait chan bool, canalPartida chan string) 
 			fin = true
 			fmt.Println("FINAL")
 		} else if input == "Pausar" {
-			fmt.Println("hola")
 			fin = true
 			fmt.Println("FINAL")
 		}
@@ -352,6 +351,8 @@ func IniciarPartida(idPartida string, canalPartida chan string, estabaPausada bo
 							wait <- true
 							partida = false
 							turno = false
+							carta_robada = true
+							goto SALIR
 						} else if resp == "Mostrar_mano" { //Comando para mostrar la mano
 							fmt.Println("Mostrando mano: ")
 							cartas.MostrarMano(jugador.(jugadores.Jugador).Mano) //Función que muestra la mano del jugador actual

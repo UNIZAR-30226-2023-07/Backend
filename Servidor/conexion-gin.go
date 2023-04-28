@@ -260,10 +260,18 @@ func main() {
 			Ganador       string     `json:"ganador"`
 		}
 
+		type RespuestaManos struct {
+			Emisor   string     `json:"emisor"`
+			Receptor string     `json:"receptor"`
+			Tipo     string     `json:"tipo"`
+			Manos    [][]string `json:"manos"`
+		}
+
 		var M Mensaje
 		var R Respuesta
 		var RT RespuestaTablero
 		var RD RespuestaDescarte
+		var RM RespuestaManos
 
 		json.Unmarshal(msg, &M)
 
@@ -401,6 +409,18 @@ func main() {
 				RT.Combinaciones = append(RT.Combinaciones, comb)
 				respuesta = <-partidas[s.Request.URL.Path]
 			}
+		} else if M.Tipo == "Mostrar_manos" { //CAMBIADO
+			partidas[s.Request.URL.Path] <- M.Tipo
+			respuesta := <-partidas[s.Request.URL.Path]
+			for respuesta != "fin" {
+				var mano []string
+				for respuesta != "finJ" {
+					mano = append(mano, respuesta)
+					respuesta = <-partidas[s.Request.URL.Path]
+				}
+				RM.Manos = append(RM.Manos, mano)
+				respuesta = <-partidas[s.Request.URL.Path]
+			}
 		}
 
 		if M.Tipo == "Mostrar_tablero" {
@@ -413,6 +433,11 @@ func main() {
 			RD.Receptor = "todos"
 			RD.Tipo = M.Tipo
 			msg, _ = json.MarshalIndent(&RD, "", "\t")
+		} else if M.Tipo == "Mostrar_manos" {
+			RM.Emisor = "Servidor"
+			RM.Receptor = "todos"
+			RM.Tipo = M.Tipo
+			msg, _ = json.MarshalIndent(&RM, "", "\t")
 		} else {
 			msg, _ = json.MarshalIndent(&R, "", "\t")
 		}
