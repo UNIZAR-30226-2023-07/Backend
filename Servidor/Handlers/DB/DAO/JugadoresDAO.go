@@ -370,7 +370,7 @@ func (jDAO *JugadoresDAO) PartidasPausadas(j string) []*VO.PartidasVO {
 	defer db.Close()
 
 	//Obtenemos todos las partidas pausadas
-	qPausa := "SELECT p.clave, p.creador, p.tipo, p.torneo " +
+	qPausa := "SELECT p.clave, p.creador, p.tipo " +
 		"FROM PARTIDAS AS p JOIN PARTICIPAR AS pr ON p.clave = pr.partida " +
 		"WHERE p.estado = 'pausada' AND pr.jugador = $1 "
 	rows, err := db.Query(qPausa, j)
@@ -383,12 +383,11 @@ func (jDAO *JugadoresDAO) PartidasPausadas(j string) []*VO.PartidasVO {
 		var clave string
 		var creador string
 		var tipo string
-		var torneo string
 
-		err := rows.Scan(&clave, &creador, &tipo, &torneo)
+		err := rows.Scan(&clave, &creador, &tipo)
 		CheckError(err)
 
-		p := VO.NewPartidasVO(clave, creador, tipo, "pausada", torneo)
+		p := VO.NewPartidasVO(clave, creador, tipo, "pausada", "")
 		res = append(res, p)
 
 	}
