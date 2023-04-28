@@ -635,13 +635,16 @@ func IniciarPartida(idPartida string, canalPartida chan string, estabaPausada bo
 
 								tablero.AnyadirCombinaciones(t, lista)
 							}
-							canalPartida <- "fin" //DESCOMENTAR
+							canalPartida <- "Ok" //DESCOMENTAR
 						}
 						if jugador.(jugadores.Jugador).Mano.Size() == 0 {
+							canalPartida <- "ganador" //DESCOMENTAR
+							canalPartida <- strconv.Itoa(id)
 							wait <- true
 							partida = false
 							turno = false
 						} else {
+							canalPartida <- "Ok"
 							wait <- false
 						}
 
@@ -792,15 +795,20 @@ func IniciarPartida(idPartida string, canalPartida chan string, estabaPausada bo
 							r := tablero.AnyadirCarta(l_aux, jugador.(jugadores.Jugador).Mano, &t, t_combinacion) //Comprobamos si no es valida, lo es, o si lo es y nos devuelve joker
 							if r != -1 {                                                                          //Si lo es la colocamos
 								fmt.Println("Carta colocada con exito")
-								canalPartida <- "Ok" //DESCOMENTAR
 								if r == 1 { //Y si es necesario recibimos el Joker
+									canalPartida <- "joker"
 									value := cartas.Carta{0, 4, 1}
 									jugador.(jugadores.Jugador).Mano.Add(value)
+									canalPartida <- strconv.Itoa(value.Valor) + "," + strconv.Itoa(value.Palo) + "," + strconv.Itoa(value.Color)
 								} else {
 									if jugador.(jugadores.Jugador).Mano.Size() == 0 {
+										canalPartida <- "ganador"                            //En caso de no contar con más cartas terminará la partida
+										canalPartida <- strconv.Itoa(id)
 										wait <- true
 										partida = false
 										turno = false
+									} else {
+										canalPartida <- "Ok" //DESCOMENTAR
 									}
 								}
 							} else {

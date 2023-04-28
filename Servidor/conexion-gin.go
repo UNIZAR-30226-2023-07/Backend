@@ -307,7 +307,7 @@ func main() {
 					// si quedan mas componentes se envia "END"
 					if i < len(M.Cartas)-1 {
 						partidas[s.Request.URL.Path] <- "END"
-						respuesta := <-partidas[s.Request.URL.Path]
+						respuesta = <-partidas[s.Request.URL.Path]
 						if respuesta != "Ok" {
 							fmt.Println("Error:", respuesta)
 							goto SALIR
@@ -316,8 +316,12 @@ func main() {
 				}
 			SALIR:
 				partidas[s.Request.URL.Path] <- "FIN"
-				respuesta := <-partidas[s.Request.URL.Path]
+				respuesta = <-partidas[s.Request.URL.Path]
 				fmt.Println(respuesta)
+				respuesta = <-partidas[s.Request.URL.Path]
+				if respuesta == "ganador" {
+					respuesta = <-partidas[s.Request.URL.Path]
+				}
 				R.Info = respuesta
 			} else {
 				fmt.Println(respuesta)
@@ -333,8 +337,12 @@ func main() {
 					partidas[s.Request.URL.Path] <- parametros[i]
 				}
 				respuesta := <-partidas[s.Request.URL.Path]
+				if respuesta == "joker" || respuesta == "ganador" {
+					respuesta = <-partidas[s.Request.URL.Path]
+				}
 				fmt.Println(respuesta)
 				R.Info = respuesta
+
 			} else {
 				fmt.Println(respuesta)
 				R.Info = respuesta
