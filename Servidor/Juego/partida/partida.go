@@ -275,6 +275,22 @@ func IniciarPartida(idPartida string, canalPartida chan string, estabaPausada bo
 							canalPartida <- "fin" //DESCOMENTAR
 
 							wait <- false
+						} else if resp == "Mostrar_manos" { //Comando para mostrar las manos de todos los jugadores
+							// recorrer la lista de jugadores y pasar cada componente a string
+							for i := 0; i < listaJ.Size(); i++ {
+								jugador, _ := listaJ.Get(i)
+								jug := jugador.(jugadores.Jugador)
+								for j := 0; j < jug.Mano.Size(); j++ {
+									carta, _ := jug.Mano.Get(j)
+									carta2 := carta.(cartas.Carta)
+									cartaString := strconv.Itoa(carta2.Valor) + "," + strconv.Itoa(carta2.Palo) + "," + strconv.Itoa(carta2.Color)
+									canalPartida <- cartaString
+								}
+								canalPartida <- "finJ"
+							}
+							canalPartida <- "fin"
+
+							wait <- false
 						} else if resp == "Mostrar_tablero" { //Comando para mostrar el tablero
 							tablero.MostrarTablero(t) //Función para mostrar el tablero
 							// recorrer el mazo y pasar cada componente a string
@@ -408,6 +424,22 @@ func IniciarPartida(idPartida string, canalPartida chan string, estabaPausada bo
 							turno = false
 							wait <- false
 						}
+					} else if resp == "Mostrar_manos" { //Comando para mostrar las manos de todos los jugadores
+						// recorrer la lista de jugadores y pasar cada componente a string
+						for i := 0; i < listaJ.Size(); i++ {
+							jugador, _ := listaJ.Get(i)
+							jug := jugador.(jugadores.Jugador)
+							for j := 0; j < jug.Mano.Size(); j++ {
+								carta, _ := jug.Mano.Get(j)
+								carta2 := carta.(cartas.Carta)
+								cartaString := strconv.Itoa(carta2.Valor) + "," + strconv.Itoa(carta2.Palo) + "," + strconv.Itoa(carta2.Color)
+								canalPartida <- cartaString
+							}
+							canalPartida <- "finJ"
+						}
+						canalPartida <- "fin"
+
+						wait <- false
 					} else if resp == "Mostrar_tablero" {
 						tablero.MostrarTablero(t)
 
