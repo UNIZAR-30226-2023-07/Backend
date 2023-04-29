@@ -4,6 +4,7 @@ import (
 	"DB/DAO"
 	"DB/VO"
 	"Juego/partida"
+	"Juego/torneo"
 	"encoding/json"
 	"math/rand"
 	"net/http"
@@ -187,10 +188,18 @@ func IniciarPartida(c *gin.Context, partidaNueva *melody.Melody, torneoNuevo *me
 		pDAO.IniciarPartida(p.Clave)
 
 		// Llamar a la función partida con el canal correspondiente
-		if pDAO.EstaPausada(p.Clave) {
-			go partida.IniciarPartida(p.Clave, partidas["/api/ws/partida/"+p.Clave], true) // el bool indica que se ha pausado
+		if !pDAO.EsTorneo(p.Clave) {
+			if pDAO.EstaPausada(p.Clave) {
+				go partida.IniciarPartida(p.Clave, partidas["/api/ws/partida/"+p.Clave], true) // el bool indica que se ha pausado
+			} else {
+				go partida.IniciarPartida(p.Clave, partidas["/api/ws/partida/"+p.Clave], false) // el bool indica que no se ha pausado
+			}
 		} else {
-			go partida.IniciarPartida(p.Clave, partidas["/api/ws/partida/"+p.Clave], false) // el bool indica que no se ha pausado
+			if pDAO.EstaPausada(p.Clave) {
+				go torneo.IniciarTorneo(p.Clave, partidas[torneos["/api/ws/torneo/"+p.Clave]], true)	// el bool indica que se ha pausado
+			} else{
+				go torneo.IniciarTorneo(p.Clave, partidas[torneos["/api/ws/torneo/"+p.Clave]], false)	// el bool indica que no se ha pausado
+			}
 		}
 
 		if pDAO.EsTorneo(p.Clave) {
