@@ -17,7 +17,7 @@ import (
 	"github.com/emirpasic/gods/lists/doublylinkedlist"
 
 	//"juego/partida"
-	//"Juego/bot" //COMENTADO
+	"Juego/bot" //COMENTADO
 	"Juego/tablero"
 )
 
@@ -67,6 +67,15 @@ func IniciarPartida(idPartida string, canalPartida chan string, estabaPausada bo
 	fmt.Println("Numero de jugadores: ", numJugad)
 	//var ab [3]bool //COMENTADO
 	ab := make([]bool, numJugad) //DESCOMENTAR
+	es_bot := make([]bool, 4) //DESCOMENTAR
+
+	for i := 0; i < len(es_bot); i++ {
+		if i >= numJugad {
+			es_bot[i] = true;
+		}else{
+			es_bot[i] = false;
+		}
+	}
 
 	t := tablero.Tablero{doublylinkedlist.New(), doublylinkedlist.New(), list.New()} //DESCOMENTAR
 
@@ -207,109 +216,8 @@ func IniciarPartida(idPartida string, canalPartida chan string, estabaPausada bo
 			for turno { //Mientras nos encontremos en un turno 
 
 					//COMENTADO
-				/*if id == 0 {
-					fmt.Println("El bot va a operar")
-
-					tablero.RobarCarta(t.Mazo, jugador.(jugadores.Jugador).Mano)
-
-					cartas.MostrarMano(jugador.(jugadores.Jugador).Mano)
-
-					fmt.Println("Vamos a ver las combinaciones posibles de la mano del bot")
-
-					p, comb := bot.CalcularPuntosPosibles(jugador.(jugadores.Jugador).Mano)
-
-					fmt.Println("Tenemos ", p, " puntos con las combinaciones")
-					fmt.Println(comb)
-
-					iterator := comb.Iterator()
-					i := 0
-					fmt.Println("Mostramos nueva combinacion")
-					for iterator.Next() {
-						i++
-						l := iterator.Value()
-						lista := l.(*doublylinkedlist.List)
-						iterator2 := lista.Iterator()
-						for iterator2.Next() {
-							c := iterator2.Value()
-							cartas := c.(doublylinkedlist.List)
-							iterator_c := cartas.Iterator()
-							for iterator_c.Next() {
-								v := iterator_c.Value()
-								fmt.Println(v)
-								//mano.Add(valor)
-							}
-						}
-					}
-					if(ab[id] == false){
-						p = 0
-						if(p < 51){
-							fmt.Println("No podemos abrir")
-							iterator := comb.Iterator()
-							i := 0
-							for iterator.Next() {
-								i++
-								l := iterator.Value()
-								lista := l.(*doublylinkedlist.List)
-								iterator2 := lista.Iterator()
-								for iterator2.Next() {
-									c := iterator2.Value()
-									cartas := c.(doublylinkedlist.List)
-									iterator_c := cartas.Iterator()
-									for iterator_c.Next() {
-										v := iterator_c.Value()
-										jugador.(jugadores.Jugador).Mano.Add(v)
-									}
-								}
-
-							}
-							des := jugadores.CartaMasAlta(jugador.(jugadores.Jugador).Mano)
-
-							tablero.FinTurno(t.Mazo, jugador.(jugadores.Jugador).Mano, t.Descartes, des)
-
-							cartas.MostrarMano(jugador.(jugadores.Jugador).Mano)
-						}else{
-							fmt.Println("Vamos a abrir")
-							listaA := list.New()
-							//cartas.MostrarMano(jugador.(jugadores.Jugador).Mano)
-							iterator := comb.Iterator()
-							for iterator.Next() {
-								i++
-								l := iterator.Value()
-								lista := l.(*doublylinkedlist.List)
-								iterator2 := lista.Iterator()
-								for iterator2.Next() {
-									c := iterator2.Value()
-									fmt.Println(c)
-									cartas := c.(doublylinkedlist.List)
-									iterator_c := cartas.Iterator()
-									copia := doublylinkedlist.New()
-									for iterator_c.Next() {
-										v := iterator_c.Value()
-										copia.Add(v) //Creamos copia
-										
-									}
-									listaA.PushBack(copia)
-								}
-							}
-							fmt.Println(listaA)
-							tablero.AnyadirCombinaciones(t, listaA)
-							tablero.MostrarTablero(t)
-
-							bot.ComprobarColocarCarta(jugador.(jugadores.Jugador).Mano, &t)
-
-							cartas.MostrarMano(jugador.(jugadores.Jugador).Mano)
-
-							des := jugadores.CartaMasAlta(jugador.(jugadores.Jugador).Mano)
-
-							tablero.FinTurno(t.Mazo, jugador.(jugadores.Jugador).Mano, t.Descartes, des)
-
-							cartas.MostrarMano(jugador.(jugadores.Jugador).Mano)
-						}
-					}else{
-						bot.ComprobarColocarCarta(jugador.(jugadores.Jugador).Mano, &t)
-
-						tablero.FinTurno(t.Mazo, jugador.(jugadores.Jugador).Mano, t.Descartes, 0)					
-					}
+				if es_bot[id] == true {
+					bot.Bot_En_Funcionamiento(t, jugador, ab[id])
 					if id >= 3 {
 						id = 0
 					} else {
@@ -319,7 +227,7 @@ func IniciarPartida(idPartida string, canalPartida chan string, estabaPausada bo
 					basura := <- espera
 					fmt.Println(basura)
 					wait <- false
-				} else { */
+				} else { 
 					for !carta_robada { //Mientras no hayan robado una carta
 						resp := <-espera
 						if resp == "Robar_carta" { //Accion de robar una carta
@@ -834,7 +742,7 @@ func IniciarPartida(idPartida string, canalPartida chan string, estabaPausada bo
 						fmt.Println("Operacion no valida")
 						wait <- false
 					}
-				//} //COMENTADO
+				} //COMENTADO
 			}
 		}
 
@@ -866,8 +774,8 @@ SALIR: //Al acabar la partida terminamos contando los puntos de los jugadores qu
 		fmt.Println("Puntos del jugador", jugador.(jugadores.Jugador).Id, ":", j.P_tor)
 	}
 	return listaJFinal
-
 }
+
 
 
 func pausar(t tablero.Tablero, canalPartida chan string, listaJ *doublylinkedlist.List, ab []bool) {

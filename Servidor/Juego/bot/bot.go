@@ -3,9 +3,11 @@ package bot
 import (
 	"Juego/cartas"
 	"Juego/tablero"
+	"Juego/jugadores"
 	"fmt"
 
 	"github.com/emirpasic/gods/lists/doublylinkedlist"
+	"container/list"
 )
 
 type Carta struct { //Struct utilizado para definir la estructura de datos que representa las cartas
@@ -571,6 +573,149 @@ func ComprobarColocarCarta(m *doublylinkedlist.List, t *tablero.Tablero) {
 			}
 		//}
 	}
+}
+
+func Bot_En_Funcionamiento(t tablero.Tablero, jugador interface{}, ab bool){
+	fmt.Println("El bot va a operar")
+
+	tablero.RobarCarta(t.Mazo, jugador.(jugadores.Jugador).Mano)
+
+	cartas.MostrarMano(jugador.(jugadores.Jugador).Mano)
+
+	fmt.Println("Vamos a ver las combinaciones posibles de la mano del bot")
+
+	p, comb := CalcularPuntosPosibles(jugador.(jugadores.Jugador).Mano)
+
+	fmt.Println("Tenemos ", p, " puntos con las combinaciones")
+	fmt.Println(comb)
+
+	iterator := comb.Iterator()
+	i := 0
+	fmt.Println("Mostramos nueva combinacion")
+	for iterator.Next() {
+		i++
+		l := iterator.Value()
+		lista := l.(*doublylinkedlist.List)
+		iterator2 := lista.Iterator()
+		for iterator2.Next() {
+			c := iterator2.Value()
+			cartas := c.(doublylinkedlist.List)
+			iterator_c := cartas.Iterator()
+			for iterator_c.Next() {
+				v := iterator_c.Value()
+				fmt.Println(v)
+				//mano.Add(valor)
+			}
+		}
+	}
+	if(ab == false){
+		p = 0
+		if(p < 51){
+			cartas.MostrarMano(jugador.(jugadores.Jugador).Mano)
+			fmt.Println("No podemos abrir")
+			iterator := comb.Iterator()
+			i := 0
+			for iterator.Next() {
+				i++
+				l := iterator.Value()
+				lista := l.(*doublylinkedlist.List)
+				iterator2 := lista.Iterator()
+				for iterator2.Next() {
+					c := iterator2.Value()
+					cartas := c.(doublylinkedlist.List)
+					iterator_c := cartas.Iterator()
+					for iterator_c.Next() {
+						v := iterator_c.Value()
+						fmt.Println("Añadimos la carta ", v)
+						jugador.(jugadores.Jugador).Mano.Add(v)
+					}
+				}
+
+			}
+			cartas.MostrarMano(jugador.(jugadores.Jugador).Mano)
+
+			fmt.Println()
+
+			des := jugadores.CartaMasAlta(jugador.(jugadores.Jugador).Mano)
+
+			tablero.FinTurno(t.Mazo, jugador.(jugadores.Jugador).Mano, t.Descartes, des)
+
+			cartas.MostrarMano(jugador.(jugadores.Jugador).Mano)
+		}else{
+			fmt.Println("Vamos a abrir")
+			listaA := list.New()
+			//cartas.MostrarMano(jugador.(jugadores.Jugador).Mano)
+			iterator := comb.Iterator()
+			for iterator.Next() {
+				i++
+				l := iterator.Value()
+				lista := l.(*doublylinkedlist.List)
+				iterator2 := lista.Iterator()
+				for iterator2.Next() {
+					c := iterator2.Value()
+					fmt.Println(c)
+					cartas := c.(doublylinkedlist.List)
+					iterator_c := cartas.Iterator()
+					copia := doublylinkedlist.New()
+					for iterator_c.Next() {
+						v := iterator_c.Value()
+						copia.Add(v) //Creamos copia
+						
+					}
+					listaA.PushBack(copia)
+				}
+			}
+			fmt.Println(listaA)
+			tablero.AnyadirCombinaciones(t, listaA)
+			tablero.MostrarTablero(t)
+
+			ComprobarColocarCarta(jugador.(jugadores.Jugador).Mano, &t)
+
+			cartas.MostrarMano(jugador.(jugadores.Jugador).Mano)
+
+			des := jugadores.CartaMasAlta(jugador.(jugadores.Jugador).Mano)
+
+			tablero.FinTurno(t.Mazo, jugador.(jugadores.Jugador).Mano, t.Descartes, des)
+
+			cartas.MostrarMano(jugador.(jugadores.Jugador).Mano)
+		}
+	}else{
+		p, comb := CalcularPuntosPosibles(jugador.(jugadores.Jugador).Mano)
+
+		if(p > 0){
+			listaA := list.New()
+			//cartas.MostrarMano(jugador.(jugadores.Jugador).Mano)
+			iterator := comb.Iterator()
+			for iterator.Next() {
+				i++
+				l := iterator.Value()
+				lista := l.(*doublylinkedlist.List)
+				iterator2 := lista.Iterator()
+				for iterator2.Next() {
+					c := iterator2.Value()
+					fmt.Println(c)
+					cartas := c.(doublylinkedlist.List)
+					iterator_c := cartas.Iterator()
+					copia := doublylinkedlist.New()
+					for iterator_c.Next() {
+						v := iterator_c.Value()
+						copia.Add(v) //Creamos copia
+						
+					}
+					listaA.PushBack(copia)
+				}
+			}
+			tablero.AnyadirCombinaciones(t, listaA)
+		}
+
+		ComprobarColocarCarta(jugador.(jugadores.Jugador).Mano, &t)
+
+		des := jugadores.CartaMasAlta(jugador.(jugadores.Jugador).Mano)
+
+		tablero.FinTurno(t.Mazo, jugador.(jugadores.Jugador).Mano, t.Descartes, des)					
+					
+	}
+
 }
 
 /*func partition(mano *doublylinkedlist.List, low, high int, tipo int) (*doublylinkedlist.List, int) { //Función del sort encargada de particionar los datos
