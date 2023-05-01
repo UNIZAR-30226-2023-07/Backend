@@ -84,7 +84,7 @@ func IniciarPartida(idPartida string, canalPartida chan string, estabaPausada bo
 	t := tablero.Tablero{doublylinkedlist.New(), doublylinkedlist.New(), list.New()} //DESCOMENTAR
 
 	if !estabaPausada {
-		fmt.Println("Partida creada")*/
+		fmt.Println("Partida creada")
 		t := tablero.IniciarTablero() //función de inicio de tablero para la partida	//DESCOMENTAR
 
 		for i := 0; i < numJugad; i++ { //Inicio de los jugadores DESCOMENTAR
@@ -361,7 +361,7 @@ func IniciarPartida(idPartida string, canalPartida chan string, estabaPausada bo
 						input = <-canalPartida //DESCOMENTAR
 						i_input, _ := strconv.Atoi(input)
 						fmt.Println("Has introducido: ", i_input)
-						//aux := jugador.(jugadores.Jugador).Mano.Size()
+						aux := jugador.(jugadores.Jugador).Mano.Size()
 
 						if i_input > aux { //DESCOMENTAR el if entero
 							canalPartida <- "Valor no valido, introduzca una carta correcta"
@@ -371,13 +371,13 @@ func IniciarPartida(idPartida string, canalPartida chan string, estabaPausada bo
 						/*for i_input > aux {
 							fmt.Println("Valor no valido, introduzca una carta correcta")
 							//fmt.Scanln(&input) //El usuario deberá de introducir el ID necesario //COMENTADO
-							input = <- canalPartida //DESCOMENTAR
+							input = <- canalPartida 
 							i_input, _ = strconv.Atoi(input)
 							fmt.Println("Has introducido: ", i_input)
 							aux := jugador.(jugadores.Jugador).Mano.Size()
 							fmt.Println(aux)
 
-							if i_input > aux { //DESCOMENTAR el if entero
+							if i_input > aux { 
 								canalPartida <- "Valor no valido, introduzca una carta correcta"
 							} else {
 								canalPartida <- "Ok"
