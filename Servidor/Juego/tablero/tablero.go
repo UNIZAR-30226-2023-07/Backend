@@ -57,10 +57,10 @@ func AnyadirCombinaciones(t Tablero, comb *list.List) {
 func FinTurno(mazo *doublylinkedlist.List, mano *doublylinkedlist.List, descarte *doublylinkedlist.List, i int) {
 	value, _ := mano.Get(i) //Obtiene el valor de la mano a descartar
 	mano.Remove(i)          //Elimina el valor de la mano
-	if descarte.Size() > 1 {
+	if descarte.Size() > 0 {
 		fmt.Println(descarte, "DESCARTE METE A MAZO") //Si hay más de un valor en descartes lo añade a la lista de mazo
-		value, _ = descarte.Get(0)
-		mazo.Add(value)
+		valueDesc, _ := descarte.Get(0)
+		mazo.Add(valueDesc)
 		descarte.Remove(0)
 	}
 	descarte.Add(value) //Añade el valor a descartes

@@ -68,13 +68,17 @@ func IniciarPartida(idPartida string, canalPartida chan string, estabaPausada bo
 	//var ab [3]bool //COMENTADO
 	ab := make([]bool, numJugad) //DESCOMENTAR
 	es_bot := make([]bool, 4)    //DESCOMENTAR
+	meterBots := false           //DESCOMENTAR de momento
 
-	for i := 0; i < len(es_bot); i++ {
-		if i >= numJugad {
-			es_bot[i] = true
-		} else {
-			es_bot[i] = false
+	if meterBots {
+		for i := 0; i < len(es_bot); i++ {
+			if i >= numJugad {
+				es_bot[i] = true
+			} else {
+				es_bot[i] = false
+			}
 		}
+		numJugad = 4
 	}
 
 	t := tablero.Tablero{doublylinkedlist.New(), doublylinkedlist.New(), list.New()} //DESCOMENTAR
@@ -216,9 +220,9 @@ func IniciarPartida(idPartida string, canalPartida chan string, estabaPausada bo
 			for turno { //Mientras nos encontremos en un turno
 
 				//COMENTADO
-				if es_bot[id] == true {
+				if es_bot[id] {
 					bot.Bot_En_Funcionamiento(t, jugador, ab[id])
-					if id >= 3 {
+					if id >= numJugad-1 {
 						id = 0
 					} else {
 						id = id + 1
