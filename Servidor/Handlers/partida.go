@@ -6,7 +6,6 @@ import (
 	"Juego/partida"
 	"Juego/torneo"
 	"encoding/json"
-	"math/rand"
 	"net/http"
 	"strconv"
 	"strings"
@@ -44,13 +43,14 @@ func CreatePartida(c *gin.Context, partidas map[string]chan string, torneos map[
 	pDAO := DAO.PartidasDAO{}
 	parDAO := DAO.ParticiparDAO{}
 
-	// Generar identificador único para la partida que no sea ninguna clave existente
-	var code string
-	for {
-		code = strconv.Itoa(rand.Intn(9999))
-		if _, ok := partidas[code]; !ok && !pDAO.HayPartida(code) {
-			break
-		}
+	// Generar identificador sumando 1 al id de la última partida guardada en el map
+	id := len(partidas) + 1
+	code := strconv.Itoa(id)
+	_, ok := partidas[code]
+	for ok || pDAO.HayPartida(code) {
+		id = id + 1
+		code = strconv.Itoa(id)
+		_, ok = partidas[code]
 	}
 
 	// Crear canal para la partida y almacenarlo en el mapa
