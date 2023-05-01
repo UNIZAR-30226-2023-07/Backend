@@ -316,7 +316,7 @@ func IniciarPartida(idPartida string, canalPartida chan string, estabaPausada bo
 							canalPartida <- "fin" //DESCOMENTAR
 
 							// recorrer las combinaciones y pasar cada componente a string
-							for e := t.Combinaciones.Back(); e != nil; e = e.Next() { //DESCOMENTAR todo el for
+							for e := t.Combinaciones.Front(); e != nil; e = e.Next() { //DESCOMENTAR todo el for
 								combinacion := e.Value.(*doublylinkedlist.List)
 								for j := 0; j < combinacion.Size(); j++ {
 									carta, _ := combinacion.Get(j)
@@ -392,7 +392,7 @@ func IniciarPartida(idPartida string, canalPartida chan string, estabaPausada bo
 						canalPartida <- "fin" //DESCOMENTAR
 
 						// recorrer las combinaciones y pasar cada componente a string
-						for e := t.Combinaciones.Back(); e != nil; e = e.Next() { //DESCOMENTAR todo el for
+						for e := t.Combinaciones.Front(); e != nil; e = e.Next() { //DESCOMENTAR todo el for
 							combinacion := e.Value.(*doublylinkedlist.List)
 							for j := 0; j < combinacion.Size(); j++ {
 								carta, _ := combinacion.Get(j)
@@ -466,7 +466,7 @@ func IniciarPartida(idPartida string, canalPartida chan string, estabaPausada bo
 						canalPartida <- "fin" //DESCOMENTAR
 
 						// recorrer las combinaciones y pasar cada componente a string
-						for e := t.Combinaciones.Back(); e != nil; e = e.Next() { //DESCOMENTAR todo el for
+						for e := t.Combinaciones.Front(); e != nil; e = e.Next() { //DESCOMENTAR todo el for
 							combinacion := e.Value.(*doublylinkedlist.List)
 							for j := 0; j < combinacion.Size(); j++ {
 								carta, _ := combinacion.Get(j)
@@ -837,7 +837,7 @@ func pausar(t tablero.Tablero, canalPartida chan string, listaJ *doublylinkedlis
 	canalPartida <- "fin"
 
 	// recorrer las combinaciones y pasar cada componente a string
-	for e := t.Combinaciones.Back(); e != nil; e = e.Next() {
+	for e := t.Combinaciones.Front(); e != nil; e = e.Next() {
 		combinacion := e.Value.(*doublylinkedlist.List)
 		for j := 0; j < combinacion.Size(); j++ {
 			carta, _ := combinacion.Get(j)
