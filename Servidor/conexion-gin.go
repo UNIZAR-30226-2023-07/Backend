@@ -304,25 +304,24 @@ func main() {
 					for j := 0; j < len(nums); j++ {
 						partidas[s.Request.URL.Path] <- nums[j]
 					}
-					// si quedan mas componentes se envia "END"
-					if i < len(M.Cartas)-1 {
-						partidas[s.Request.URL.Path] <- "END"
-						respuesta = <-partidas[s.Request.URL.Path]
-						if respuesta != "Ok" {
-							fmt.Println("Error:", respuesta)
-							goto SALIR
-						}
+					// al terminar esta componente se envia "END"
+					partidas[s.Request.URL.Path] <- "END"
+					respuesta = <-partidas[s.Request.URL.Path]
+					if respuesta != "Ok" {
+						fmt.Println("Error:", respuesta)
+						goto SALIR
 					}
 				}
 			SALIR:
 				partidas[s.Request.URL.Path] <- "FIN"
 				respuesta = <-partidas[s.Request.URL.Path]
 				fmt.Println(respuesta)
+				R.Info = respuesta
 				respuesta = <-partidas[s.Request.URL.Path]
 				if respuesta == "ganador" {
 					respuesta = <-partidas[s.Request.URL.Path]
+					R.Info = respuesta
 				}
-				R.Info = respuesta
 			} else {
 				fmt.Println(respuesta)
 				R.Info = respuesta
@@ -333,10 +332,9 @@ func main() {
 			if respuesta == "Ok" {
 				parametros := strings.Split(M.Info, ",")
 				partidas[s.Request.URL.Path] <- parametros[0]
-				for i := 1; i < len(parametros); i++ {
-					partidas[s.Request.URL.Path] <- parametros[i]
-				}
-				respuesta := <-partidas[s.Request.URL.Path]
+				partidas[s.Request.URL.Path] <- parametros[1]
+
+				respuesta = <-partidas[s.Request.URL.Path]
 				if respuesta == "joker" || respuesta == "ganador" {
 					respuesta = <-partidas[s.Request.URL.Path]
 				}
@@ -354,7 +352,7 @@ func main() {
 			RD.Info = respuesta
 			if respuesta == "Ok" {
 				partidas[s.Request.URL.Path] <- M.Info
-				respuesta := <-partidas[s.Request.URL.Path] // info
+				respuesta = <-partidas[s.Request.URL.Path] // info
 				fmt.Println(respuesta)
 				RD.Info = respuesta
 				if respuesta == "Ok" {
