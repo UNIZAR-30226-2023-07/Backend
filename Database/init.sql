@@ -84,8 +84,7 @@ CREATE TABLE MANOS (
 	partida 	text REFERENCES PARTIDAS (clave),
 	carta 		serial REFERENCES CARTAS (id),
 	turno 		integer NOT NULL,
-	UNIQUE (partida, turno),
-	UNIQUE (partida, carta),
+	UNIQUE (partida, turno, carta),
 	PRIMARY KEY (id)
 );
 
@@ -118,6 +117,16 @@ insert into amistad (estado, usr1, usr2 ) values ('confirmada', 1, 7);
 insert into amistad (estado, usr1, usr2 ) values ('confirmada', 1, 8);
 insert into amistad (estado, usr1, usr2 ) values ('confirmada', 1, 9);
 
+
+
+INSERT INTO CARTAS VALUES (011,0,1,1);
+INSERT INTO CARTAS VALUES (012,0,1,2);
+INSERT INTO CARTAS VALUES (021,0,2,1);
+INSERT INTO CARTAS VALUES (022,0,2,2);
+INSERT INTO CARTAS VALUES (031,0,3,1);
+INSERT INTO CARTAS VALUES (032,0,3,2);
+INSERT INTO CARTAS VALUES (041,0,4,1);
+INSERT INTO CARTAS VALUES (042,0,4,2);
 INSERT INTO CARTAS VALUES (111,1,1,1);
 INSERT INTO CARTAS VALUES (112,1,1,2);
 INSERT INTO CARTAS VALUES (121,1,2,1);
