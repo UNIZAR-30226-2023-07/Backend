@@ -497,7 +497,8 @@ func CalcularPuntosPosibles(mano *doublylinkedlist.List) (int, *doublylinkedlist
 		copia_mano_trio.Add(valor) //Creamos copia
 	}
 	cartas.MostrarMano(mano)
-	fmt.Println("hola")
+	cartas.MostrarMano(copia_mano_trio)
+	fmt.Println("LUCIA JOPEEE")
 	trio := true
 	for esc {
 		// bucle para encontrar todas las escaleras
@@ -544,6 +545,12 @@ func CalcularPuntosPosibles(mano *doublylinkedlist.List) (int, *doublylinkedlist
 		joker = jokerR
 	}
 
+	if(!(esc_j && trio_j)){
+		for i := 0; i < joker.Size(); i++{
+			valor, _ := joker.Get(i)
+			mano.Add(valor)
+		}
+	}
 	if(puntos > puntos_trio){
 		fmt.Println("Mas puntos en combinacion")
 		return puntos, comb
@@ -555,23 +562,42 @@ func CalcularPuntosPosibles(mano *doublylinkedlist.List) (int, *doublylinkedlist
 
 func ComprobarColocarCarta(m *doublylinkedlist.List, t *tablero.Tablero) {
 	aux := m.Size()
+	enc := false
 	for i := 0; i < aux; i++ {
+		if(enc){
+			i = 0
+			enc = false
+			cartas.MostrarMano(m)
+			fmt.Println("RESTO J", i , aux)
+		}
 		l_aux := doublylinkedlist.New()
 		c_aux, _ := m.Get(i)
+		cartas.MostrarMano(m)
 		fmt.Println("Comprobamos la carta ", c_aux)
 		l_aux.Add(c_aux)
-		//for j := 0; j < t.Combinaciones.Len(); j++ {
-			r := tablero.AnyadirCarta(l_aux, m, t, 0)
+		/*if(c_aux.Valor == 0){
+			tablero.anyadirJoker(l_aux, m, t, i)
+			break
+		}*/
+		for j := 0; j < t.Combinaciones.Len(); j++ {
+			r := tablero.AnyadirCarta(l_aux, m, t, j)
 			if r != -1 {
 				fmt.Printf("Se ha añadido una carta a una combinacion")
 				if r == 1 {
 					fmt.Println(" Y se ha obtenido un Joker \n")
 				}
 				t_aux := *t
-				tablero.MostrarTablero(t_aux)
-				break
+				tablero.MostrarTablero(t_aux) 
+				fmt.Println("RESTO I")
+				enc = true
+				aux = m.Size()
+				goto SALIR
+				
+				
 			}
-		//}
+		}
+		SALIR:
+		cartas.MostrarMano(m)
 	}
 }
 
@@ -609,7 +635,6 @@ func Bot_En_Funcionamiento(t tablero.Tablero, jugador interface{}, ab bool){
 		}
 	}
 	if(ab == false){
-		p = 0
 		if(p < 51){
 			cartas.MostrarMano(jugador.(jugadores.Jugador).Mano)
 			fmt.Println("No podemos abrir")
@@ -680,9 +705,11 @@ func Bot_En_Funcionamiento(t tablero.Tablero, jugador interface{}, ab bool){
 			cartas.MostrarMano(jugador.(jugadores.Jugador).Mano)
 		}
 	}else{
-		p, comb := CalcularPuntosPosibles(jugador.(jugadores.Jugador).Mano)
+		fmt.Println("VAMOS A HACER PRUEBAS");
 
 		if(p > 0){
+
+
 			listaA := list.New()
 			//cartas.MostrarMano(jugador.(jugadores.Jugador).Mano)
 			iterator := comb.Iterator()
@@ -705,10 +732,23 @@ func Bot_En_Funcionamiento(t tablero.Tablero, jugador interface{}, ab bool){
 					listaA.PushBack(copia)
 				}
 			}
+			fmt.Println("AÑADIMOS LA COMBINACION")
 			tablero.AnyadirCombinaciones(t, listaA)
 		}
 
+		fmt.Println("MI MANO ES:");
+		cartas.MostrarMano(jugador.(jugadores.Jugador).Mano)
+
+		fmt.Println("EL TABLERO ES:")
+		tablero.MostrarTablero(t)
+
 		ComprobarColocarCarta(jugador.(jugadores.Jugador).Mano, &t)
+
+		fmt.Println("MI MANO ES:");
+		cartas.MostrarMano(jugador.(jugadores.Jugador).Mano)
+
+		fmt.Println("EL TABLERO ES:")
+		tablero.MostrarTablero(t)
 
 		des := jugadores.CartaMasAlta(jugador.(jugadores.Jugador).Mano)
 
