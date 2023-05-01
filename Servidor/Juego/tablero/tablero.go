@@ -259,7 +259,92 @@ func Abrir(jugada *doublylinkedlist.List, mano *doublylinkedlist.List, t *Tabler
 	return true
 }
 
-// función para añadir una carta a una combinación
+func AnyadirJoker (jugada *doublylinkedlist.List, mano *doublylinkedlist.List, t *Tablero, idCombinacion int) int {
+	if !jugada.Empty(){
+		for e := t.Combinaciones.Front(); e != nil; e = e.Next() {
+			/*if id_comb == idCombinacion {
+				
+			}*/
+		}
+		return 0
+	}else{
+		return -1
+	}
+}
+
+func AnyadirCarta(jugada *doublylinkedlist.List, mano *doublylinkedlist.List, t *Tablero, idCombinacion int) int {
+	if !jugada.Empty() {
+		listaJokers := doublylinkedlist.New()
+		v1, _ := jugada.Get(0)
+		carta, _ := v1.(cartas.Carta)
+		id_comb := 0
+		for e := t.Combinaciones.Front(); e != nil; e = e.Next() {
+			if id_comb == idCombinacion {				
+				listaC := doublylinkedlist.New()
+				for a := 0; a < (e.Value.(*doublylinkedlist.List)).Size(); a++ {
+					valor, _ := (e.Value.(*doublylinkedlist.List)).Get(a)
+					listaC.Add(valor)
+				}
+				fmt.Println("listaC:", listaC)
+				if NumComodines(listaC) > 0 {
+					listaC.Add(carta)
+					posJ := PosicionJoker(listaC)
+					for i := 0; i < posJ.Size(); i++ {
+						v1, _ := posJ.Get(i)
+						j, _ := v1.(int)
+						listaJokers.Add(listaC.Get(j))
+						listaC.Remove(j)
+						
+					}
+					listaC = SortStartMenorMayor(listaC, 0)
+					if EscaleraValida(listaC) || TrioValido(listaC){
+						/*carta := cartas.Carta{0, 4, 1}
+						mano.Add(carta)*/
+						return 1
+					}
+					fmt.Println("listaCP:", listaC)
+					for i := 0; i < posJ.Size(); i++ {
+						v1, _ := posJ.Get(i)
+						j, _ := v1.(int)
+						fmt.Println(j,"HEEEY",posJ.Size())
+						aux, _ := listaJokers.Get(i)
+						aux_j, _ := aux.(cartas.Carta)
+						listaC.Insert(j + 1,aux_j)
+					}
+					fmt.Println("listaCP:", listaC)
+					fmt.Println("Seguimos")
+					if !EscaleraValida(listaC) && !TrioValido(listaC) {
+						fmt.Println("No valido")
+						return -1
+					}
+					t.Combinaciones.Remove(e)
+					t.Combinaciones.PushBack(listaC)
+					ind := mano.IndexOf(carta)
+					mano.Remove(ind)
+					fmt.Println("Valido")
+					return 0
+				}else{
+					listaC.Add(carta)
+					listaC = SortStartMenorMayor(listaC, 0)
+					fmt.Println("listaCA:", listaC)
+					if !EscaleraValida(listaC) && !TrioValido(listaC) {
+						return -1
+					}
+					t.Combinaciones.Remove(e)
+					t.Combinaciones.PushBack(listaC)
+					ind := mano.IndexOf(carta)
+					mano.Remove(ind)
+
+					return 0
+				}
+			}
+			id_comb++
+		}
+	}
+	return -1
+}
+
+/*// función para añadir una carta a una combinación
 // Devuelve -1 si es una jugada invalida, 0 si es valida y 1 si es valida y devuelve un comodin
 func AnyadirCarta(jugada *doublylinkedlist.List, mano *doublylinkedlist.List, t *Tablero, idCombinacion int) int {
 	fmt.Println("jugada:", jugada)
@@ -291,6 +376,8 @@ func AnyadirCarta(jugada *doublylinkedlist.List, mano *doublylinkedlist.List, t 
 					fmt.Println("listaC:", listaC)
 					listaC = SortStartMenorMayor(listaC, 0)
 					fmt.Println("listaC:", listaC)
+					t_aux := *t
+					MostrarTablero(t_aux)
 					fmt.Println(listaJokers)
 					fmt.Println(posJ)
 					indice := listaC.IndexOf(carta)
@@ -306,16 +393,23 @@ func AnyadirCarta(jugada *doublylinkedlist.List, mano *doublylinkedlist.List, t 
 							listaJokers.Remove(joker)
 						}
 					}
-
-					listaC = AnyadirJokers(posJ, listaJokers, listaC)
+					fmt.Println("AAAAAAAAA")
+					MostrarTablero(t_aux)
+					//fmt.Println("listaC:", listaC)
+					//listaC = AnyadirJokers(posJ, listaJokers, listaC)
+					fmt.Println("listaC:", listaC)
 					if !EscaleraValida(listaC) && !TrioValido(listaC) {
 						return -1
 					}
 					t.Combinaciones.Remove(e)
 					t.Combinaciones.PushBack(listaC)
+					fmt.Println("AAAAAAAAA")
+					MostrarTablero(t_aux)
 					ind := mano.IndexOf(carta)
 					mano.Remove(ind)
 					if devolverJoker {
+						carta := cartas.Carta{0, 4, 1}
+						mano.Add(carta)
 						return 1
 					} else {
 						return 0
@@ -339,7 +433,7 @@ func AnyadirCarta(jugada *doublylinkedlist.List, mano *doublylinkedlist.List, t 
 		}
 	}
 	return -1
-}
+}*/
 
 // Se muestra el Tablero por pantalla (para depuración)
 func MostrarTablero(t Tablero) {
@@ -369,14 +463,26 @@ func IniciarTablero() Tablero {
 	t := Tablero{mazo, descarte, list.New()}
 
 	aux := doublylinkedlist.New()
-	carta := cartas.Carta{10, 1, 1}
+	carta := cartas.Carta{0, 4, 1}
 	aux.Add(carta)
 	carta = cartas.Carta{11, 1, 1}
 	aux.Add(carta)
 	carta = cartas.Carta{12, 1, 1}
 	aux.Add(carta)
+	carta = cartas.Carta{13, 1, 1}
+	aux.Add(carta)
 
 	t.Combinaciones.PushBack(aux)
+
+	aux2:= doublylinkedlist.New()
+	carta = cartas.Carta{6, 4, 1}
+	aux2.Add(carta)
+	carta = cartas.Carta{6, 1, 1}
+	aux2.Add(carta)
+	carta = cartas.Carta{6, 3, 1}
+	aux2.Add(carta)
+
+	t.Combinaciones.PushBack(aux2)
 
 	return t
 }
@@ -480,7 +586,9 @@ func EscaleraValida(jugada *doublylinkedlist.List) bool {
 		CartaValorMirar := carta1.Valor //Sacamos este valor por si es un comodin
 		PaloCartaMirar := carta1.Palo
 
+		fmt.Println("SAUL", PaloCartaRef,PaloCartaMirar,carta,carta1,!EsComodin(CartaValorRef),!EsComodin(CartaValorMirar), PaloCartaRef != PaloCartaMirar)
 		if PaloCartaRef != PaloCartaMirar && !EsComodin(CartaValorRef) && !EsComodin(CartaValorMirar) { //Si tiene distinto palo, no valido
+			fmt.Println("False 1")
 			return false
 		}
 	}
@@ -501,6 +609,7 @@ func EscaleraValida(jugada *doublylinkedlist.List) bool {
 	//El numero de comodines que hay delante de 1 debe ser cero, el numero de comodines que pueden ir delante
 	// de 2 es 1, y asi sucesibamente. Index en este caso tambien tomaria el numero de comodines que hay delante
 	if (CartaValorRef - index) <= 0 {
+		fmt.Println("False 1")
 		return false
 	}
 
@@ -514,10 +623,12 @@ func EscaleraValida(jugada *doublylinkedlist.List) bool {
 		if !EsComodin(CartaValorMirar) { //Si es un comodin seguro que valdra para la escalera
 			if CartaValorMirar != 1 || CartaValorRef != 14 { //Esta condicion no se cumple cuando despues del Rey(13), se pone un As(1)
 				if CartaValorMirar != CartaValorRef { //Si concuerda el valor con lo que deberia dar(p.ejem: 2 != 15(valor despues de As))
+					fmt.Println("False 2")
 					return false
 				}
 			}
 		} else if CartaValorRef > 14 { //Si la jugada continua despues de ..., Rey, As,...sera erronea
+			fmt.Println("False 3")
 			return false
 		}
 	}
