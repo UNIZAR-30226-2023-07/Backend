@@ -18,7 +18,7 @@ type Tablero struct {
 
 func RobarCarta(list *doublylinkedlist.List, mano *doublylinkedlist.List) cartas.Carta{ //Función encargada de robar una carta del mazo
 	fmt.Println(list.Size())
-	r := rand.Intn(list.Size()) + 1 //Obtiene un número aleatorio de la lista
+	r := rand.Intn(list.Size()) //Obtiene un número aleatorio de la lista
 	value, ok := list.Get(r)        //Obtiene el valor de la carta de la lista
 	cart := value.(cartas.Carta)
 	fmt.Println("Has robado la carta ", cart)
