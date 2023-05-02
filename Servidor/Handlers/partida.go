@@ -27,7 +27,7 @@ type JoinPart struct {
 type InitPart struct {
 	Codigo string `json:"codigo" binding:"required"`
 	Clave  string `json:"clave" binding:"required"`
-	Bot	string `json:"bot" binding:"required"`
+	//Bot	string `json:"bot" binding:"required"`
 }
 
 // Retrasmitir mensaje en el ws de partida
@@ -170,8 +170,8 @@ func JoinPartida(c *gin.Context, partidaNueva *melody.Melody, torneoNuevo *melod
 
 func IniciarPartida(c *gin.Context, partidaNueva *melody.Melody, torneoNuevo *melody.Melody, partidas map[string]chan string, torneos map[string]string) {
 
-	p := InitPart{}
-
+	//p := InitPart{}
+	p := JoinPart{}
 	if err := c.BindJSON(&p); err != nil {
 		c.AbortWithError(http.StatusBadRequest, err)
 		return
