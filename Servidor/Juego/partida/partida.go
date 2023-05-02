@@ -66,7 +66,6 @@ func IniciarPartida(idPartida string, canalPartida chan string, estabaPausada bo
 	listaJ := doublylinkedlist.New()
 	//fmt.Println("Numero de jugadores: ", numJugad)
 	//var ab [3]bool //COMENTADO
-	ab := make([]bool, numJugad) //DESCOMENTAR
 
 	for i := 0; i < len(es_bot); i++ { //DESCOMENTAR
 		if es_bot[i] {
@@ -74,7 +73,7 @@ func IniciarPartida(idPartida string, canalPartida chan string, estabaPausada bo
 			break;
 		}
 	}
-
+	ab := make([]bool, numJugad) //DESCOMENTAR
 
 
 	t := tablero.Tablero{doublylinkedlist.New(), doublylinkedlist.New(), list.New()} //DESCOMENTAR
