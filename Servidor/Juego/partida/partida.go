@@ -52,7 +52,7 @@ func inicio_turno(espera chan string, wait chan bool, canalPartida chan string) 
 }
 
 // func IniciarPartida() *doublylinkedlist.List { //COMENTADO
-func IniciarPartida(idPartida string, canalPartida chan string, estabaPausada bool) *doublylinkedlist.List { //DESCOMENTAR
+func IniciarPartida(idPartida string, canalPartida chan string, estabaPausada bool, es_bot []bool) *doublylinkedlist.List { //DESCOMENTAR
 	//jugad, err := strconv.Atoi(os.Args[1])
 	//torn, err := strconv.Atoi(os.Args[2])
 	//bots, err := strconv.Atoi(os.Args[3])
@@ -67,9 +67,8 @@ func IniciarPartida(idPartida string, canalPartida chan string, estabaPausada bo
 	//fmt.Println("Numero de jugadores: ", numJugad)
 	//var ab [3]bool //COMENTADO
 	ab := make([]bool, numJugad) //DESCOMENTAR
-	es_bot := make([]bool, 4)
+
 	for i := 0; i < len(es_bot); i++ { //DESCOMENTAR
-		es_bot[i] = false
 		if es_bot[i] {
 			numJugad = 4;
 			break;
@@ -746,10 +745,10 @@ func IniciarPartida(idPartida string, canalPartida chan string, estabaPausada bo
 							if r != -1 {                                                                          //Si lo es la colocamos
 								fmt.Println("Carta colocada con exito")
 								if r == 1 { //Y si es necesario recibimos el Joker
-									//canalPartida <- "joker"
+									canalPartida <- "joker"
 									value := cartas.Carta{0, 4, 1}
 									jugador.(jugadores.Jugador).Mano.Add(value)
-									//canalPartida <- strconv.Itoa(value.Valor) + "," + strconv.Itoa(value.Palo) + "," + strconv.Itoa(value.Color)
+									canalPartida <- strconv.Itoa(value.Valor) + "," + strconv.Itoa(value.Palo) + "," + strconv.Itoa(value.Color)
 								} else {
 									if jugador.(jugadores.Jugador).Mano.Size() == 0 {
 										canalPartida <- "ganador" //En caso de no contar con más cartas terminará la partida

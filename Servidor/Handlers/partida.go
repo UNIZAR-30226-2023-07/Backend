@@ -27,7 +27,7 @@ type JoinPart struct {
 type InitPart struct {
 	Codigo string `json:"codigo" binding:"required"`
 	Clave  string `json:"clave" binding:"required"`
-	//Bot	string `json:"bot" binding:"required"`
+	Bot	string `json:"bot" binding:"required"`
 }
 
 // Retrasmitir mensaje en el ws de partida
@@ -170,8 +170,8 @@ func JoinPartida(c *gin.Context, partidaNueva *melody.Melody, torneoNuevo *melod
 
 func IniciarPartida(c *gin.Context, partidaNueva *melody.Melody, torneoNuevo *melody.Melody, partidas map[string]chan string, torneos map[string]string) {
 
-	//p := InitPart{}
-	p := JoinPart{}
+	p := InitPart{}
+	//p := JoinPart{}
 	if err := c.BindJSON(&p); err != nil {
 		c.AbortWithError(http.StatusBadRequest, err)
 		return
@@ -189,15 +189,15 @@ func IniciarPartida(c *gin.Context, partidaNueva *melody.Melody, torneoNuevo *me
 		M1.Emisor = "Servidor"
 		M1.Tipo = "Partida_Iniciada"
 		M1.Turnos = turnos
-		/*
+		
 		es_bot := make([]bool, 4) 
 		b := 1
 		if p.Bot == "si" {  
-			meterBots = true
 			for i := 0; i < len(es_bot); i++ {
 				if i >= njug {
 					es_bot[i] = true
-					stringBot := ["bot" + strconv.Itoa(b),strconv.Itoa(i)]
+					var stringBot []string
+					stringBot = append(stringBot,"bot" + strconv.Itoa(b),strconv.Itoa(i))
 					turnos = append(turnos, stringBot)
 					b += 1
 				} else {
@@ -205,7 +205,7 @@ func IniciarPartida(c *gin.Context, partidaNueva *melody.Melody, torneoNuevo *me
 				}
 			}
 			// Indicar al DAO que hay bots en la partida
-		}*/
+		}
 
 		msg1, _ := json.MarshalIndent(&M1, "", "\t")
 
@@ -214,9 +214,9 @@ func IniciarPartida(c *gin.Context, partidaNueva *melody.Melody, torneoNuevo *me
 		// Llamar a la función partida con el canal correspondiente
 		if !pDAO.EsTorneo(p.Clave) {
 			if pDAO.EstaPausada(p.Clave) {
-				go partida.IniciarPartida(p.Clave, partidas["/api/ws/partida/"+p.Clave], true) // el bool indica que se ha pausado
+				go partida.IniciarPartida(p.Clave, partidas["/api/ws/partida/"+p.Clave], true, es_bot) // el bool indica que se ha pausado
 			} else {
-				go partida.IniciarPartida(p.Clave, partidas["/api/ws/partida/"+p.Clave], false) // el bool indica que no se ha pausado
+				go partida.IniciarPartida(p.Clave, partidas["/api/ws/partida/"+p.Clave], false, es_bot) // el bool indica que no se ha pausado
 			}
 		} else {
 			if pDAO.EstaPausada(p.Clave) {

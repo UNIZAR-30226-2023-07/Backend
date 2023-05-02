@@ -5,7 +5,7 @@ import (
 	"container/list"
 	"fmt"
 	"math/rand"
-	"time"
+	//"time"
 
 	"github.com/emirpasic/gods/lists/doublylinkedlist"
 )
@@ -455,14 +455,14 @@ func MostrarTablero(t Tablero) {
 // Inicializa el Tablero y la mano del jugador (hay que cambiar lo de repartirMano cuando se hagan más jugadores)
 func IniciarTablero() Tablero {
 
-	rand.Seed(time.Now().UnixNano())
+	//rand.Seed(time.Now().UnixNano())
 	mazo := doublylinkedlist.New()
 	descarte := doublylinkedlist.New()
 
 	cartas.CreacionBaraja(mazo)
 
 	t := Tablero{mazo, descarte, list.New()}
-
+/*
 	aux := doublylinkedlist.New()
 	carta := cartas.Carta{0, 4, 1}
 	aux.Add(carta)
@@ -484,6 +484,7 @@ func IniciarTablero() Tablero {
 	aux2.Add(carta)
 
 	t.Combinaciones.PushBack(aux2)
+	*/
 
 	return t
 }

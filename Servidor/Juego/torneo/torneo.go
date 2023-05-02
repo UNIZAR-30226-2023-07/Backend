@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	"Juego/jugadores"
-	"Juego/partida"
+	//"Juego/partida"
 
 	"github.com/emirpasic/gods/lists/doublylinkedlist"
 )
@@ -17,7 +17,7 @@ func IniciarTorneo(idPartida string, canalPartida chan string, estabaPausada boo
 	listaJtotal := doublylinkedlist.New()
 
 	// prueba
-	// listaJ := doublylinkedlist.New()
+	 listaJ := doublylinkedlist.New()
 	// listaJ.Add(jugadores.Jugador{0,doublylinkedlist.New(),0})
 	// listaJ.Add(jugadores.Jugador{1,doublylinkedlist.New(),536})
 	// listaJ.Add(jugadores.Jugador{2,doublylinkedlist.New(),138})
@@ -26,7 +26,7 @@ func IniciarTorneo(idPartida string, canalPartida chan string, estabaPausada boo
 	for !ganador {
 		// nueva partida
 		fmt.Println("Nueva Partida")
-		listaJ := partida.IniciarPartida(idPartida, canalPartida, estabaPausada)
+		//listaJ := partida.IniciarPartida(idPartida, canalPartida, estabaPausada)
 		//listaJ := partida.IniciarPartida()
 
 		if primeraPartida { // se inicializa la lista de jugadores
