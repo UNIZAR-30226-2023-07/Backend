@@ -188,7 +188,6 @@ func IniciarPartida(c *gin.Context, partidaNueva *melody.Melody, torneoNuevo *me
 		var M1 Turnos
 		M1.Emisor = "Servidor"
 		M1.Tipo = "Partida_Iniciada"
-		M1.Turnos = turnos
 		
 		es_bot := make([]bool, 4) 
 		b := 1
@@ -206,6 +205,8 @@ func IniciarPartida(c *gin.Context, partidaNueva *melody.Melody, torneoNuevo *me
 			}
 			// Indicar al DAO que hay bots en la partida
 		}
+		M1.Turnos = turnos
+		
 
 		msg1, _ := json.MarshalIndent(&M1, "", "\t")
 
