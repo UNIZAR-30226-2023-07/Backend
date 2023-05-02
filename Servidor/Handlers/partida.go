@@ -24,6 +24,12 @@ type JoinPart struct {
 	Clave  string `json:"clave" binding:"required"`
 }
 
+type InitPart struct {
+	Codigo string `json:"codigo" binding:"required"`
+	Clave  string `json:"clave" binding:"required"`
+	Bot	string `json:"bot" binding:"required"`
+}
+
 // Retrasmitir mensaje en el ws de partida
 type Mensaje struct {
 	Emisor string   `json:"emisor"`
@@ -164,7 +170,7 @@ func JoinPartida(c *gin.Context, partidaNueva *melody.Melody, torneoNuevo *melod
 
 func IniciarPartida(c *gin.Context, partidaNueva *melody.Melody, torneoNuevo *melody.Melody, partidas map[string]chan string, torneos map[string]string) {
 
-	p := JoinPart{}
+	p := InitPart{}
 
 	if err := c.BindJSON(&p); err != nil {
 		c.AbortWithError(http.StatusBadRequest, err)
@@ -183,6 +189,24 @@ func IniciarPartida(c *gin.Context, partidaNueva *melody.Melody, torneoNuevo *me
 		M1.Emisor = "Servidor"
 		M1.Tipo = "Partida_Iniciada"
 		M1.Turnos = turnos
+		/*
+		es_bot := make([]bool, 4) 
+		b := 1
+		if p.Bot == "si" {  
+			meterBots = true
+			for i := 0; i < len(es_bot); i++ {
+				if i >= njug {
+					es_bot[i] = true
+					stringBot := ["bot" + strconv.Itoa(b),strconv.Itoa(i)]
+					turnos = append(turnos, stringBot)
+					b += 1
+				} else {
+					es_bot[i] = false
+				}
+			}
+			// Indicar al DAO que hay bots en la partida
+		}*/
+
 		msg1, _ := json.MarshalIndent(&M1, "", "\t")
 
 		pDAO.IniciarPartida(p.Clave)

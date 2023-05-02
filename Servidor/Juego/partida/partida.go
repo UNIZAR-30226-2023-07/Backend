@@ -67,25 +67,22 @@ func IniciarPartida(idPartida string, canalPartida chan string, estabaPausada bo
 	//fmt.Println("Numero de jugadores: ", numJugad)
 	//var ab [3]bool //COMENTADO
 	ab := make([]bool, numJugad) //DESCOMENTAR
-	es_bot := make([]bool, 4)    //DESCOMENTAR
-	meterBots := false           //DESCOMENTAR de momento
-	if meterBots {
-		for i := 0; i < len(es_bot); i++ {
-			if i >= numJugad {
-				es_bot[i] = true
-			} else {
-				es_bot[i] = false
-			}
-
+	es_bot := make([]bool, 4)
+	for i := 0; i < len(es_bot); i++ { //DESCOMENTAR
+		es_bot[i] = false
+		if es_bot[i] {
+			numJugad = 4;
+			break;
 		}
-		numJugad = 4
 	}
+
+
 
 	t := tablero.Tablero{doublylinkedlist.New(), doublylinkedlist.New(), list.New()} //DESCOMENTAR
 
 	if !estabaPausada {
 		fmt.Println("Partida creada")
-		t := tablero.IniciarTablero() //función de inicio de tablero para la partida	//DESCOMENTAR
+		t = tablero.IniciarTablero() //función de inicio de tablero para la partida	//DESCOMENTAR
 
 		for i := 0; i < numJugad; i++ { //Inicio de los jugadores DESCOMENTAR
 			//for i := 0; i < 3; i++ { //Inicio de los jugadores //COMENTADO

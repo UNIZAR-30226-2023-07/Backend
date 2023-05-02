@@ -287,6 +287,7 @@ func main() {
 			fmt.Println("Respuesta:", respuesta)
 		} else if M.Tipo == "Robar_carta" || M.Tipo == "Robar_carta_descartes" {
 			partidas[s.Request.URL.Path] <- M.Tipo
+			fmt.Println("1")
 			respuesta := <-partidas[s.Request.URL.Path]
 			fmt.Println(respuesta)
 			R.Info = respuesta
