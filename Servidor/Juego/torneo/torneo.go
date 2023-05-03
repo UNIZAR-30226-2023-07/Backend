@@ -4,20 +4,32 @@ import (
 	"fmt"
 
 	"Juego/jugadores"
-	//"Juego/partida"
+	"Juego/partida"
+	"strconv"
+	"encoding/json"
+	"github.com/olahol/melody"
 
 	"github.com/emirpasic/gods/lists/doublylinkedlist"
 )
 
+type Respuesta struct {
+	Emisor        string     `json:"emisor"`
+	Receptor      string     `json:"receptor"`
+	Tipo          string     `json:"tipo"`
+	Ganador       string     `json:"ganador"`
+	Puntos 	  	  []string     `json:"puntos"`
+	Partida       string     `json:"partida"`
+}
+
 //func IniciarTorneo() {
-func IniciarTorneo(idPartida string, canalPartida chan string, estabaPausada bool) {
+func IniciarTorneo(idPartida string, canalPartida chan string, estabaPausada bool, es_bot []bool, torneoNuevo *melody.Melody) {
 
 	primeraPartida := true
 	ganador := false
 	listaJtotal := doublylinkedlist.New()
 
 	// prueba
-	 listaJ := doublylinkedlist.New()
+	// listaJ := doublylinkedlist.New()
 	// listaJ.Add(jugadores.Jugador{0,doublylinkedlist.New(),0})
 	// listaJ.Add(jugadores.Jugador{1,doublylinkedlist.New(),536})
 	// listaJ.Add(jugadores.Jugador{2,doublylinkedlist.New(),138})
@@ -26,7 +38,7 @@ func IniciarTorneo(idPartida string, canalPartida chan string, estabaPausada boo
 	for !ganador {
 		// nueva partida
 		fmt.Println("Nueva Partida")
-		//listaJ := partida.IniciarPartida(idPartida, canalPartida, estabaPausada)
+		listaJ := partida.IniciarPartida(idPartida, canalPartida, estabaPausada, es_bot)
 		//listaJ := partida.IniciarPartida()
 
 		if primeraPartida { // se inicializa la lista de jugadores
@@ -86,23 +98,42 @@ func IniciarTorneo(idPartida string, canalPartida chan string, estabaPausada boo
 			listaJtotal = listaJ
 		}
 
+		var puntos []string
 		fmt.Println("Recuento de puntos:")
 		for i := 0; i < listaJtotal.Size(); i++ {
 			jugador, _ := listaJtotal.Get(i)
 			fmt.Println("id:", jugador.(jugadores.Jugador).Id, "puntos:", jugador.(jugadores.Jugador).P_tor)
+			puntos = append(puntos, strconv.Itoa(jugador.(jugadores.Jugador).P_tor))
 		}
 
 		// comprobar si hay ganador
 		numPerdedores := 0
+		idGanador := 0
 		for i := 0; i < listaJtotal.Size(); i++ {
 			jugador, _ := listaJtotal.Get(i)
 			if jugador.(jugadores.Jugador).P_tor > 100 {
 				numPerdedores++
+			} else {
+				idGanador = jugador.(jugadores.Jugador).Id
 			}
 		}
+
+		var R Respuesta
+		R.Tipo = "Partida terminada"
+		R.Emisor = "Servidor"
+		R.Receptor = "todos"
+		R.Puntos = puntos
+		R.Partida = idPartida
 		if numPerdedores == listaJtotal.Size()-1 {
 			ganador = true
 			fmt.Println("Hay ganador")
+			R.Ganador = strconv.Itoa(idGanador)
 		}
+
+		msg1, _ := json.MarshalIndent(&R, "", "\t")
+		torneoNuevo.BroadcastFilter(msg1, func(q *melody.Session) bool { //Envia la información a todos con la misma url
+			return q.Request.URL.Path == "/api/ws/torneo/"+idPartida
+		})
+		
 	}
 }

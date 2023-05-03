@@ -5,7 +5,9 @@ import (
 	"Juego/tablero"
 	"Juego/jugadores"
 	"fmt"
+//	"encoding/json"
 
+//	"github.com/olahol/melody"
 	"github.com/emirpasic/gods/lists/doublylinkedlist"
 	"container/list"
 )
@@ -14,6 +16,18 @@ type Carta struct { //Struct utilizado para definir la estructura de datos que r
 	Valor int
 	Palo  int
 	Color int
+}
+
+type RespuestaDescarte struct {
+	Emisor        string     `json:"emisor"`
+	Receptor      string     `json:"receptor"`
+	Tipo          string     `json:"tipo"`
+	Info          string     `json:"info"`
+	Descartes     []string   `json:"descartes"`
+	Combinaciones [][]string `json:"combinaciones"`
+	Turno         string     `json:"turno"`
+	Abrir         string     `json:"abrir"`
+	Ganador       string     `json:"ganador"`
 }
 
 // Función encargada de encontrar una escalera en la mano, devuelve los puntos del trio, las
@@ -602,6 +616,61 @@ func ComprobarColocarCarta(m *doublylinkedlist.List, t *tablero.Tablero) {
 }
 
 func Bot_En_Funcionamiento(t tablero.Tablero, jugador interface{}, ab bool){
+/*
+	var RD RespuestaDescarte
+	RD.Emisor = "Servidor"
+	RD.Receptor = "todos"
+	RD.Tipo = "Descarte"
+
+
+	// devolver descartes y combinaciones
+	// recorrer el mazo de descartes y pasar cada componente a string
+	for i := 0; i < descarte.Size(); i++ { //DESCOMENTAR todo el for
+		carta, _ := descarte.Get(i)
+		carta2 := carta.(cartas.Carta)
+		cartaString := strconv.Itoa(carta2.Valor) + "," + strconv.Itoa(carta2.Palo) + "," + strconv.Itoa(carta2.Color)
+	}
+
+	// recorrer las combinaciones y pasar cada componente a string
+	for e := t.Combinaciones.Front(); e != nil; e = e.Next() { //DESCOMENTAR todo el for
+		combinacion := e.Value.(*doublylinkedlist.List)
+		for j := 0; j < combinacion.Size(); j++ {
+			carta, _ := combinacion.Get(j)
+			carta2 := carta.(cartas.Carta)
+			cartaString := strconv.Itoa(carta2.Valor) + "," + strconv.Itoa(carta2.Palo) + "," + strconv.Itoa(carta2.Color)
+			canalPartida <- cartaString
+		}
+		canalPartida <- "finC" //DESCOMENTAR
+	}
+	canalPartida <- "fin" //DESCOMENTAR
+
+	// Devolver siguiente turno y si ha abierto, si hay ganador devolverlo
+	if jugador.(jugadores.Jugador).Mano.Size() == 0 {
+		canalPartida <- "ganador" //En caso de no contar con más cartas terminará la partida
+		canalPartida <- strconv.Itoa(id)
+		wait <- true
+		partida = false
+		turno = false
+	} else { //Y en caso contrario pasaremos al turno del siguiente jugador
+		//if id >= 3 { //COMENTADO
+		canalPartida <- "no"
+		if id >= numJugad-1 { //DESCOMENTAR
+			id = 0
+		} else {
+			id = id + 1
+		}
+		canalPartida <- strconv.Itoa(id)
+		if ab[id] {
+			canalPartida <- "si"
+		} else {
+			canalPartida <- "no"
+		}
+		turno = false
+		wait <- false
+
+	msg1, _ := json.MarshalIndent(&RD, "", "\t")
+*/
+	
 	fmt.Println("El bot va a operar")
 
 	tablero.RobarCarta(t.Mazo, jugador.(jugadores.Jugador).Mano)

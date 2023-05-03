@@ -221,9 +221,9 @@ func IniciarPartida(c *gin.Context, partidaNueva *melody.Melody, torneoNuevo *me
 			}
 		} else {
 			if pDAO.EstaPausada(p.Clave) {
-				go torneo.IniciarTorneo(p.Clave, partidas[torneos["/api/ws/torneo/"+p.Clave]], true)	// el bool indica que se ha pausado
+				go torneo.IniciarTorneo(p.Clave, partidas[torneos["/api/ws/torneo/"+p.Clave]], true, es_bot, torneoNuevo)	// el bool indica que se ha pausado
 			} else{
-				go torneo.IniciarTorneo(p.Clave, partidas[torneos["/api/ws/torneo/"+p.Clave]], false)	// el bool indica que no se ha pausado
+				go torneo.IniciarTorneo(p.Clave, partidas[torneos["/api/ws/torneo/"+p.Clave]], false, es_bot, torneoNuevo)	// el bool indica que no se ha pausado
 			}
 		}
 
