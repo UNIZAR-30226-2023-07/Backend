@@ -289,8 +289,8 @@ func IniciarPartida(idPartida string, canalPartida chan string, estabaPausada bo
 					}
 
 					msg, _ := json.MarshalIndent(&RD, "", "\t")
-					//basura := <-espera
-					//fmt.Println(basura)
+					basura := <-espera
+					fmt.Println(basura)
 					ws.BroadcastFilter(msg, func(q *melody.Session) bool { //Envia la información a todos con la misma url
 						return q.Request.URL.Path == "/api/ws/partida/"+idPartida
 					})
