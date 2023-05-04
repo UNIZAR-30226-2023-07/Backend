@@ -27,7 +27,7 @@ type JoinPart struct {
 type InitPart struct {
 	Codigo string `json:"codigo" binding:"required"`
 	Clave  string `json:"clave" binding:"required"`
-	Bot	string `json:"bot" binding:"required"`
+	Bot    string `json:"bot" binding:"required"`
 }
 
 // Retrasmitir mensaje en el ws de partida
@@ -188,15 +188,15 @@ func IniciarPartida(c *gin.Context, partidaNueva *melody.Melody, torneoNuevo *me
 		var M1 Turnos
 		M1.Emisor = "Servidor"
 		M1.Tipo = "Partida_Iniciada"
-		
-		es_bot := make([]bool, 4) 
+
+		es_bot := make([]bool, 4)
 		b := 1
-		if p.Bot == "si" {  
+		if p.Bot == "si" {
 			for i := 0; i < len(es_bot); i++ {
 				if i >= njug {
 					es_bot[i] = true
 					var stringBot []string
-					stringBot = append(stringBot,"bot" + strconv.Itoa(b),strconv.Itoa(i))
+					stringBot = append(stringBot, "bot"+strconv.Itoa(b), strconv.Itoa(i))
 					turnos = append(turnos, stringBot)
 					b += 1
 				} else {
@@ -206,7 +206,6 @@ func IniciarPartida(c *gin.Context, partidaNueva *melody.Melody, torneoNuevo *me
 			// Indicar al DAO que hay bots en la partida
 		}
 		M1.Turnos = turnos
-		
 
 		msg1, _ := json.MarshalIndent(&M1, "", "\t")
 
@@ -215,15 +214,15 @@ func IniciarPartida(c *gin.Context, partidaNueva *melody.Melody, torneoNuevo *me
 		// Llamar a la función partida con el canal correspondiente
 		if !pDAO.EsTorneo(p.Clave) {
 			if pDAO.EstaPausada(p.Clave) {
-				go partida.IniciarPartida(p.Clave, partidas["/api/ws/partida/"+p.Clave], true, es_bot) // el bool indica que se ha pausado
+				go partida.IniciarPartida(p.Clave, partidas["/api/ws/partida/"+p.Clave], true, es_bot, partidaNueva) // el bool indica que se ha pausado
 			} else {
-				go partida.IniciarPartida(p.Clave, partidas["/api/ws/partida/"+p.Clave], false, es_bot) // el bool indica que no se ha pausado
+				go partida.IniciarPartida(p.Clave, partidas["/api/ws/partida/"+p.Clave], false, es_bot, partidaNueva) // el bool indica que no se ha pausado
 			}
 		} else {
 			if pDAO.EstaPausada(p.Clave) {
-				go torneo.IniciarTorneo(p.Clave, partidas[torneos["/api/ws/torneo/"+p.Clave]], true, es_bot, torneoNuevo)	// el bool indica que se ha pausado
-			} else{
-				go torneo.IniciarTorneo(p.Clave, partidas[torneos["/api/ws/torneo/"+p.Clave]], false, es_bot, torneoNuevo)	// el bool indica que no se ha pausado
+				go torneo.IniciarTorneo(p.Clave, partidas[torneos["/api/ws/torneo/"+p.Clave]], true, es_bot, torneoNuevo) // el bool indica que se ha pausado
+			} else {
+				go torneo.IniciarTorneo(p.Clave, partidas[torneos["/api/ws/torneo/"+p.Clave]], false, es_bot, torneoNuevo) // el bool indica que no se ha pausado
 			}
 		}
 

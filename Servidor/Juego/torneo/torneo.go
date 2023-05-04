@@ -5,23 +5,24 @@ import (
 
 	"Juego/jugadores"
 	"Juego/partida"
-	"strconv"
 	"encoding/json"
+	"strconv"
+
 	"github.com/olahol/melody"
 
 	"github.com/emirpasic/gods/lists/doublylinkedlist"
 )
 
 type Respuesta struct {
-	Emisor        string     `json:"emisor"`
-	Receptor      string     `json:"receptor"`
-	Tipo          string     `json:"tipo"`
-	Ganador       string     `json:"ganador"`
-	Puntos 	  	  []string     `json:"puntos"`
-	Partida       string     `json:"partida"`
+	Emisor   string   `json:"emisor"`
+	Receptor string   `json:"receptor"`
+	Tipo     string   `json:"tipo"`
+	Ganador  string   `json:"ganador"`
+	Puntos   []string `json:"puntos"`
+	Partida  string   `json:"partida"`
 }
 
-//func IniciarTorneo() {
+// func IniciarTorneo() {
 func IniciarTorneo(idPartida string, canalPartida chan string, estabaPausada bool, es_bot []bool, torneoNuevo *melody.Melody) {
 
 	primeraPartida := true
@@ -38,7 +39,7 @@ func IniciarTorneo(idPartida string, canalPartida chan string, estabaPausada boo
 	for !ganador {
 		// nueva partida
 		fmt.Println("Nueva Partida")
-		listaJ := partida.IniciarPartida(idPartida, canalPartida, estabaPausada, es_bot)
+		listaJ := partida.IniciarPartida(idPartida, canalPartida, estabaPausada, es_bot, torneoNuevo)
 		//listaJ := partida.IniciarPartida()
 
 		if primeraPartida { // se inicializa la lista de jugadores
@@ -134,6 +135,6 @@ func IniciarTorneo(idPartida string, canalPartida chan string, estabaPausada boo
 		torneoNuevo.BroadcastFilter(msg1, func(q *melody.Session) bool { //Envia la información a todos con la misma url
 			return q.Request.URL.Path == "/api/ws/torneo/"+idPartida
 		})
-		
+
 	}
 }

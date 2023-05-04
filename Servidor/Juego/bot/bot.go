@@ -2,32 +2,22 @@ package bot
 
 import (
 	"Juego/cartas"
-	"Juego/tablero"
 	"Juego/jugadores"
+	"Juego/tablero"
 	"fmt"
-//	"encoding/json"
 
-//	"github.com/olahol/melody"
-	"github.com/emirpasic/gods/lists/doublylinkedlist"
+	//	"encoding/json"
+
+	//	"github.com/olahol/melody"
 	"container/list"
+
+	"github.com/emirpasic/gods/lists/doublylinkedlist"
 )
 
 type Carta struct { //Struct utilizado para definir la estructura de datos que representa las cartas
 	Valor int
 	Palo  int
 	Color int
-}
-
-type RespuestaDescarte struct {
-	Emisor        string     `json:"emisor"`
-	Receptor      string     `json:"receptor"`
-	Tipo          string     `json:"tipo"`
-	Info          string     `json:"info"`
-	Descartes     []string   `json:"descartes"`
-	Combinaciones [][]string `json:"combinaciones"`
-	Turno         string     `json:"turno"`
-	Abrir         string     `json:"abrir"`
-	Ganador       string     `json:"ganador"`
 }
 
 // Función encargada de encontrar una escalera en la mano, devuelve los puntos del trio, las
@@ -78,9 +68,9 @@ func calcularEscalerasJoker(mano *doublylinkedlist.List, joker *doublylinkedlist
 					nuevoPalo = true
 				}
 				// comprobar si las dos cartas son escalera
-				if i > mano.Size(){
+				if i > mano.Size() {
 					hay_esc = false
-				}else if carta1.Valor+1 == carta2.Valor && carta1.Palo == carta2.Palo {
+				} else if carta1.Valor+1 == carta2.Valor && carta1.Palo == carta2.Palo {
 					//añadir la nueva carta a l
 					l.Add(carta2)
 					if carta2.Valor >= 10 {
@@ -242,7 +232,7 @@ func calcularEscaleras(mano *doublylinkedlist.List) (int, *doublylinkedlist.List
 			}
 			// comprobar si las dos cartas son escalera
 			if carta1.Valor+1 == carta2.Valor && carta1.Palo == carta2.Palo {
-				//añadir la nueva carta a 
+				//añadir la nueva carta a
 				fmt.Println("Holi4")
 				l.Add(carta2)
 				if carta2.Valor >= 10 {
@@ -252,7 +242,7 @@ func calcularEscaleras(mano *doublylinkedlist.List) (int, *doublylinkedlist.List
 				}
 				num_c += 1
 				i++
-			}else if i > mano.Size(){
+			} else if i > mano.Size() {
 				hay_esc = false
 			} else if num_c >= 2 && carta1.Valor == 13 && hay_as {
 				// hay escalera valida de la forma 11 12 AS
@@ -275,7 +265,7 @@ func calcularEscaleras(mano *doublylinkedlist.List) (int, *doublylinkedlist.List
 				} else {
 					no_elim = no_elim*100 + i
 				}
-			}else {
+			} else {
 				fmt.Println("Holi7")
 				// no hay escalera
 				hay_esc = false
@@ -478,7 +468,7 @@ func separarJokers(mano *doublylinkedlist.List) (*doublylinkedlist.List, *doubly
 		if carta.Valor == 0 {
 			v2, _ := mano.Get(mano.Size() - 2)
 			carta2, _ := v2.(cartas.Carta)
-			if carta2.Valor == 0{
+			if carta2.Valor == 0 {
 				joker.Add(carta2)
 				mano.Remove(mano.Size() - 2)
 			}
@@ -559,30 +549,30 @@ func CalcularPuntosPosibles(mano *doublylinkedlist.List) (int, *doublylinkedlist
 		joker = jokerR
 	}
 
-	if(!(esc_j && trio_j)){
-		for i := 0; i < joker.Size(); i++{
+	if !(esc_j && trio_j) {
+		for i := 0; i < joker.Size(); i++ {
 			valor, _ := joker.Get(i)
 			mano.Add(valor)
 		}
 	}
-	if(puntos > puntos_trio){
+	if puntos > puntos_trio {
 		fmt.Println("Mas puntos en combinacion")
 		return puntos, comb
 	}
 	fmt.Println("Mas puntos en trio")
 	return puntos_trio, comb_trio
-	
+
 }
 
 func ComprobarColocarCarta(m *doublylinkedlist.List, t *tablero.Tablero) {
 	aux := m.Size()
 	enc := false
 	for i := 0; i < aux; i++ {
-		if(enc){
+		if enc {
 			i = 0
 			enc = false
 			cartas.MostrarMano(m)
-			fmt.Println("RESTO J", i , aux)
+			fmt.Println("RESTO J", i, aux)
 		}
 		l_aux := doublylinkedlist.New()
 		c_aux, _ := m.Get(i)
@@ -601,76 +591,21 @@ func ComprobarColocarCarta(m *doublylinkedlist.List, t *tablero.Tablero) {
 					fmt.Println(" Y se ha obtenido un Joker \n")
 				}
 				t_aux := *t
-				tablero.MostrarTablero(t_aux) 
+				tablero.MostrarTablero(t_aux)
 				fmt.Println("RESTO I")
 				enc = true
 				aux = m.Size()
 				goto SALIR
-				
-				
+
 			}
 		}
-		SALIR:
+	SALIR:
 		cartas.MostrarMano(m)
 	}
 }
 
-func Bot_En_Funcionamiento(t tablero.Tablero, jugador interface{}, ab bool){
-/*
-	var RD RespuestaDescarte
-	RD.Emisor = "Servidor"
-	RD.Receptor = "todos"
-	RD.Tipo = "Descarte"
+func Bot_En_Funcionamiento(t tablero.Tablero, jugador interface{}, ab bool) {
 
-
-	// devolver descartes y combinaciones
-	// recorrer el mazo de descartes y pasar cada componente a string
-	for i := 0; i < descarte.Size(); i++ { //DESCOMENTAR todo el for
-		carta, _ := descarte.Get(i)
-		carta2 := carta.(cartas.Carta)
-		cartaString := strconv.Itoa(carta2.Valor) + "," + strconv.Itoa(carta2.Palo) + "," + strconv.Itoa(carta2.Color)
-	}
-
-	// recorrer las combinaciones y pasar cada componente a string
-	for e := t.Combinaciones.Front(); e != nil; e = e.Next() { //DESCOMENTAR todo el for
-		combinacion := e.Value.(*doublylinkedlist.List)
-		for j := 0; j < combinacion.Size(); j++ {
-			carta, _ := combinacion.Get(j)
-			carta2 := carta.(cartas.Carta)
-			cartaString := strconv.Itoa(carta2.Valor) + "," + strconv.Itoa(carta2.Palo) + "," + strconv.Itoa(carta2.Color)
-			canalPartida <- cartaString
-		}
-		canalPartida <- "finC" //DESCOMENTAR
-	}
-	canalPartida <- "fin" //DESCOMENTAR
-
-	// Devolver siguiente turno y si ha abierto, si hay ganador devolverlo
-	if jugador.(jugadores.Jugador).Mano.Size() == 0 {
-		canalPartida <- "ganador" //En caso de no contar con más cartas terminará la partida
-		canalPartida <- strconv.Itoa(id)
-		wait <- true
-		partida = false
-		turno = false
-	} else { //Y en caso contrario pasaremos al turno del siguiente jugador
-		//if id >= 3 { //COMENTADO
-		canalPartida <- "no"
-		if id >= numJugad-1 { //DESCOMENTAR
-			id = 0
-		} else {
-			id = id + 1
-		}
-		canalPartida <- strconv.Itoa(id)
-		if ab[id] {
-			canalPartida <- "si"
-		} else {
-			canalPartida <- "no"
-		}
-		turno = false
-		wait <- false
-
-	msg1, _ := json.MarshalIndent(&RD, "", "\t")
-*/
-	
 	fmt.Println("El bot va a operar")
 
 	tablero.RobarCarta(t.Mazo, jugador.(jugadores.Jugador).Mano)
@@ -703,8 +638,8 @@ func Bot_En_Funcionamiento(t tablero.Tablero, jugador interface{}, ab bool){
 			}
 		}
 	}
-	if(ab == false){
-		if(p < 51){
+	if ab == false {
+		if p < 51 {
 			cartas.MostrarMano(jugador.(jugadores.Jugador).Mano)
 			fmt.Println("No podemos abrir")
 			iterator := comb.Iterator()
@@ -735,7 +670,7 @@ func Bot_En_Funcionamiento(t tablero.Tablero, jugador interface{}, ab bool){
 			tablero.FinTurno(t.Mazo, jugador.(jugadores.Jugador).Mano, t.Descartes, des)
 
 			cartas.MostrarMano(jugador.(jugadores.Jugador).Mano)
-		}else{
+		} else {
 			fmt.Println("Vamos a abrir")
 			listaA := list.New()
 			//cartas.MostrarMano(jugador.(jugadores.Jugador).Mano)
@@ -754,7 +689,7 @@ func Bot_En_Funcionamiento(t tablero.Tablero, jugador interface{}, ab bool){
 					for iterator_c.Next() {
 						v := iterator_c.Value()
 						copia.Add(v) //Creamos copia
-						
+
 					}
 					listaA.PushBack(copia)
 				}
@@ -773,11 +708,10 @@ func Bot_En_Funcionamiento(t tablero.Tablero, jugador interface{}, ab bool){
 
 			cartas.MostrarMano(jugador.(jugadores.Jugador).Mano)
 		}
-	}else{
-		fmt.Println("VAMOS A HACER PRUEBAS");
+	} else {
+		fmt.Println("VAMOS A HACER PRUEBAS")
 
-		if(p > 0){
-
+		if p > 0 {
 
 			listaA := list.New()
 			//cartas.MostrarMano(jugador.(jugadores.Jugador).Mano)
@@ -796,7 +730,7 @@ func Bot_En_Funcionamiento(t tablero.Tablero, jugador interface{}, ab bool){
 					for iterator_c.Next() {
 						v := iterator_c.Value()
 						copia.Add(v) //Creamos copia
-						
+
 					}
 					listaA.PushBack(copia)
 				}
@@ -805,7 +739,7 @@ func Bot_En_Funcionamiento(t tablero.Tablero, jugador interface{}, ab bool){
 			tablero.AnyadirCombinaciones(t, listaA)
 		}
 
-		fmt.Println("MI MANO ES:");
+		fmt.Println("MI MANO ES:")
 		cartas.MostrarMano(jugador.(jugadores.Jugador).Mano)
 
 		fmt.Println("EL TABLERO ES:")
@@ -813,7 +747,7 @@ func Bot_En_Funcionamiento(t tablero.Tablero, jugador interface{}, ab bool){
 
 		ComprobarColocarCarta(jugador.(jugadores.Jugador).Mano, &t)
 
-		fmt.Println("MI MANO ES:");
+		fmt.Println("MI MANO ES:")
 		cartas.MostrarMano(jugador.(jugadores.Jugador).Mano)
 
 		fmt.Println("EL TABLERO ES:")
@@ -821,8 +755,8 @@ func Bot_En_Funcionamiento(t tablero.Tablero, jugador interface{}, ab bool){
 
 		des := jugadores.CartaMasAlta(jugador.(jugadores.Jugador).Mano)
 
-		tablero.FinTurno(t.Mazo, jugador.(jugadores.Jugador).Mano, t.Descartes, des)					
-					
+		tablero.FinTurno(t.Mazo, jugador.(jugadores.Jugador).Mano, t.Descartes, des)
+
 	}
 
 }

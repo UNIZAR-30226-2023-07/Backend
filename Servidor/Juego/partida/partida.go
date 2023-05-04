@@ -3,6 +3,8 @@ package partida
 import (
 	//"bufio"
 	"container/list"
+	"encoding/json"
+
 	//"math/rand"
 	//"time"
 	"fmt"
@@ -17,8 +19,10 @@ import (
 	"github.com/emirpasic/gods/lists/doublylinkedlist"
 
 	//"juego/partida"
-	"Juego/bot" //COMENTADO
+	"Juego/bot"
 	"Juego/tablero"
+
+	"github.com/olahol/melody"
 )
 
 type Partida struct {
@@ -27,6 +31,18 @@ type Partida struct {
 
 func Add_jug(j jugadores.Jugador, p Partida) {
 	p.Jug.Add(j)
+}
+
+type RespuestaDescarte struct {
+	Emisor        string     `json:"emisor"`
+	Receptor      string     `json:"receptor"`
+	Tipo          string     `json:"tipo"`
+	Info          string     `json:"info"`
+	Descartes     []string   `json:"descartes"`
+	Combinaciones [][]string `json:"combinaciones"`
+	Turno         string     `json:"turno"`
+	Abrir         string     `json:"abrir"`
+	Ganador       string     `json:"ganador"`
 }
 
 // func inicio_turno(espera chan string, wait chan bool) { //COMENTADO
@@ -52,7 +68,7 @@ func inicio_turno(espera chan string, wait chan bool, canalPartida chan string) 
 }
 
 // func IniciarPartida() *doublylinkedlist.List { //COMENTADO
-func IniciarPartida(idPartida string, canalPartida chan string, estabaPausada bool, es_bot []bool) *doublylinkedlist.List { //DESCOMENTAR
+func IniciarPartida(idPartida string, canalPartida chan string, estabaPausada bool, es_bot []bool, ws *melody.Melody) *doublylinkedlist.List { //DESCOMENTAR
 	//jugad, err := strconv.Atoi(os.Args[1])
 	//torn, err := strconv.Atoi(os.Args[2])
 	//bots, err := strconv.Atoi(os.Args[3])
@@ -69,12 +85,11 @@ func IniciarPartida(idPartida string, canalPartida chan string, estabaPausada bo
 
 	for i := 0; i < len(es_bot); i++ { //DESCOMENTAR
 		if es_bot[i] {
-			numJugad = 4;
-			break;
+			numJugad = 4
+			break
 		}
 	}
 	ab := make([]bool, numJugad) //DESCOMENTAR
-
 
 	t := tablero.Tablero{doublylinkedlist.New(), doublylinkedlist.New(), list.New()} //DESCOMENTAR
 
@@ -88,7 +103,7 @@ func IniciarPartida(idPartida string, canalPartida chan string, estabaPausada bo
 			listaJ.Add(jugador)
 			ab[i] = false
 		}
-	} else {	//DESCOMENTAR
+	} else { //DESCOMENTAR
 		fmt.Println("Partida reanudada")
 
 		// llegan las cartas del mazo del tablero por el canal, hay que guardarlas en t.Mazo
@@ -167,7 +182,7 @@ func IniciarPartida(idPartida string, canalPartida chan string, estabaPausada bo
 			}
 		}
 		fmt.Println("Ya empieza la partida")
-	}		//DESCOMENTAR
+	} //DESCOMENTAR
 
 	espera := make(chan string)
 	wait := make(chan bool)
@@ -221,15 +236,64 @@ func IniciarPartida(idPartida string, canalPartida chan string, estabaPausada bo
 				//COMENTADO
 				if es_bot[id] {
 					bot.Bot_En_Funcionamiento(t, jugador, ab[id])
-					if id >= numJugad-1 {
-						id = 0
-					} else {
-						id = id + 1
+
+					var RD RespuestaDescarte
+					RD.Emisor = "Servidor"
+					RD.Receptor = "todos"
+					RD.Tipo = "Descarte"
+
+					// devolver descartes y combinaciones
+					// recorrer el mazo de descartes y pasar cada componente a string
+					for i := 0; i < t.Descartes.Size(); i++ { //DESCOMENTAR todo el for
+						carta, _ := t.Descartes.Get(i)
+						carta2 := carta.(cartas.Carta)
+						cartaString := strconv.Itoa(carta2.Valor) + "," + strconv.Itoa(carta2.Palo) + "," + strconv.Itoa(carta2.Color)
+						RD.Descartes = append(RD.Descartes, cartaString)
 					}
-					turno = false
-					basura := <-espera
-					fmt.Println(basura)
-					wait <- false
+
+					// recorrer las combinaciones y pasar cada componente a string
+					for e := t.Combinaciones.Front(); e != nil; e = e.Next() { //DESCOMENTAR todo el for
+						combinacion := e.Value.(*doublylinkedlist.List)
+						var comb []string
+						for j := 0; j < combinacion.Size(); j++ {
+							carta, _ := combinacion.Get(j)
+							carta2 := carta.(cartas.Carta)
+							cartaString := strconv.Itoa(carta2.Valor) + "," + strconv.Itoa(carta2.Palo) + "," + strconv.Itoa(carta2.Color)
+							comb = append(comb, cartaString)
+						}
+						RD.Combinaciones = append(RD.Combinaciones, comb)
+					}
+
+					// Devolver siguiente turno y si ha abierto, si hay ganador devolverlo
+					if jugador.(jugadores.Jugador).Mano.Size() == 0 {
+						RD.Ganador = strconv.Itoa(id)
+						wait <- true
+						partida = false
+						turno = false
+					} else { //Y en caso contrario pasaremos al turno del siguiente jugador
+						//if id >= 3 { //COMENTADO
+						canalPartida <- "no"
+						if id >= numJugad-1 { //DESCOMENTAR
+							id = 0
+						} else {
+							id = id + 1
+						}
+						RD.Turno = strconv.Itoa(id)
+						if ab[id] {
+							RD.Abrir = "si"
+						} else {
+							RD.Abrir = "no"
+						}
+						turno = false
+						wait <- false
+					}
+
+					msg, _ := json.MarshalIndent(&RD, "", "\t")
+					//basura := <-espera
+					//fmt.Println(basura)
+					ws.BroadcastFilter(msg, func(q *melody.Session) bool { //Envia la información a todos con la misma url
+						return q.Request.URL.Path == "/api/ws/partida/"+idPartida
+					})
 				} else {
 					for !carta_robada { //Mientras no hayan robado una carta
 						resp := <-espera
@@ -275,7 +339,7 @@ func IniciarPartida(idPartida string, canalPartida chan string, estabaPausada bo
 								cartaString := strconv.Itoa(carta2.Valor) + "," + strconv.Itoa(carta2.Palo) + "," + strconv.Itoa(carta2.Color)
 								canalPartida <- cartaString
 							}
-							canalPartida <- "fin" //DESCOMENTAR 
+							canalPartida <- "fin" //DESCOMENTAR
 
 							wait <- false
 						} else if resp == "Mostrar_manos" { //Comando para mostrar las manos de todos los jugadores
@@ -312,7 +376,7 @@ func IniciarPartida(idPartida string, canalPartida chan string, estabaPausada bo
 								cartaString := strconv.Itoa(carta2.Valor) + "," + strconv.Itoa(carta2.Palo) + "," + strconv.Itoa(carta2.Color)
 								canalPartida <- cartaString
 							}
-							canalPartida <- "fin" //DESCOMENTAR 
+							canalPartida <- "fin" //DESCOMENTAR
 
 							// recorrer las combinaciones y pasar cada componente a string
 							for e := t.Combinaciones.Front(); e != nil; e = e.Next() { //DESCOMENTAR todo el for
@@ -325,7 +389,7 @@ func IniciarPartida(idPartida string, canalPartida chan string, estabaPausada bo
 								}
 								canalPartida <- "finC" //DESCOMENTAR
 							}
-							canalPartida <- "fin" //DESCOMENTAR 
+							canalPartida <- "fin" //DESCOMENTAR
 
 							wait <- false
 						} else {
@@ -346,7 +410,7 @@ func IniciarPartida(idPartida string, canalPartida chan string, estabaPausada bo
 							cartaString := strconv.Itoa(carta2.Valor) + "," + strconv.Itoa(carta2.Palo) + "," + strconv.Itoa(carta2.Color)
 							canalPartida <- cartaString
 						}
-						canalPartida <- "fin" //DESCOMENTAR 
+						canalPartida <- "fin" //DESCOMENTAR
 						wait <- false
 					} else if resp == "Descarte" {
 						canalPartida <- "Ok" //DESCOMENTAR
@@ -366,13 +430,13 @@ func IniciarPartida(idPartida string, canalPartida chan string, estabaPausada bo
 						/*for i_input > aux {
 							fmt.Println("Valor no valido, introduzca una carta correcta")
 							//fmt.Scanln(&input) //El usuario deberá de introducir el ID necesario //COMENTADO
-							input = <- canalPartida 
+							input = <- canalPartida
 							i_input, _ = strconv.Atoi(input)
 							fmt.Println("Has introducido: ", i_input)
 							aux := jugador.(jugadores.Jugador).Mano.Size()
 							fmt.Println(aux)
 
-							if i_input > aux { 
+							if i_input > aux {
 								canalPartida <- "Valor no valido, introduzca una carta correcta"
 							} else {
 								canalPartida <- "Ok"
@@ -388,7 +452,7 @@ func IniciarPartida(idPartida string, canalPartida chan string, estabaPausada bo
 							cartaString := strconv.Itoa(carta2.Valor) + "," + strconv.Itoa(carta2.Palo) + "," + strconv.Itoa(carta2.Color)
 							canalPartida <- cartaString
 						}
-						canalPartida <- "fin" //DESCOMENTAR 
+						canalPartida <- "fin" //DESCOMENTAR
 
 						// recorrer las combinaciones y pasar cada componente a string
 						for e := t.Combinaciones.Front(); e != nil; e = e.Next() { //DESCOMENTAR todo el for
@@ -462,7 +526,7 @@ func IniciarPartida(idPartida string, canalPartida chan string, estabaPausada bo
 							cartaString := strconv.Itoa(carta2.Valor) + "," + strconv.Itoa(carta2.Palo) + "," + strconv.Itoa(carta2.Color)
 							canalPartida <- cartaString
 						}
-						canalPartida <- "fin" //DESCOMENTAR 
+						canalPartida <- "fin" //DESCOMENTAR
 
 						// recorrer las combinaciones y pasar cada componente a string
 						for e := t.Combinaciones.Front(); e != nil; e = e.Next() { //DESCOMENTAR todo el for
