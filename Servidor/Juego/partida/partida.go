@@ -285,9 +285,8 @@ func IniciarPartida(idPartida string, canalPartida chan string, estabaPausada bo
 							RD.Abrir = "no"
 						}
 						turno = false
-						basura := <-espera
-						fmt.Println("se ha leido:", basura)
 						wait <- false
+						fmt.Println("fin turno bot")
 					}
 
 					msg, _ := json.MarshalIndent(&RD, "", "\t")
