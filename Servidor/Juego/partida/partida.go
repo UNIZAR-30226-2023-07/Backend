@@ -266,19 +266,19 @@ func IniciarPartida(idPartida string, canalPartida chan string, estabaPausada bo
 
 					// Devolver siguiente turno y si ha abierto, si hay ganador devolverlo
 					if jugador.(jugadores.Jugador).Mano.Size() == 0 {
+						fmt.Println("El bot ha ganado")
 						RD.Ganador = strconv.Itoa(id)
 						wait <- true
 						partida = false
 						turno = false
 					} else { //Y en caso contrario pasaremos al turno del siguiente jugador
-						//if id >= 3 { //COMENTADO
-						canalPartida <- "no"
 						if id >= numJugad-1 { //DESCOMENTAR
 							id = 0
 						} else {
 							id = id + 1
 						}
 						RD.Turno = strconv.Itoa(id)
+						fmt.Println("Siguiente turno: ", id)
 						if ab[id] {
 							RD.Abrir = "si"
 						} else {
