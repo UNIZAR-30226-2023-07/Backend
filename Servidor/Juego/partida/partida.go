@@ -285,6 +285,9 @@ func IniciarPartida(idPartida string, canalPartida chan string, estabaPausada bo
 							RD.Abrir = "no"
 						}
 						turno = false
+						canalPartida <- "finTurno"
+						a := <-espera
+						fmt.Println(a)
 						wait <- false
 						fmt.Println("fin turno bot")
 					}
