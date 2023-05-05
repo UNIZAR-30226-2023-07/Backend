@@ -2,9 +2,11 @@ package Handlers
 
 import (
 	"DB/DAO"
+	"encoding/json"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"github.com/olahol/melody"
 )
 
 // Todas las peticiones de post de amistad usaran este struct
@@ -13,7 +15,12 @@ type Amistad struct {
 	Receptor string `json:"receptor" binding:"required"`
 }
 
-func PostAmistadRm(c *gin.Context) {
+func PostAmistadRm(c *gin.Context, chat *melody.Melody) {
+	type M_rcp struct {
+		Emisor    string `json:"emisor"`
+		Receptor  string `json:"receptor"`
+		Contenido string `json:"contenido"`
+	}
 
 	a := Amistad{}
 
@@ -30,6 +37,18 @@ func PostAmistadRm(c *gin.Context) {
 
 	c.JSON(http.StatusAccepted, gin.H{
 		"res": "ok",
+	})
+
+	var M M_rcp
+	M.Emisor = "Servidor"
+	M.Receptor = a.Receptor
+	M.Contenido = "Remove"
+	var msg []byte
+	json.Unmarshal(msg, &M)
+
+	//Retransmitir el mensaje al receptor
+	chat.BroadcastFilter(msg, func(q *melody.Session) bool {
+		return q.Request.URL.Path == ("/api/ws/chat/" + a.Receptor)
 	})
 
 }
@@ -72,7 +91,13 @@ func GetAmistadList(c *gin.Context) {
 
 }
 
-func PostAmistadAdd(c *gin.Context) {
+func PostAmistadAdd(c *gin.Context, chat *melody.Melody) {
+
+	type M_rcp struct {
+		Emisor    string `json:"emisor"`
+		Receptor  string `json:"receptor"`
+		Contenido string `json:"contenido"`
+	}
 
 	a := Amistad{}
 
@@ -91,9 +116,26 @@ func PostAmistadAdd(c *gin.Context) {
 		"res": "ok",
 	})
 
+	var M M_rcp
+	M.Emisor = "Servidor"
+	M.Receptor = a.Receptor
+	M.Contenido = "Add"
+	var msg []byte
+	json.Unmarshal(msg, &M)
+
+	//Retransmitir el mensaje al receptor
+	chat.BroadcastFilter(msg, func(q *melody.Session) bool {
+		return q.Request.URL.Path == ("/api/ws/chat/" + a.Receptor)
+	})
+
 }
 
-func PostAmistadAccept(c *gin.Context) {
+func PostAmistadAccept(c *gin.Context, chat *melody.Melody) {
+	type M_rcp struct {
+		Emisor    string `json:"emisor"`
+		Receptor  string `json:"receptor"`
+		Contenido string `json:"contenido"`
+	}
 
 	a := Amistad{}
 
@@ -112,9 +154,26 @@ func PostAmistadAccept(c *gin.Context) {
 		"res": "ok",
 	})
 
+	var M M_rcp
+	M.Emisor = "Servidor"
+	M.Receptor = a.Receptor
+	M.Contenido = "Accept"
+	var msg []byte
+	json.Unmarshal(msg, &M)
+
+	//Retransmitir el mensaje al receptor
+	chat.BroadcastFilter(msg, func(q *melody.Session) bool {
+		return q.Request.URL.Path == ("/api/ws/chat/" + a.Receptor)
+	})
+
 }
 
-func PostAmistadDeny(c *gin.Context) {
+func PostAmistadDeny(c *gin.Context, chat *melody.Melody) {
+	type M_rcp struct {
+		Emisor    string `json:"emisor"`
+		Receptor  string `json:"receptor"`
+		Contenido string `json:"contenido"`
+	}
 
 	a := Amistad{}
 
@@ -131,6 +190,18 @@ func PostAmistadDeny(c *gin.Context) {
 
 	c.JSON(http.StatusAccepted, gin.H{
 		"res": "ok",
+	})
+
+	var M M_rcp
+	M.Emisor = "Servidor"
+	M.Receptor = a.Receptor
+	M.Contenido = "Deny"
+	var msg []byte
+	json.Unmarshal(msg, &M)
+
+	//Retransmitir el mensaje al receptor
+	chat.BroadcastFilter(msg, func(q *melody.Session) bool {
+		return q.Request.URL.Path == ("/api/ws/chat/" + a.Receptor)
 	})
 
 }

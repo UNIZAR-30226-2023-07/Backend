@@ -54,16 +54,24 @@ func main() {
 		api.GET("/amistad/get/:code", Handlers.GetAmistadList)
 
 		//Elimina una relación de amistad
-		api.POST("/amistad/remove", Handlers.PostAmistadRm)
+		api.POST("/amistad/remove", func(c *gin.Context) {
+			Handlers.PostAmistadRm(c, chat)
+		})
 
 		//Manda una solicitud de amistad
-		api.POST("/amistad/add", Handlers.PostAmistadAdd)
+		api.POST("/amistad/add", func(c *gin.Context) {
+			Handlers.PostAmistadAdd(c, chat)
+		})
 
 		//Acepta una solicitud de amistad
-		api.POST("/amistad/accept", Handlers.PostAmistadAccept)
+		api.POST("/amistad/accept", func(c *gin.Context) {
+			Handlers.PostAmistadAccept(c, chat)
+		})
 
 		//Rechaza una solicitud de amistad
-		api.POST("/amistad/deny", Handlers.PostAmistadDeny)
+		api.POST("/amistad/deny", func(c *gin.Context) {
+			Handlers.PostAmistadDeny(c, chat)
+		})
 
 		//Devuelve la lista de solicitudes pendientes
 		api.GET("/amistad/get/pendientes/:code", Handlers.GetPendientesList)
