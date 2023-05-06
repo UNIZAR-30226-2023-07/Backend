@@ -811,10 +811,12 @@ func IniciarPartida(idPartida string, canalPartida chan string, estabaPausada bo
 								fmt.Println("Carta colocada con exito")
 								if r == 1 { //Y si es necesario recibimos el Joker
 									canalPartida <- "joker"
+									jugador.(jugadores.Jugador).Mano.Remove(i_carta)
 									value := cartas.Carta{0, 4, 1}
 									jugador.(jugadores.Jugador).Mano.Add(value)
 									canalPartida <- strconv.Itoa(value.Valor) + "," + strconv.Itoa(value.Palo) + "," + strconv.Itoa(value.Color)
 								} else {
+									jugador.(jugadores.Jugador).Mano.Remove(i_carta)
 									if jugador.(jugadores.Jugador).Mano.Size() == 0 {
 										canalPartida <- "ganador" //En caso de no contar con más cartas terminará la partida
 										canalPartida <- strconv.Itoa(id)
