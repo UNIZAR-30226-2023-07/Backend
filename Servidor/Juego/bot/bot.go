@@ -5,6 +5,7 @@ import (
 	"Juego/jugadores"
 	"Juego/tablero"
 	"fmt"
+	"time"
 
 	//	"encoding/json"
 
@@ -607,6 +608,9 @@ func ComprobarColocarCarta(m *doublylinkedlist.List, t *tablero.Tablero) {
 func Bot_En_Funcionamiento(t tablero.Tablero, jugador interface{}, ab bool) {
 
 	fmt.Println("El bot va a operar")
+
+	// sleep de 5 segundos
+	time.Sleep(5 * time.Second)
 
 	tablero.RobarCarta(t.Mazo, jugador.(jugadores.Jugador).Mano)
 

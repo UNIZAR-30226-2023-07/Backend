@@ -209,8 +209,6 @@ func IniciarPartida(c *gin.Context, partidaNueva *melody.Melody, torneoNuevo *me
 
 		msg1, _ := json.MarshalIndent(&M1, "", "\t")
 
-		pDAO.IniciarPartida(p.Clave)
-
 		// Llamar a la función partida con el canal correspondiente
 		if !pDAO.EsTorneo(p.Clave) {
 			if pDAO.EstaPausada(p.Clave) {
@@ -287,7 +285,9 @@ func IniciarPartida(c *gin.Context, partidaNueva *melody.Melody, torneoNuevo *me
 				//pDAO.DelTableroGuardado(p.Clave)
 
 			}
+
 		}
+		pDAO.IniciarPartida(p.Clave)
 
 		c.JSON(http.StatusOK, gin.H{
 			"res": "ok",
