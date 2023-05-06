@@ -250,8 +250,10 @@ func IniciarPartida(c *gin.Context, partidaNueva *melody.Melody, torneoNuevo *me
 				partidas["/api/ws/partida/"+p.Clave] <- "Fin_mazo"
 
 				//Recuperar el descarte
-				cartaDescarte := strconv.Itoa(descarte.GetValor()) + "," + strconv.Itoa(descarte.GetPalo()) + "," + strconv.Itoa(descarte.GetReverso())
-				partidas["/api/ws/partida/"+p.Clave] <- cartaDescarte
+				if descarte != nil {
+					cartaDescarte := strconv.Itoa(descarte.GetValor()) + "," + strconv.Itoa(descarte.GetPalo()) + "," + strconv.Itoa(descarte.GetReverso())
+					partidas["/api/ws/partida/"+p.Clave] <- cartaDescarte
+				}
 				partidas["/api/ws/partida/"+p.Clave] <- "Fin_descartes"
 
 				//Recuperar combinaciones
