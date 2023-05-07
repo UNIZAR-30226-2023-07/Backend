@@ -2,6 +2,7 @@ package torneo
 
 import (
 	"fmt"
+	"time"
 
 	"Juego/jugadores"
 	"Juego/partida"
@@ -22,12 +23,20 @@ type Respuesta struct {
 	Partida  string   `json:"partida"`
 }
 
+type M_jugadores struct {
+	Emisor string   `json:"emisor"`
+	Tipo   string   `json:"tipo"`
+	Cartas []string `json:"cartas"`
+	Info   string   `json:"info"`
+}
+
 // func IniciarTorneo() {
-func IniciarTorneo(idPartida string, canalPartida chan string, estabaPausada bool, es_bot []bool, torneoNuevo *melody.Melody) {
+func IniciarTorneo(idPartida string, canalPartida chan string, estabaPausada bool, es_bot []bool, torneoNuevo *melody.Melody, partidaNueva *melody.Melody) {
 
 	primeraPartida := true
 	ganador := false
 	listaJtotal := doublylinkedlist.New()
+	numJug := 0
 
 	// prueba
 	// listaJ := doublylinkedlist.New()
@@ -120,7 +129,7 @@ func IniciarTorneo(idPartida string, canalPartida chan string, estabaPausada boo
 		}
 
 		var R Respuesta
-		R.Tipo = "Partida terminada"
+		R.Tipo = "Partida_terminada"
 		R.Emisor = "Servidor"
 		R.Receptor = "todos"
 		R.Puntos = puntos
@@ -133,8 +142,23 @@ func IniciarTorneo(idPartida string, canalPartida chan string, estabaPausada boo
 
 		msg1, _ := json.MarshalIndent(&R, "", "\t")
 		torneoNuevo.BroadcastFilter(msg1, func(q *melody.Session) bool { //Envia la información a todos con la misma url
-			return q.Request.URL.Path == "/api/ws/torneo/"+idPartida
+			return q.Request.URL.Path == ("/api/ws/torneo/" + idPartida)
 		})
 
+		if !ganador {
+			numJug = listaJtotal.Size()
+			for i := 0; i < len(es_bot); i++ {
+				if es_bot[i] {
+					numJug--
+				}
+			}
+			go enviarJugadores(numJug, canalPartida)
+		}
+
 	}
+}
+
+func enviarJugadores(numJug int, canalPartida chan string) {
+	time.Sleep(1 * time.Second)
+	canalPartida <- strconv.Itoa(numJug)
 }

@@ -6,6 +6,7 @@ import (
 	"Juego/partida"
 	"Juego/torneo"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"strconv"
 	"strings"
@@ -218,9 +219,9 @@ func IniciarPartida(c *gin.Context, partidaNueva *melody.Melody, torneoNuevo *me
 			}
 		} else {
 			if pDAO.EstaPausada(p.Clave) {
-				go torneo.IniciarTorneo(p.Clave, partidas[torneos["/api/ws/torneo/"+p.Clave]], true, es_bot, torneoNuevo) // el bool indica que se ha pausado
+				go torneo.IniciarTorneo(p.Clave, partidas[torneos["/api/ws/torneo/"+p.Clave]], true, es_bot, torneoNuevo, partidaNueva) // el bool indica que se ha pausado
 			} else {
-				go torneo.IniciarTorneo(p.Clave, partidas[torneos["/api/ws/torneo/"+p.Clave]], false, es_bot, torneoNuevo) // el bool indica que no se ha pausado
+				go torneo.IniciarTorneo(p.Clave, partidas[torneos["/api/ws/torneo/"+p.Clave]], false, es_bot, torneoNuevo, partidaNueva) // el bool indica que no se ha pausado
 			}
 		}
 
@@ -259,13 +260,16 @@ func IniciarPartida(c *gin.Context, partidaNueva *melody.Melody, torneoNuevo *me
 				//Recuperar combinaciones
 				ncomb := 0
 				for i := 0; i < len(combinaciones); i++ {
+					fmt.Println(combinaciones[i].GetCarta(), i, ncomb)
 					partidas["/api/ws/partida/"+p.Clave] <- strconv.Itoa((combinaciones[i].GetCarta()/10)/10) + "," + strconv.Itoa((combinaciones[i].GetCarta()/10)%10) + "," + strconv.Itoa(combinaciones[i].GetCarta()%10)
 					if i+1 < len(combinaciones) && ncomb != combinaciones[i+1].GetNcomb() {
 						ncomb = combinaciones[i+1].GetNcomb()
 						partidas["/api/ws/partida/"+p.Clave] <- "Fin_combinacion"
+					} else if i+1 == len(combinaciones) {
+						partidas["/api/ws/partida/"+p.Clave] <- "Fin_combinacion"
 					}
 				}
-				partidas["/api/ws/partida/"+p.Clave] <- "Fin_combinacion"
+				partidas["/api/ws/partida/"+p.Clave] <- "Fin_combinaciones"
 
 				//Recuperar manos
 				//Como todos los jugadores de antes deben de estar en el lobby podemos usar esta funcion
@@ -273,6 +277,7 @@ func IniciarPartida(c *gin.Context, partidaNueva *melody.Melody, torneoNuevo *me
 				for i := 0; i < len(jugadores); i++ {
 					mano := pDAO.GetMano(p.Clave, jugadores[i])
 					for j := 0; j < len(mano); j++ {
+						fmt.Println(mano[j].GetValor(), mano[j].GetPalo(), mano[j].GetReverso())
 						partidas["/api/ws/partida/"+p.Clave] <- strconv.Itoa(mano[i].GetValor()) + "," + strconv.Itoa(mano[i].GetPalo()) + "," + strconv.Itoa(mano[i].GetReverso())
 					}
 					partidas["/api/ws/partida/"+p.Clave] <- "Fin_mano"

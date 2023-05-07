@@ -289,7 +289,8 @@ func main() {
 		R.Cartas = M.Cartas
 		R.Info = M.Info
 
-		if M.Tipo == "jugadores" {
+		if M.Tipo == "Jugadores" {
+			fmt.Println("Se envia el numero de jugadores")
 			partidas[s.Request.URL.Path] <- M.Info
 			respuesta := <-partidas[s.Request.URL.Path]
 			fmt.Println("Respuesta:", respuesta)
@@ -347,7 +348,7 @@ func main() {
 				if respuesta == "joker" || respuesta == "ganador" {
 					respuesta = <-partidas[s.Request.URL.Path]
 				}
-				fmt.Println(respuesta)
+				fmt.Println("Respuesta:", respuesta)
 				R.Info = respuesta
 
 			} else {
@@ -524,8 +525,9 @@ func main() {
 		R.Cartas = M.Cartas
 		R.Info = M.Info
 
-		if M.Tipo == "jugadores" {
-			partidas[s.Request.URL.Path] <- M.Info
+		if M.Tipo == "Jugadores" {
+			fmt.Println("Se envia el numero de jugadores")
+			partidas[torneos[s.Request.URL.Path]] <- M.Info
 			respuesta := <-partidas[s.Request.URL.Path]
 			fmt.Println("Respuesta:", respuesta)
 		} else if M.Tipo == "Robar_carta" || M.Tipo == "Robar_carta_descartes" {

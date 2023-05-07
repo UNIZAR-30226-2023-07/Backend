@@ -138,9 +138,11 @@ func IniciarPartida(idPartida string, canalPartida chan string, estabaPausada bo
 		respuesta = <-canalPartida
 		for respuesta != "Fin_combinaciones" {
 			comb := doublylinkedlist.New()
+			fmt.Println("Combinacion recibida")
 			for respuesta != "Fin_combinacion" {
 				// separar el string por el caracter ","
 				V_P_C := strings.Split(respuesta, ",")
+				fmt.Println(V_P_C)
 				valor, _ := strconv.Atoi(V_P_C[0])
 				palo, _ := strconv.Atoi(V_P_C[1])
 				color, _ := strconv.Atoi(V_P_C[2])
@@ -155,6 +157,7 @@ func IniciarPartida(idPartida string, canalPartida chan string, estabaPausada bo
 
 		// llegan las cartas de los jugadores por el canal, hay que guardarlas en jugadores.Jugador.Mano
 		for i := 0; i < numJugad; i++ {
+			fmt.Println("Jugador", i)
 			respuesta = <-canalPartida
 			mano := doublylinkedlist.New()
 			for respuesta != "Fin_mano" {
@@ -166,7 +169,9 @@ func IniciarPartida(idPartida string, canalPartida chan string, estabaPausada bo
 				carta := cartas.Carta{valor, palo, color}
 				mano.Add(carta)
 				respuesta = <-canalPartida
+				fmt.Println("Carta recibida", respuesta)
 			}
+			fmt.Println("Mano recibida", mano)
 			j := jugadores.Jugador{i, mano, 0}
 			listaJ.Add(j)
 		}
