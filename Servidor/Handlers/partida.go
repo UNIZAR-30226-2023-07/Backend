@@ -73,7 +73,7 @@ func CreatePartida(c *gin.Context, partidas map[string]chan string, torneos map[
 
 	if p.Tipo == "torneo" { //Guardamos la partida actual del torneo, en la BD puede ser la primera
 		pVO = VO.NewPartidasVO(code, p.Anfitrion, p.Tipo, "", code)
-		torneos[code] = "/api/ws/partida/" + code
+		torneos["/api/ws/torneo/"+code] = "/api/ws/partida/" + code
 	}
 
 	pDAO.AddPartida(*pVO)
