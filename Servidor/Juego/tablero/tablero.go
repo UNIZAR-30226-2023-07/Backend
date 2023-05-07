@@ -292,16 +292,50 @@ func AnyadirCarta(jugada *doublylinkedlist.List, mano *doublylinkedlist.List, t 
 					posJ := PosicionJoker(listaC)
 					for i := 0; i < posJ.Size(); i++ {
 						v1, _ := posJ.Get(i)
-						j, _ := v1.(int)
-						listaJokers.Add(listaC.Get(j))
-						listaC.Remove(j)
-						
+						if(v1 != listaC.Size()){
+							j, _ := v1.(int)
+							aux, _ := listaC.Get(j - i)
+							fmt.Println("PIPI", aux)
+							listaJokers.Add(listaC.Get(j - i))
+							listaC.Remove(j - i)
+							fmt.Println("QUITO JOKER")
+						}else{
+							posJ.Remove(i)
+							fmt.Println("ESTE CASO NO")
+						}
+					}
+					a,_ := listaC.Get(listaC.Size() - 2)
+					fmt.Println(a, "JESUS")
+					a_carta := a.(cartas.Carta)
+					if(a_carta.Valor == 1){
+						listaC.Remove(listaC.Size() - 2)
 					}
 					listaC = SortStartMenorMayor(listaC, 0)
+					if(a_carta.Valor == 1){
+						listaC.Add(a_carta)
+					}
+					fmt.Println(listaC,"AMEN")
 					if EscaleraValida(listaC) || TrioValido(listaC){
 						/*carta := cartas.Carta{0, 4, 1}
 						mano.Add(carta)*/
-						return 1
+						if(carta.Valor != 0){
+							t.Combinaciones.Remove(e)
+							t.Combinaciones.PushBack(listaC)
+							return 1
+						}else{
+							for i := 0; i < posJ.Size(); i++ {
+								v1, _ := posJ.Get(i)
+								j, _ := v1.(int)
+								fmt.Println(j,"HEEEY",posJ.Size())
+								aux, _ := listaJokers.Get(i)
+								fmt.Println("PIPI", aux)
+								aux_j, _ := aux.(cartas.Carta)
+								listaC.Insert(j + 1,aux_j)
+							}
+							t.Combinaciones.Remove(e)
+							t.Combinaciones.PushBack(listaC)
+							return 0
+						}
 					}
 					fmt.Println("listaCP:", listaC)
 					for i := 0; i < posJ.Size(); i++ {
