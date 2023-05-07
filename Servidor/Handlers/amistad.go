@@ -43,8 +43,7 @@ func PostAmistadRm(c *gin.Context, chat *melody.Melody) {
 	M.Emisor = "Servidor"
 	M.Receptor = a.Receptor
 	M.Contenido = "Remove"
-	var msg []byte
-	json.Unmarshal(msg, &M)
+	msg, _ := json.MarshalIndent(&M, "", "\t")
 
 	//Retransmitir el mensaje al receptor
 	chat.BroadcastFilter(msg, func(q *melody.Session) bool {
@@ -120,8 +119,7 @@ func PostAmistadAdd(c *gin.Context, chat *melody.Melody) {
 	M.Emisor = "Servidor"
 	M.Receptor = a.Receptor
 	M.Contenido = "Add"
-	var msg []byte
-	json.Unmarshal(msg, &M)
+	msg, _ := json.MarshalIndent(&M, "", "\t")
 
 	//Retransmitir el mensaje al receptor
 	chat.BroadcastFilter(msg, func(q *melody.Session) bool {
@@ -158,8 +156,7 @@ func PostAmistadAccept(c *gin.Context, chat *melody.Melody) {
 	M.Emisor = "Servidor"
 	M.Receptor = a.Receptor
 	M.Contenido = "Accept"
-	var msg []byte
-	json.Unmarshal(msg, &M)
+	msg, _ := json.MarshalIndent(&M, "", "\t")
 
 	//Retransmitir el mensaje al receptor
 	chat.BroadcastFilter(msg, func(q *melody.Session) bool {
@@ -196,8 +193,7 @@ func PostAmistadDeny(c *gin.Context, chat *melody.Melody) {
 	M.Emisor = "Servidor"
 	M.Receptor = a.Receptor
 	M.Contenido = "Deny"
-	var msg []byte
-	json.Unmarshal(msg, &M)
+	msg, _ := json.MarshalIndent(&M, "", "\t")
 
 	//Retransmitir el mensaje al receptor
 	chat.BroadcastFilter(msg, func(q *melody.Session) bool {
