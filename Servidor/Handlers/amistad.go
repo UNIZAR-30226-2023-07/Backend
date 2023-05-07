@@ -42,7 +42,7 @@ func PostAmistadRm(c *gin.Context, chat *melody.Melody) {
 
 	var M M_rcp
 	M.Emisor = "Servidor"
-	M.Receptor = a.Emisor
+	M.Receptor = a.Receptor
 	M.Contenido = "Remove"
 	msg, _ := json.MarshalIndent(&M, "", "\t")
 
