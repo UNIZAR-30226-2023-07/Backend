@@ -3,6 +3,7 @@ package Handlers
 import (
 	"DB/DAO"
 	"encoding/json"
+	"fmt"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -41,13 +42,13 @@ func PostAmistadRm(c *gin.Context, chat *melody.Melody) {
 
 	var M M_rcp
 	M.Emisor = "Servidor"
-	M.Receptor = a.Receptor
+	M.Receptor = a.Emisor
 	M.Contenido = "Remove"
 	msg, _ := json.MarshalIndent(&M, "", "\t")
 
 	//Retransmitir el mensaje al receptor
 	chat.BroadcastFilter(msg, func(q *melody.Session) bool {
-		return q.Request.URL.Path == ("/api/ws/chat/" + a.Receptor)
+		return q.Request.URL.Path == ("/api/ws/chat/" + M.Receptor)
 	})
 
 }
@@ -123,7 +124,7 @@ func PostAmistadAdd(c *gin.Context, chat *melody.Melody) {
 
 	//Retransmitir el mensaje al receptor
 	chat.BroadcastFilter(msg, func(q *melody.Session) bool {
-		return q.Request.URL.Path == ("/api/ws/chat/" + a.Receptor)
+		return q.Request.URL.Path == ("/api/ws/chat/" + M.Receptor)
 	})
 
 }
@@ -154,13 +155,14 @@ func PostAmistadAccept(c *gin.Context, chat *melody.Melody) {
 
 	var M M_rcp
 	M.Emisor = "Servidor"
-	M.Receptor = a.Receptor
+	M.Receptor = a.Emisor
 	M.Contenido = "Accept"
 	msg, _ := json.MarshalIndent(&M, "", "\t")
+	fmt.Println(string(msg))
 
 	//Retransmitir el mensaje al receptor
 	chat.BroadcastFilter(msg, func(q *melody.Session) bool {
-		return q.Request.URL.Path == ("/api/ws/chat/" + a.Receptor)
+		return q.Request.URL.Path == ("/api/ws/chat/" + M.Receptor)
 	})
 
 }
@@ -191,13 +193,13 @@ func PostAmistadDeny(c *gin.Context, chat *melody.Melody) {
 
 	var M M_rcp
 	M.Emisor = "Servidor"
-	M.Receptor = a.Receptor
+	M.Receptor = a.Emisor
 	M.Contenido = "Deny"
 	msg, _ := json.MarshalIndent(&M, "", "\t")
 
 	//Retransmitir el mensaje al receptor
 	chat.BroadcastFilter(msg, func(q *melody.Session) bool {
-		return q.Request.URL.Path == ("/api/ws/chat/" + a.Receptor)
+		return q.Request.URL.Path == ("/api/ws/chat/" + M.Receptor)
 	})
 
 }
