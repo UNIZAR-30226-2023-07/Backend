@@ -15,11 +15,12 @@ import (
 	"github.com/emirpasic/gods/lists/doublylinkedlist"
 )
 
+/*
 type Carta struct { //Struct utilizado para definir la estructura de datos que representa las cartas
 	Valor int
 	Palo  int
 	Color int
-}
+}*/
 
 // Función encargada de encontrar una escalera en la mano, devuelve los puntos del trio, las
 // cartas que lo forman y si se ha encontrado trio
@@ -43,7 +44,7 @@ func calcularEscalerasJoker(mano *doublylinkedlist.List, joker *doublylinkedlist
 			num_c := 1
 			puntos_t := 0
 			v1, _ := mano.Get(i)
-			carta1, _ := v1.(Carta)
+			carta1, _ := v1.(cartas.Carta)
 			// comprobar si hay as en el palo
 			if nuevoPalo {
 				hay_as = carta1.Valor == 1
@@ -62,7 +63,7 @@ func calcularEscalerasJoker(mano *doublylinkedlist.List, joker *doublylinkedlist
 			mirar_j := false
 			for hay_esc {
 				v2, _ := mano.Get(i + 1)
-				carta2, _ := v2.(Carta)
+				carta2, _ := v2.(cartas.Carta)
 				if carta1.Palo == carta2.Palo {
 					nuevoPalo = false
 				} else {
@@ -86,7 +87,7 @@ func calcularEscalerasJoker(mano *doublylinkedlist.List, joker *doublylinkedlist
 					// hay escalera valida de la forma 11 12 AS
 					// recupero la carta del as
 					as, _ := mano.Get(ind_as)
-					as_c, _ := as.(Carta)
+					as_c, _ := as.(cartas.Carta)
 					l.Add(as_c)
 					puntos_t = puntos_t + 11
 					num_c += 1
@@ -102,7 +103,7 @@ func calcularEscalerasJoker(mano *doublylinkedlist.List, joker *doublylinkedlist
 
 				} else if num_j > 0 { // mirar si puedo añadir el joker para hacer escalera
 					v_joker, _ := joker.Get(num_j - 1)
-					c_joker, _ := v_joker.(Carta)
+					c_joker, _ := v_joker.(cartas.Carta)
 					l.Add(c_joker)
 					num_j_anyadidos++
 					if carta1.Valor == 13 && !hay_as { //joker como as
@@ -118,7 +119,7 @@ func calcularEscalerasJoker(mano *doublylinkedlist.List, joker *doublylinkedlist
 					}
 					num_j--
 					num_c++
-					carta1 = Carta{carta1.Valor + 1, carta1.Palo, carta1.Color}
+					carta1 = cartas.Carta{carta1.Valor + 1, carta1.Palo, carta1.Color}
 					if hay_as {
 						hay_esc = false
 					}
@@ -201,7 +202,7 @@ func calcularEscaleras(mano *doublylinkedlist.List) (int, *doublylinkedlist.List
 		num_c := 1
 		puntos_t := 0
 		v1, _ := mano.Get(i)
-		carta1, _ := v1.(Carta)
+		carta1, _ := v1.(cartas.Carta)
 		fmt.Println(carta1)
 		// comprobar si hay as en el palo
 		if nuevoPalo {
@@ -222,7 +223,7 @@ func calcularEscaleras(mano *doublylinkedlist.List) (int, *doublylinkedlist.List
 		fmt.Println("Holi")
 		for hay_esc {
 			v2, _ := mano.Get(i + 1)
-			carta2, _ := v2.(Carta)
+			carta2, _ := v2.(cartas.Carta)
 			fmt.Println(carta2)
 			if carta1.Palo == carta2.Palo {
 				nuevoPalo = false
@@ -250,7 +251,7 @@ func calcularEscaleras(mano *doublylinkedlist.List) (int, *doublylinkedlist.List
 				// recupero la carta del as
 				fmt.Println("Holi5")
 				as, _ := mano.Get(ind_as)
-				as_c, _ := as.(Carta)
+				as_c, _ := as.(cartas.Carta)
 				l.Add(as_c)
 				puntos_t = puntos_t + 11
 				num_c += 1
@@ -330,11 +331,11 @@ func calcularEscaleras(mano *doublylinkedlist.List) (int, *doublylinkedlist.List
 			iterator_c := cartas.Iterator()
 			for iterator_c.Next() {
 				v := iterator_c.Value()
-				valor := v.(Carta)
+				valor := v.(cartas.Carta)
 				fmt.Println(valor)
 				//mano.Add(valor)
 			}*/
-			valor := c.(Carta)
+			valor := c.(cartas.Carta)
 			fmt.Println(valor)
 		}
 	}
@@ -354,9 +355,9 @@ func calcularTriosJoker(mano *doublylinkedlist.List, joker *doublylinkedlist.Lis
 		for i := 0; i < mano.Size()-2 && !trio; i++ {
 			i_inf := i
 			v1, _ := mano.Get(i)
-			carta1, _ := v1.(Carta)
+			carta1, _ := v1.(cartas.Carta)
 			v2, _ := mano.Get(i + 1)
-			carta2, _ := v2.(Carta)
+			carta2, _ := v2.(cartas.Carta)
 			if carta1.Valor == carta2.Valor {
 				// las tres cartas tienen el mismo numero
 				if carta1.Palo != carta2.Palo {
@@ -367,7 +368,7 @@ func calcularTriosJoker(mano *doublylinkedlist.List, joker *doublylinkedlist.Lis
 					l.Add(carta1)
 					l.Add(carta2)
 					v_joker, _ := joker.Get(0)
-					c_joker, _ := v_joker.(Carta)
+					c_joker, _ := v_joker.(cartas.Carta)
 					l.Add(c_joker)
 					if carta1.Valor == 1 {
 						puntos = puntos + 11*3
@@ -403,11 +404,11 @@ func calcularTrios(mano *doublylinkedlist.List) (int, *doublylinkedlist.List, bo
 		i_inf := i
 		palo := 0
 		v1, _ := mano.Get(i)
-		carta1, _ := v1.(Carta)
+		carta1, _ := v1.(cartas.Carta)
 		v2, _ := mano.Get(i + 1)
-		carta2, _ := v2.(Carta)
+		carta2, _ := v2.(cartas.Carta)
 		v3, _ := mano.Get(i + 2)
-		carta3, _ := v3.(Carta)
+		carta3, _ := v3.(cartas.Carta)
 		if carta1.Valor == carta2.Valor && carta2.Valor == carta3.Valor {
 			// las tres cartas tienen el mismo numero
 			if carta1.Palo != carta2.Palo && carta2.Palo != carta3.Palo && carta1.Palo != carta3.Palo {
@@ -429,7 +430,7 @@ func calcularTrios(mano *doublylinkedlist.List) (int, *doublylinkedlist.List, bo
 				}
 				i += 2
 				v4, _ := mano.Get(i + 1)
-				carta4, _ := v4.(Carta)
+				carta4, _ := v4.(cartas.Carta)
 				palo += carta4.Palo
 				// la suma de los cuatro palos 1+2+3+4 = 10
 				// si al añadir la cuarta carta el valor que teniamos en palo + el palo de la nueva carta
@@ -465,10 +466,10 @@ func separarJokers(mano *doublylinkedlist.List) (*doublylinkedlist.List, *doubly
 	fmt.Println("Me quedo aquí1")
 	for hay_j {
 		v, _ := mano.Get(mano.Size() - 1)
-		carta, _ := v.(Carta)
+		carta, _ := v.(cartas.Carta)
 		if carta.Valor == 0 {
 			v2, _ := mano.Get(mano.Size() - 2)
-			carta2, _ := v2.(Carta)
+			carta2, _ := v2.(cartas.Carta)
 			if carta2.Valor == 0 {
 				joker.Add(carta2)
 				mano.Remove(mano.Size() - 2)
@@ -767,11 +768,11 @@ func Bot_En_Funcionamiento(t tablero.Tablero, jugador interface{}, ab bool) {
 
 /*func partition(mano *doublylinkedlist.List, low, high int, tipo int) (*doublylinkedlist.List, int) { //Función del sort encargada de particionar los datos
 	v1, _ := mano.Get(high)
-	carta1, _ := v1.(Carta)
+	carta1, _ := v1.(cartas.Carta)
 	i := low
 	for j := low; j < high; j++ {
 		v2, _ := mano.Get(j)
-		carta2, _ := v2.(Carta)
+		carta2, _ := v2.(cartas.Carta)
 		if tipo == 0 {
 			if cartas.compararCartasN(carta1, carta2) == -1 {
 				mano.Swap(i, j)
@@ -821,7 +822,7 @@ func Bot_En_Funcionamiento(t tablero.Tablero, jugador interface{}, ab bool) {
 			iterator_c := cartas.Iterator()
 			for iterator_c.Next() {
 				v := iterator_c.Value()
-				valor := v.(Carta)
+				valor := v.(cartas.Carta)
 				mano.Add(valor)
 			}
 		}
