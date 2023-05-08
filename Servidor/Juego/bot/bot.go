@@ -201,7 +201,7 @@ func calcularEscaleras(mano *doublylinkedlist.List) (int, *doublylinkedlist.List
 		num_c := 1
 		puntos_t := 0
 		v1, _ := mano.Get(i)
-		carta1, _ := v1.(cartas.Carta)
+		carta1, _ := v1.(Carta)
 		fmt.Println(carta1)
 		// comprobar si hay as en el palo
 		if nuevoPalo {
@@ -222,7 +222,7 @@ func calcularEscaleras(mano *doublylinkedlist.List) (int, *doublylinkedlist.List
 		fmt.Println("Holi")
 		for hay_esc {
 			v2, _ := mano.Get(i + 1)
-			carta2, _ := v2.(cartas.Carta)
+			carta2, _ := v2.(Carta)
 			fmt.Println(carta2)
 			if carta1.Palo == carta2.Palo {
 				nuevoPalo = false
@@ -334,7 +334,7 @@ func calcularEscaleras(mano *doublylinkedlist.List) (int, *doublylinkedlist.List
 				fmt.Println(valor)
 				//mano.Add(valor)
 			}*/
-			valor := c.(cartas.Carta)
+			valor := c.(Carta)
 			fmt.Println(valor)
 		}
 	}
@@ -465,10 +465,10 @@ func separarJokers(mano *doublylinkedlist.List) (*doublylinkedlist.List, *doubly
 	fmt.Println("Me quedo aquí1")
 	for hay_j {
 		v, _ := mano.Get(mano.Size() - 1)
-		carta, _ := v.(cartas.Carta)
+		carta, _ := v.(Carta)
 		if carta.Valor == 0 {
 			v2, _ := mano.Get(mano.Size() - 2)
-			carta2, _ := v2.(cartas.Carta)
+			carta2, _ := v2.(Carta)
 			if carta2.Valor == 0 {
 				joker.Add(carta2)
 				mano.Remove(mano.Size() - 2)
