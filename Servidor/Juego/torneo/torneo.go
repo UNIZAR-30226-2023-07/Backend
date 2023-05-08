@@ -48,7 +48,7 @@ func IniciarTorneo(idPartida string, canalPartida chan string, estabaPausada boo
 	for !ganador {
 		// nueva partida
 		fmt.Println("Nueva Partida")
-		listaJ := partida.IniciarPartida(idPartida, canalPartida, estabaPausada, es_bot, torneoNuevo)
+		listaJ := partida.IniciarPartida(idPartida, canalPartida, estabaPausada, es_bot, partidaNueva)
 		//listaJ := partida.IniciarPartida()
 
 		if primeraPartida { // se inicializa la lista de jugadores
