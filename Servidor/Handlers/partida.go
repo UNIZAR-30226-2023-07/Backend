@@ -278,7 +278,7 @@ func IniciarPartida(c *gin.Context, partidaNueva *melody.Melody, torneoNuevo *me
 					mano := pDAO.GetMano(p.Clave, jugadores[i])
 					for j := 0; j < len(mano); j++ {
 						fmt.Println(mano[j].GetValor(), mano[j].GetPalo(), mano[j].GetReverso())
-						partidas["/api/ws/partida/"+p.Clave] <- strconv.Itoa(mano[i].GetValor()) + "," + strconv.Itoa(mano[i].GetPalo()) + "," + strconv.Itoa(mano[i].GetReverso())
+						partidas["/api/ws/partida/"+p.Clave] <- strconv.Itoa(mano[j].GetValor()) + "," + strconv.Itoa(mano[j].GetPalo()) + "," + strconv.Itoa(mano[j].GetReverso())
 					}
 					partidas["/api/ws/partida/"+p.Clave] <- "Fin_mano"
 				}
