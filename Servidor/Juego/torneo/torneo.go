@@ -175,9 +175,11 @@ func IniciarTorneo(idPartida string, canalPartida chan string, estabaPausada boo
 				canalPartida <- strconv.Itoa(puntos)
 			}
 			canalPartida <- "fin"
+			goto fin
 		}
 
 	}
+fin:
 }
 
 func enviarJugadores(numJug int, canalPartida chan string) {
