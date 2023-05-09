@@ -37,7 +37,7 @@ func IniciarTorneo(idPartida string, canalPartida chan string, estabaPausada boo
 	ganador := false
 	listaJtotal := doublylinkedlist.New()
 	numJug := 0
-
+	var puntos []string
 	// prueba
 	// listaJ := doublylinkedlist.New()
 	// listaJ.Add(jugadores.Jugador{0,doublylinkedlist.New(),0})
@@ -46,6 +46,14 @@ func IniciarTorneo(idPartida string, canalPartida chan string, estabaPausada boo
 
 	// realizar partidas hasta que todos los jugadores se pasen de 100 puntos menos uno (el ganador)
 	for !ganador {
+		if estabaPausada {
+			respuesta := <-canalPartida
+			for respuesta != "Fin_puntos" {
+				respuesta = <-canalPartida
+				puntos = append(puntos, respuesta)
+			}
+		}
+
 		// nueva partida
 		fmt.Println("Nueva Partida")
 		listaJ := partida.IniciarPartida(idPartida, canalPartida, estabaPausada, es_bot, partidaNueva)
@@ -56,8 +64,12 @@ func IniciarTorneo(idPartida string, canalPartida chan string, estabaPausada boo
 				jugador, _ := listaJ.Get(i)
 				j := jugador.(jugadores.Jugador)
 				j.P_tor = 0
+				if estabaPausada {
+					j.P_tor, _ = strconv.Atoi(puntos[i])
+				}
 				listaJtotal.Add(j)
 			}
+			estabaPausada = false
 			primeraPartida = false
 		}
 

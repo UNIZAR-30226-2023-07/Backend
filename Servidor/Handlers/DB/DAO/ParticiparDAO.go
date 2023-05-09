@@ -204,6 +204,40 @@ func (pDAO *ParticiparDAO) UpdatePuntos(p string, j string, puntos string) {
 
 }
 
+// Devuelve los puntos del torneo en curso
+func (pDAO *ParticiparDAO) GetPuntos(p string) []string {
+	//String para la conexión
+	psqlcon := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable", host, port, user, password, dbname)
+
+	//abrir base de datos
+	db, err := sql.Open("postgres", psqlcon)
+	CheckError(err)
+
+	//cerrar base de datos
+	defer db.Close()
+
+	var res []string
+
+	//Devuelve los puntos de cada jugador
+	punt := "SELECT turno, puntos_resultado FROM PARTICIPAR WHERE partida = $1 ORDER BY turno ASC"
+	rows, e := db.Query(punt, p)
+	CheckError(e)
+
+	defer rows.Close()
+	for rows.Next() {
+		var turno int
+		var puntos string
+
+		err := rows.Scan(&turno, &puntos)
+		CheckError(err)
+
+		res = append(res, puntos)
+	}
+
+	return res
+
+}
+
 // Recupera si un jugados ha abierto o no ordenados por turno
 func (pDAO *ParticiparDAO) GetAbierto(p string) []string {
 	//String para la conexión
