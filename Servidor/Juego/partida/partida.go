@@ -68,12 +68,13 @@ func inicio_turno(espera chan string, wait chan bool, canalPartida chan string) 
 }
 
 // func IniciarPartida() *doublylinkedlist.List { //COMENTADO
-func IniciarPartida(idPartida string, canalPartida chan string, estabaPausada bool, es_bot []bool, ws *melody.Melody) *doublylinkedlist.List { //DESCOMENTAR
+func IniciarPartida(idPartida string, canalPartida chan string, estabaPausada bool, es_bot []bool, ws *melody.Melody) (*doublylinkedlist.List, bool) { //DESCOMENTAR
 	//jugad, err := strconv.Atoi(os.Args[1])
 	//torn, err := strconv.Atoi(os.Args[2])
 	//bots, err := strconv.Atoi(os.Args[3])
 	fmt.Println("Iniciando")
 	input := ""
+	pausa := false
 	parametrosPartida := <-canalPartida //DESCOMENTAR
 
 	//separar los parametros por el caracter ","
@@ -329,6 +330,7 @@ func IniciarPartida(idPartida string, canalPartida chan string, estabaPausada bo
 							carta_robada = true
 							goto SALIR
 						} else if resp == "Pausar" {
+							pausa = true
 							pausar(t, canalPartida, listaJ, ab) //DESCOMENTAR
 							wait <- true
 							partida = false
@@ -847,6 +849,7 @@ func IniciarPartida(idPartida string, canalPartida chan string, estabaPausada bo
 						partida = false
 						turno = false
 					} else if resp == "Pausar" {
+						pausa = true
 						pausar(t, canalPartida, listaJ, ab) //DESCOMENTAR
 						wait <- true
 						partida = false
@@ -886,7 +889,7 @@ SALIR: //Al acabar la partida terminamos contando los puntos de los jugadores qu
 		listaJFinal.Add(j)
 		fmt.Println("Puntos del jugador", jugador.(jugadores.Jugador).Id, ":", j.P_tor)
 	}
-	return listaJFinal
+	return listaJFinal, pausa
 }
 
 func pausar(t tablero.Tablero, canalPartida chan string, listaJ *doublylinkedlist.List, ab []bool) {
