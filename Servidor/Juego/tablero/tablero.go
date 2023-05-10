@@ -85,7 +85,7 @@ func SumaCartas(jugada *doublylinkedlist.List) int { // cuenta los puntos de la 
 		carta, _ := v1.(cartas.Carta)
 		if carta.Valor == 0 {
 			if TrioValido(jugada) {
-				aux_t, _ := jugada.Get((i % size) + 1)
+				aux_t, _ := jugada.Get((i + 1) % size)
 				carta, _ := aux_t.(cartas.Carta)
 				if carta.Valor == 1 {
 					fmt.Println("Hola1")
@@ -339,7 +339,7 @@ func AnyadirCarta(jugada *doublylinkedlist.List, mano *doublylinkedlist.List, t 
 								aux, _ := listaJokers.Get(i)
 								fmt.Println("PIPI", aux)
 								aux_j, _ := aux.(cartas.Carta)
-								listaC.Insert(j+1, aux_j)
+								listaC.Insert(j, aux_j)
 							}
 							t.Combinaciones.Remove(e)
 							t.Combinaciones.PushBack(listaC)
@@ -353,7 +353,7 @@ func AnyadirCarta(jugada *doublylinkedlist.List, mano *doublylinkedlist.List, t 
 						fmt.Println(j, "HEEEY", posJ.Size())
 						aux, _ := listaJokers.Get(i)
 						aux_j, _ := aux.(cartas.Carta)
-						listaC.Insert(j+1, aux_j)
+						listaC.Insert(j, aux_j) //he cambiado esto
 					}
 					fmt.Println("listaCP:", listaC)
 					fmt.Println("Seguimos")
