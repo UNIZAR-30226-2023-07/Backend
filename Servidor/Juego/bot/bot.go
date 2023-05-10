@@ -670,7 +670,7 @@ func Bot_En_Funcionamiento(t tablero.Tablero, jugador interface{}, ab bool) {
 
 			fmt.Println()
 
-			des := jugadores.CartaMasAlta(jugador.(jugadores.Jugador).Mano)
+			des := jugadores.CartaMasBaja(jugador.(jugadores.Jugador).Mano)
 
 			tablero.FinTurno(t.Mazo, jugador.(jugadores.Jugador).Mano, t.Descartes, des)
 

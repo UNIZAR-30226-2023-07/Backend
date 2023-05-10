@@ -28,3 +28,15 @@ func CartaMasAlta(mano *doublylinkedlist.List) int{
 	}
 	return r;
 }
+
+func CartaMasBaja(mano *doublylinkedlist.List) int{
+	r := 0;
+	for i := 0; i < mano.Size(); i++{
+		carta, _ := mano.Get(i)
+		carta_r, _ := mano.Get(r)
+		if carta.(cartas.Carta).Valor < carta_r.(cartas.Carta).Valor{
+			r = i
+		}
+	}
+	return r;
+}
