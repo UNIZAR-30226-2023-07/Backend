@@ -33,7 +33,7 @@ CREATE TABLE PARTIDAS (
 CREATE TABLE PARTICIPAR (
 	id 			serial,
 	partida 	text REFERENCES PARTIDAS (clave),
-	jugador 	text REFERENCES JUGADORES (codigo),
+	jugador 	text ,
 	puntos_resultado integer NOT NULL,
 	enlobby 	integer NOT NULL CHECK(enlobby = 1 OR enlobby = 0),
 	turno 		integer NOT NULL,

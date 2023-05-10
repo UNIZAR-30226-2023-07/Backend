@@ -99,8 +99,8 @@ func JoinPartida(c *gin.Context, partidaNueva *melody.Melody, torneoNuevo *melod
 
 	pDAO := DAO.PartidasDAO{}
 	parDAO := DAO.ParticiparDAO{}
-
 	j := parDAO.GetJugadoresEnLobby(p.Clave)
+	var tipo string
 
 	if pDAO.EstaPausada(p.Clave) && parDAO.EstaParticipando(p.Clave, p.Codigo) { //Si estaba pausada y el jugador estaba participando
 
@@ -114,10 +114,12 @@ func JoinPartida(c *gin.Context, partidaNueva *melody.Melody, torneoNuevo *melod
 		msg, _ := json.MarshalIndent(&M, "", "\t")
 
 		if pDAO.EsTorneo(p.Clave) {
+			tipo = "toreno"
 			torneoNuevo.BroadcastFilter(msg, func(q *melody.Session) bool { //Envia la información a todos con la misma url
 				return q.Request.URL.Path == "/api/ws/torneo/"+p.Clave
 			})
 		} else {
+			tipo = "amistosa"
 			partidaNueva.BroadcastFilter(msg, func(q *melody.Session) bool { //Envia la información a todos con la misma url
 				return q.Request.URL.Path == "/api/ws/partida/"+p.Clave
 			})
@@ -126,13 +128,14 @@ func JoinPartida(c *gin.Context, partidaNueva *melody.Melody, torneoNuevo *melod
 		c.JSON(http.StatusOK, gin.H{
 			"res":       "ok",
 			"jugadores": j,
+			"tipo":      tipo,
 		})
 
 	} else if !pDAO.EstaPausada(p.Clave) {
 
 		n := pDAO.NJugadoresPartida(p.Clave)
 		estor := pDAO.EsTorneo(p.Clave)
-		if estor || n <= 4 {
+		if n <= 4 {
 
 			parVO := VO.NewParticiparVO(p.Clave, p.Codigo, 0, n, "no")
 			parDAO.AddParticipar(*parVO)
@@ -145,10 +148,12 @@ func JoinPartida(c *gin.Context, partidaNueva *melody.Melody, torneoNuevo *melod
 			msg, _ := json.MarshalIndent(&M, "", "\t")
 
 			if estor {
+				tipo = "torneo"
 				torneoNuevo.BroadcastFilter(msg, func(q *melody.Session) bool { //Envia la información a todos con la misma url
 					return q.Request.URL.Path == "/api/ws/torneo/"+p.Clave
 				})
 			} else {
+				tipo = "amistosa"
 				partidaNueva.BroadcastFilter(msg, func(q *melody.Session) bool { //Envia la información a todos con la misma url
 					return q.Request.URL.Path == "/api/ws/partida/"+p.Clave
 				})
@@ -157,6 +162,7 @@ func JoinPartida(c *gin.Context, partidaNueva *melody.Melody, torneoNuevo *melod
 			c.JSON(http.StatusOK, gin.H{
 				"res":       "ok",
 				"jugadores": j,
+				"tipo":      tipo,
 			})
 
 		} else {
@@ -172,7 +178,6 @@ func JoinPartida(c *gin.Context, partidaNueva *melody.Melody, torneoNuevo *melod
 func IniciarPartida(c *gin.Context, partidaNueva *melody.Melody, torneoNuevo *melody.Melody, partidas map[string]chan string, torneos map[string]string) {
 
 	p := InitPart{}
-	//p := JoinPart{}
 	if err := c.BindJSON(&p); err != nil {
 		c.AbortWithError(http.StatusBadRequest, err)
 		return
@@ -198,6 +203,7 @@ func IniciarPartida(c *gin.Context, partidaNueva *melody.Melody, torneoNuevo *me
 					es_bot[i] = true
 					var stringBot []string
 					stringBot = append(stringBot, "bot"+strconv.Itoa(b), strconv.Itoa(i))
+					// añadir bot como jugador en la base de datos
 					turnos = append(turnos, stringBot)
 					b += 1
 				} else {
