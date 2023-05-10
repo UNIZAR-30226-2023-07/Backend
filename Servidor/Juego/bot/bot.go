@@ -563,8 +563,13 @@ func CalcularPuntosPosibles(mano *doublylinkedlist.List) (int, *doublylinkedlist
 		return puntos, comb
 	}
 	fmt.Println("Mas puntos en trio")
-	return puntos_trio, comb_trio
+	mano.Clear()
+	for i := 0; i < copia_mano_trio.Size(); i++ {
+		valor, _ := copia_mano_trio.Get(i)
+		mano.Add(valor)
+	}
 
+	return puntos_trio, comb_trio
 }
 
 func ComprobarColocarCarta(m *doublylinkedlist.List, t *tablero.Tablero) {
