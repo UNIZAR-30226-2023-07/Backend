@@ -15,9 +15,9 @@ type Tablero struct {
 	Mazo          *doublylinkedlist.List
 	Descartes     *doublylinkedlist.List
 	Combinaciones *list.List //Es una lista de doublylinkedlist donde se guardan las cartas jugadas(trios y escaleras en cada lista)
+	CartaAnterior cartas.Carta
+	Primero       bool
 }
-
-var cartaAnterior cartas.Carta
 
 func RobarCarta(list *doublylinkedlist.List, mano *doublylinkedlist.List) cartas.Carta { //Función encargada de robar una carta del mazo
 	fmt.Println(list.Size())
@@ -32,11 +32,14 @@ func RobarCarta(list *doublylinkedlist.List, mano *doublylinkedlist.List) cartas
 	return cart
 }
 
-func RobarDescartes(list *doublylinkedlist.List, mano *doublylinkedlist.List) cartas.Carta {
+func RobarDescartes(list *doublylinkedlist.List, mano *doublylinkedlist.List, t Tablero) cartas.Carta {
 	value, ok := list.Get(0)
 	cart := value.(cartas.Carta)
 	list.Remove(0)
-	list.Add(cartaAnterior)
+	if !t.Primero {
+		list.Add(t.CartaAnterior)
+		t.Primero = false
+	}
 	fmt.Println("Has robado la carta de descartes", cart)
 	if ok {
 		mano.Add(value) //Añade el valor a la mano
@@ -60,16 +63,15 @@ func AnyadirCombinaciones(t Tablero, comb *list.List) {
 	}*/
 }
 
-func FinTurno(mazo *doublylinkedlist.List, mano *doublylinkedlist.List, descarte *doublylinkedlist.List, i int) {
+func FinTurno(mazo *doublylinkedlist.List, mano *doublylinkedlist.List, descarte *doublylinkedlist.List, i int, t Tablero) {
 	value, _ := mano.Get(i) //Obtiene el valor de la mano a descartar
 	mano.Remove(i)          //Elimina el valor de la mano
 	if descarte.Size() > 0 {
 		fmt.Println(descarte, "DESCARTE METE A MAZO") //Si hay más de un valor en descartes lo añade a la lista de mazo
 		valueDesc, _ := descarte.Get(0)
 		mazo.Add(valueDesc)
-		cartaAnterior = valueDesc.(cartas.Carta)
+		t.CartaAnterior = valueDesc.(cartas.Carta)
 		descarte.Remove(0)
-		descarte.Add(cartaAnterior)
 	}
 	descarte.Add(value) //Añade el valor a descartes
 }
@@ -83,7 +85,7 @@ func SumaCartas(jugada *doublylinkedlist.List) int { // cuenta los puntos de la 
 		carta, _ := v1.(cartas.Carta)
 		if carta.Valor == 0 {
 			if TrioValido(jugada) {
-				aux_t, _ := jugada.Get((i % size) + 1)
+				aux_t, _ := jugada.Get((i + 1) % size)
 				carta, _ := aux_t.(cartas.Carta)
 				if carta.Valor == 1 {
 					fmt.Println("Hola1")
@@ -337,7 +339,7 @@ func AnyadirCarta(jugada *doublylinkedlist.List, mano *doublylinkedlist.List, t 
 								aux, _ := listaJokers.Get(i)
 								fmt.Println("PIPI", aux)
 								aux_j, _ := aux.(cartas.Carta)
-								listaC.Insert(j+1, aux_j)
+								listaC.Insert(j, aux_j)
 							}
 							t.Combinaciones.Remove(e)
 							t.Combinaciones.PushBack(listaC)
@@ -351,7 +353,7 @@ func AnyadirCarta(jugada *doublylinkedlist.List, mano *doublylinkedlist.List, t 
 						fmt.Println(j, "HEEEY", posJ.Size())
 						aux, _ := listaJokers.Get(i)
 						aux_j, _ := aux.(cartas.Carta)
-						listaC.Insert(j+1, aux_j)
+						listaC.Insert(j, aux_j) //he cambiado esto
 					}
 					fmt.Println("listaCP:", listaC)
 					fmt.Println("Seguimos")
@@ -502,7 +504,7 @@ func IniciarTablero() Tablero {
 
 	cartas.CreacionBaraja(mazo)
 
-	t := Tablero{mazo, descarte, list.New()}
+	t := Tablero{mazo, descarte, list.New(), cartas.Carta{}, true}
 	/*
 		aux := doublylinkedlist.New()
 		carta := cartas.Carta{0, 4, 1}
