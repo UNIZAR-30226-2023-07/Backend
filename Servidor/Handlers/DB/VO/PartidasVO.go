@@ -5,11 +5,10 @@ type PartidasVO struct {
 	creador string
 	tipo    string
 	estado  string
-	pactual string
 }
 
-func NewPartidasVO(clave string, creador string, tipo string, estado string, pactual string) *PartidasVO {
-	p := PartidasVO{clave: clave, creador: creador, tipo: tipo, estado: estado, pactual: pactual}
+func NewPartidasVO(clave string, creador string, tipo string, estado string) *PartidasVO {
+	p := PartidasVO{clave: clave, creador: creador, tipo: tipo, estado: estado}
 	return &p
 }
 
@@ -27,8 +26,4 @@ func (p *PartidasVO) GetTipo() string {
 
 func (p *PartidasVO) GetEstado() string {
 	return p.estado
-}
-
-func (p *PartidasVO) GetPactual() string {
-	return p.pactual
 }

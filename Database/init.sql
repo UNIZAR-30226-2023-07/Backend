@@ -26,7 +26,6 @@ CREATE TABLE PARTIDAS (
 	creador 	text REFERENCES JUGADORES (codigo),
 	tipo 		text NOT NULL CHECK(tipo = 'amistosa' OR tipo = 'torneo'),
 	estado 		text NOT NULL CHECK(estado = 'terminada' OR estado = 'pausada' OR estado = 'iniciada' OR estado = 'creando'),
-	pactual 	text,
 	PRIMARY KEY (clave)
 );
 
@@ -38,6 +37,7 @@ CREATE TABLE PARTICIPAR (
 	enlobby 	integer NOT NULL CHECK(enlobby = 1 OR enlobby = 0),
 	turno 		integer NOT NULL,
 	abierto		text NOT NULL CHECK(abierto = 'si' OR abierto = 'no'),
+	bot 		integer NOT NULL,
 	UNIQUE (partida, turno),
 	UNIQUE (partida, jugador),
 	PRIMARY KEY (id)

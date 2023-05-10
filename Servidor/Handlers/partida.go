@@ -70,16 +70,15 @@ func CreatePartida(c *gin.Context, partidas map[string]chan string, torneos map[
 		return
 	}
 
-	pVO := VO.NewPartidasVO(code, p.Anfitrion, p.Tipo, "", "")
+	pVO := VO.NewPartidasVO(code, p.Anfitrion, p.Tipo, "")
 
-	if p.Tipo == "torneo" { //Guardamos la partida actual del torneo, en la BD puede ser la primera
-		pVO = VO.NewPartidasVO(code, p.Anfitrion, p.Tipo, "", code)
+	if p.Tipo == "torneo" {
 		torneos["/api/ws/torneo/"+code] = "/api/ws/partida/" + code
 	}
 
 	pDAO.AddPartida(*pVO)
 
-	parVO := VO.NewParticiparVO(code, p.Anfitrion, 1, 0, "no")
+	parVO := VO.NewParticiparVO(code, p.Anfitrion, 1, 0, "no", 0)
 
 	parDAO.AddParticipar(*parVO)
 
@@ -137,7 +136,7 @@ func JoinPartida(c *gin.Context, partidaNueva *melody.Melody, torneoNuevo *melod
 		estor := pDAO.EsTorneo(p.Clave)
 		if n <= 4 {
 
-			parVO := VO.NewParticiparVO(p.Clave, p.Codigo, 0, n, "no")
+			parVO := VO.NewParticiparVO(p.Clave, p.Codigo, 0, n, "no", 0)
 			parDAO.AddParticipar(*parVO)
 
 			var M Mensaje
@@ -188,6 +187,8 @@ func IniciarPartida(c *gin.Context, partidaNueva *melody.Melody, torneoNuevo *me
 
 	if pDAO.HayPartida(p.Clave) && pDAO.EsCreador(p.Clave, p.Codigo) && pDAO.JugadoresEnLobby(p.Clave) {
 
+		pDAO.IniciarPartida(p.Clave) //Cambia el estado de la partida
+
 		turnos := parDAO.GetJugadoresTurnos(p.Clave)
 		njug := pDAO.NJugadoresPartida(p.Clave)
 
@@ -203,7 +204,9 @@ func IniciarPartida(c *gin.Context, partidaNueva *melody.Melody, torneoNuevo *me
 					es_bot[i] = true
 					var stringBot []string
 					stringBot = append(stringBot, "bot"+strconv.Itoa(b), strconv.Itoa(i))
-					// añadir bot como jugador en la base de datos
+					// Añadimos los bots a la BD
+					bot := VO.NewParticiparVO(p.Clave, "bot"+strconv.Itoa(b), 0, i, "no", 1)
+					parDAO.AddParticipar(*bot)
 					turnos = append(turnos, stringBot)
 					b += 1
 				} else {
@@ -314,8 +317,6 @@ func IniciarPartida(c *gin.Context, partidaNueva *melody.Melody, torneoNuevo *me
 			//pDAO.DelTableroGuardado(p.Clave)
 
 		}
-
-		pDAO.IniciarPartida(p.Clave)
 
 		c.JSON(http.StatusOK, gin.H{
 			"res": "ok",
@@ -479,4 +480,17 @@ func PausarPartida(c *gin.Context, partidaNueva *melody.Melody, partidas map[str
 		})
 	}
 
+}
+
+func FinPartida(turnoGanador string, clave string) {
+
+	pDAO := DAO.PartidasDAO{}
+	parDAO := DAO.ParticiparDAO{}
+	//Ponemos la partida como finalizada
+	pDAO.TerminarPartida(clave)
+	//Actualizamos las partidas ganads y jugadas de cada jugador
+	for i := 0; i < len(parDAO.GetJugadoresEnLobby(clave)); i++ {
+		//El dao ya se preocupa de no asignar las partidas a un bot
+		parDAO.UpdatePartidasJug(i, clave, turnoGanador == strconv.Itoa(i))
+	}
 }

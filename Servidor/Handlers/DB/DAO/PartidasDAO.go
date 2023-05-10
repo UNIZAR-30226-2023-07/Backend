@@ -23,8 +23,8 @@ func (pDAO *PartidasDAO) AddPartida(pVO VO.PartidasVO) {
 	defer db.Close()
 
 	//Añadir partida
-	addp := "INSERT INTO PARTIDAS VALUES ($1, $2, $3, 'creando', $4)"
-	_, e := db.Exec(addp, pVO.GetClave(), pVO.GetCreador(), pVO.GetTipo(), pVO.GetPactual())
+	addp := "INSERT INTO PARTIDAS VALUES ($1, $2, $3, 'creando')"
+	_, e := db.Exec(addp, pVO.GetClave(), pVO.GetCreador(), pVO.GetTipo())
 	CheckError(e)
 
 }
@@ -85,36 +85,6 @@ func (pDAO *PartidasDAO) EsTorneo(clave string) bool {
 
 }
 
-// Devuelve la partida actual de un torneo
-func (pDAO *PartidasDAO) PartidaActualTorneo(torneo string) string {
-	//String para la conexión
-	psqlcon := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable", host, port, user, password, dbname)
-
-	//abrir base de datos
-	db, err := sql.Open("postgres", psqlcon)
-	CheckError(err)
-
-	//cerrar base de datos
-	defer db.Close()
-
-	pcatual := ""
-
-	//Buscamos si hay alguna sala con gente libre en el torneo
-	isp := "SELECT pactual FROM PARTIDAS WHERE clave = $1"
-	rows, err := db.Query(isp, torneo)
-	CheckError(err)
-
-	defer rows.Close()
-	if rows.Next() {
-
-		err := rows.Scan(&pcatual)
-		CheckError(err)
-	}
-
-	return pcatual
-
-}
-
 // Devuelve la partida con clave clave
 func (pDAO *PartidasDAO) GetPartida(clave string) *VO.PartidasVO {
 	//String para la conexión
@@ -128,7 +98,7 @@ func (pDAO *PartidasDAO) GetPartida(clave string) *VO.PartidasVO {
 	defer db.Close()
 
 	//Buscamos el creador del torneo
-	isp := "SELECT creador, tipo, estado, pactual FROM PARTIDAS WHERE clave = $1"
+	isp := "SELECT creador, tipo, estado FROM PARTIDAS WHERE clave = $1"
 	rows, err := db.Query(isp, clave)
 	CheckError(err)
 
@@ -139,11 +109,10 @@ func (pDAO *PartidasDAO) GetPartida(clave string) *VO.PartidasVO {
 		var creador string
 		var tipo string
 		var estado string
-		var pactual string
 
-		err := rows.Scan(&creador, &tipo, &estado, &pactual)
+		err := rows.Scan(&creador, &tipo, &estado)
 
-		partida = VO.NewPartidasVO(clave, creador, tipo, estado, pactual)
+		partida = VO.NewPartidasVO(clave, creador, tipo, estado)
 		CheckError(err)
 
 	}

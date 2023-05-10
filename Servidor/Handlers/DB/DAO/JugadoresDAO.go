@@ -387,29 +387,11 @@ func (jDAO *JugadoresDAO) PartidasPausadas(j string) []*VO.PartidasVO {
 		err := rows.Scan(&clave, &creador, &tipo)
 		CheckError(err)
 
-		p := VO.NewPartidasVO(clave, creador, tipo, "pausada", "")
+		p := VO.NewPartidasVO(clave, creador, tipo, "pausada")
 		res = append(res, p)
 
 	}
 
 	return res
 
-}
-
-// Actualiza los puntos
-func (JDAO *JugadoresDAO) AddPuntos(code string, puntos int) {
-	//String para la conexión
-	psqlcon := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable", host, port, user, password, dbname)
-
-	//abrir base de datos
-	db, err := sql.Open("postgres", psqlcon)
-	CheckError(err)
-
-	//cerrar base de datos
-	defer db.Close()
-
-	//Actualizamos los puntos de un usuario
-	ap := "UPDATE JUGADORES SET puntos = ($1) WHERE codigo = $2"
-	_, e := db.Exec(ap, puntos, code)
-	CheckError(e)
 }

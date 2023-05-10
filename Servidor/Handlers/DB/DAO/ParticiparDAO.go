@@ -23,13 +23,13 @@ func (pDAO *ParticiparDAO) AddParticipar(pVO VO.ParticiparVO) {
 	defer db.Close()
 
 	//Añadir participación
-	addp := "INSERT INTO PARTICIPAR (partida, jugador, puntos_resultado, enlobby, turno, abierto) VALUES ($1, $2, 0, 1, $3, 'no')"
-	_, e := db.Exec(addp, pVO.GetPartida(), pVO.GetJugador(), pVO.GetTurno())
+	addp := "INSERT INTO PARTICIPAR (partida, jugador, puntos_resultado, enlobby, turno, abierto, bot) VALUES ($1, $2, 0, 1, $3, 'no', $4)"
+	_, e := db.Exec(addp, pVO.GetPartida(), pVO.GetJugador(), pVO.GetTurno(), pVO.GetBot())
 	CheckError(e)
 
 }
 
-// Asigna enlobby de un jugador para una partida
+// Asigna enlobby de un jugador o bot para una partida
 func (pDAO *ParticiparDAO) ModLobbyJug(j string, p string, l int) {
 	//String para la conexión
 	psqlcon := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable", host, port, user, password, dbname)
@@ -48,7 +48,7 @@ func (pDAO *ParticiparDAO) ModLobbyJug(j string, p string, l int) {
 
 }
 
-// Asigna enlobby para todos jugadores de una partida
+// Asigna enlobby para todos jugadores de una partida que no son bots
 func (pDAO *ParticiparDAO) ModLobby(p string, l int) {
 	//String para la conexión
 	psqlcon := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable", host, port, user, password, dbname)
@@ -61,7 +61,7 @@ func (pDAO *ParticiparDAO) ModLobby(p string, l int) {
 	defer db.Close()
 
 	//Modifica enlobby de todos los jugadores de una partida
-	modL := "UPDATE PARTICIPAR SET enlobby = $2 WHERE partida = $1"
+	modL := "UPDATE PARTICIPAR SET enlobby = $2 WHERE partida = $1 AND bot = 0"
 	_, e := db.Exec(modL, p, l)
 	CheckError(e)
 
@@ -182,6 +182,65 @@ func (pDAO *ParticiparDAO) GetJugadoresEnLobby(p string) []string {
 	}
 
 	return res
+
+}
+
+// Actualiza los puntos del torneo en curso
+func (pDAO *ParticiparDAO) UpdatePuntosJug(turno int, partida string, puntos string) {
+	//String para la conexión
+	psqlcon := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable", host, port, user, password, dbname)
+
+	//abrir base de datos
+	db, err := sql.Open("postgres", psqlcon)
+	CheckError(err)
+
+	//cerrar base de datos
+	defer db.Close()
+
+	//Incrementa los puntos de un jugador real en la tabla de jugadores
+	upp := "UPDATE JUGADORES AS j " +
+		"SET puntos = puntos + $3 " +
+		"FROM PARTICIPAR AS p " +
+		"WHERE p.jugador = j.codigo AND " +
+		"p.bot = 0 AND p.partida = $2 " +
+		"AND p.turno = $1 "
+	_, e := db.Exec(upp, turno, partida, puntos)
+	CheckError(e)
+}
+
+// Actualiza los puntos del torneo en curso
+func (pDAO *ParticiparDAO) UpdatePartidasJug(turno int, partida string, ganador bool) {
+	//String para la conexión
+	psqlcon := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable", host, port, user, password, dbname)
+
+	//abrir base de datos
+	db, err := sql.Open("postgres", psqlcon)
+	CheckError(err)
+
+	//cerrar base de datos
+	defer db.Close()
+
+	//Incrementamos una partida jugada
+	uppj := "UPDATE JUGADORES AS j " +
+		"SET pjugadas = pjugadas + 1 " +
+		"FROM PARTICIPAR AS p " +
+		"WHERE p.jugador = j.codigo AND " +
+		"p.bot = 0 AND p.partida = $2 " +
+		"AND p.turno = $1 "
+	_, e := db.Exec(uppj, turno, partida)
+	CheckError(e)
+
+	//Si ha ganado incrementamos un partida ganada
+	if ganador {
+		uppg := "UPDATE JUGADORES AS j " +
+			"SET pganadas = pganadas + 1 " +
+			"FROM PARTICIPAR AS p " +
+			"WHERE p.jugador = j.codigo AND " +
+			"p.bot = 0 AND p.partida = $2 " +
+			"AND p.turno = $1 "
+		_, e := db.Exec(uppg, turno, partida)
+		CheckError(e)
+	}
 
 }
 

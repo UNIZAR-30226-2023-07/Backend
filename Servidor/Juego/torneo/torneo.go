@@ -1,6 +1,7 @@
 package torneo
 
 import (
+	"DB/DAO"
 	"fmt"
 	"time"
 
@@ -141,16 +142,23 @@ func IniciarTorneo(idPartida string, canalPartida chan string, estabaPausada boo
 				}
 			}
 
+			parDAO := DAO.ParticiparDAO{}
 			var R Respuesta
 			R.Tipo = "Partida_terminada"
 			R.Emisor = "Servidor"
 			R.Receptor = "todos"
 			R.Puntos = puntos
 			R.Partida = idPartida
+
 			if numPerdedores == listaJtotal.Size()-1 {
 				ganador = true
 				fmt.Println("Hay ganador")
 				R.Ganador = strconv.Itoa(idGanador)
+
+				for i := 0; i < listaJtotal.Size(); i++ {
+					//Actualizamos los puntos, el DAO ya se preocupa de diferenciar entre bots y jugadores
+					parDAO.UpdatePuntosJug(i, idPartida, puntos[i])
+				}
 			}
 
 			msg1, _ := json.MarshalIndent(&R, "", "\t")
@@ -168,6 +176,7 @@ func IniciarTorneo(idPartida string, canalPartida chan string, estabaPausada boo
 				go enviarJugadores(numJug, canalPartida)
 			}
 		} else {
+			//Actualizar los puntos en la BD
 			// devolver los puntos de la partida
 			for i := 0; i < listaJ.Size(); i++ {
 				jugador, _ := listaJ.Get(i)
