@@ -69,7 +69,6 @@ func FinTurno(mazo *doublylinkedlist.List, mano *doublylinkedlist.List, descarte
 		mazo.Add(valueDesc)
 		cartaAnterior = valueDesc.(cartas.Carta)
 		descarte.Remove(0)
-		descarte.Add(cartaAnterior)
 	}
 	descarte.Add(value) //Añade el valor a descartes
 }
