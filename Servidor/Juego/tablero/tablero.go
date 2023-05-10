@@ -5,6 +5,7 @@ import (
 	"container/list"
 	"fmt"
 	"math/rand"
+
 	//"time"
 
 	"github.com/emirpasic/gods/lists/doublylinkedlist"
@@ -16,10 +17,12 @@ type Tablero struct {
 	Combinaciones *list.List //Es una lista de doublylinkedlist donde se guardan las cartas jugadas(trios y escaleras en cada lista)
 }
 
-func RobarCarta(list *doublylinkedlist.List, mano *doublylinkedlist.List) cartas.Carta{ //Función encargada de robar una carta del mazo
+var cartaAnterior cartas.Carta
+
+func RobarCarta(list *doublylinkedlist.List, mano *doublylinkedlist.List) cartas.Carta { //Función encargada de robar una carta del mazo
 	fmt.Println(list.Size())
 	r := rand.Intn(list.Size()) //Obtiene un número aleatorio de la lista
-	value, ok := list.Get(r)        //Obtiene el valor de la carta de la lista
+	value, ok := list.Get(r)    //Obtiene el valor de la carta de la lista
 	cart := value.(cartas.Carta)
 	fmt.Println("Has robado la carta ", cart)
 	if ok {
@@ -29,9 +32,11 @@ func RobarCarta(list *doublylinkedlist.List, mano *doublylinkedlist.List) cartas
 	return cart
 }
 
-func RobarDescartes(list *doublylinkedlist.List, mano *doublylinkedlist.List) cartas.Carta{
+func RobarDescartes(list *doublylinkedlist.List, mano *doublylinkedlist.List) cartas.Carta {
 	value, ok := list.Get(0)
 	cart := value.(cartas.Carta)
+	list.Remove(0)
+	list.Add(cartaAnterior)
 	fmt.Println("Has robado la carta de descartes", cart)
 	if ok {
 		mano.Add(value) //Añade el valor a la mano
@@ -62,7 +67,9 @@ func FinTurno(mazo *doublylinkedlist.List, mano *doublylinkedlist.List, descarte
 		fmt.Println(descarte, "DESCARTE METE A MAZO") //Si hay más de un valor en descartes lo añade a la lista de mazo
 		valueDesc, _ := descarte.Get(0)
 		mazo.Add(valueDesc)
+		cartaAnterior = valueDesc.(cartas.Carta)
 		descarte.Remove(0)
+		descarte.Add(cartaAnterior)
 	}
 	descarte.Add(value) //Añade el valor a descartes
 }
@@ -260,15 +267,15 @@ func Abrir(jugada *doublylinkedlist.List, mano *doublylinkedlist.List, t *Tabler
 	return true
 }
 
-func AnyadirJoker (jugada *doublylinkedlist.List, mano *doublylinkedlist.List, t *Tablero, idCombinacion int) int {
-	if !jugada.Empty(){
+func AnyadirJoker(jugada *doublylinkedlist.List, mano *doublylinkedlist.List, t *Tablero, idCombinacion int) int {
+	if !jugada.Empty() {
 		for e := t.Combinaciones.Front(); e != nil; e = e.Next() {
 			/*if id_comb == idCombinacion {
-				
+
 			}*/
 		}
 		return 0
-	}else{
+	} else {
 		return -1
 	}
 }
@@ -280,7 +287,7 @@ func AnyadirCarta(jugada *doublylinkedlist.List, mano *doublylinkedlist.List, t 
 		carta, _ := v1.(cartas.Carta)
 		id_comb := 0
 		for e := t.Combinaciones.Front(); e != nil; e = e.Next() {
-			if id_comb == idCombinacion {				
+			if id_comb == idCombinacion {
 				listaC := doublylinkedlist.New()
 				for a := 0; a < (e.Value.(*doublylinkedlist.List)).Size(); a++ {
 					valor, _ := (e.Value.(*doublylinkedlist.List)).Get(a)
@@ -292,45 +299,45 @@ func AnyadirCarta(jugada *doublylinkedlist.List, mano *doublylinkedlist.List, t 
 					posJ := PosicionJoker(listaC)
 					for i := 0; i < posJ.Size(); i++ {
 						v1, _ := posJ.Get(i)
-						if(v1 != listaC.Size()){
+						if v1 != listaC.Size() {
 							j, _ := v1.(int)
 							aux, _ := listaC.Get(j - i)
 							fmt.Println("PIPI", aux)
 							listaJokers.Add(listaC.Get(j - i))
 							listaC.Remove(j - i)
 							fmt.Println("QUITO JOKER")
-						}else{
+						} else {
 							posJ.Remove(i)
 							fmt.Println("ESTE CASO NO")
 						}
 					}
-					a,_ := listaC.Get(listaC.Size() - 2)
+					a, _ := listaC.Get(listaC.Size() - 2)
 					fmt.Println(a, "JESUS")
 					a_carta := a.(cartas.Carta)
-					if(a_carta.Valor == 1){
+					if a_carta.Valor == 1 {
 						listaC.Remove(listaC.Size() - 2)
 					}
 					listaC = SortStartMenorMayor(listaC, 0)
-					if(a_carta.Valor == 1){
+					if a_carta.Valor == 1 {
 						listaC.Add(a_carta)
 					}
-					fmt.Println(listaC,"AMEN")
-					if EscaleraValida(listaC) || TrioValido(listaC){
+					fmt.Println(listaC, "AMEN")
+					if EscaleraValida(listaC) || TrioValido(listaC) {
 						/*carta := cartas.Carta{0, 4, 1}
 						mano.Add(carta)*/
-						if(carta.Valor != 0){
+						if carta.Valor != 0 {
 							t.Combinaciones.Remove(e)
 							t.Combinaciones.PushBack(listaC)
 							return 1
-						}else{
+						} else {
 							for i := 0; i < posJ.Size(); i++ {
 								v1, _ := posJ.Get(i)
 								j, _ := v1.(int)
-								fmt.Println(j,"HEEEY",posJ.Size())
+								fmt.Println(j, "HEEEY", posJ.Size())
 								aux, _ := listaJokers.Get(i)
 								fmt.Println("PIPI", aux)
 								aux_j, _ := aux.(cartas.Carta)
-								listaC.Insert(j + 1,aux_j)
+								listaC.Insert(j+1, aux_j)
 							}
 							t.Combinaciones.Remove(e)
 							t.Combinaciones.PushBack(listaC)
@@ -341,10 +348,10 @@ func AnyadirCarta(jugada *doublylinkedlist.List, mano *doublylinkedlist.List, t 
 					for i := 0; i < posJ.Size(); i++ {
 						v1, _ := posJ.Get(i)
 						j, _ := v1.(int)
-						fmt.Println(j,"HEEEY",posJ.Size())
+						fmt.Println(j, "HEEEY", posJ.Size())
 						aux, _ := listaJokers.Get(i)
 						aux_j, _ := aux.(cartas.Carta)
-						listaC.Insert(j + 1,aux_j)
+						listaC.Insert(j+1, aux_j)
 					}
 					fmt.Println("listaCP:", listaC)
 					fmt.Println("Seguimos")
@@ -358,7 +365,7 @@ func AnyadirCarta(jugada *doublylinkedlist.List, mano *doublylinkedlist.List, t 
 					mano.Remove(ind)
 					fmt.Println("Valido")
 					return 0
-				}else{
+				} else {
 					listaC.Add(carta)
 					listaC = SortStartMenorMayor(listaC, 0)
 					fmt.Println("listaCA:", listaC)
@@ -496,28 +503,28 @@ func IniciarTablero() Tablero {
 	cartas.CreacionBaraja(mazo)
 
 	t := Tablero{mazo, descarte, list.New()}
-/*
-	aux := doublylinkedlist.New()
-	carta := cartas.Carta{0, 4, 1}
-	aux.Add(carta)
-	carta = cartas.Carta{11, 1, 1}
-	aux.Add(carta)
-	carta = cartas.Carta{12, 1, 1}
-	aux.Add(carta)
-	carta = cartas.Carta{13, 1, 1}
-	aux.Add(carta)
+	/*
+		aux := doublylinkedlist.New()
+		carta := cartas.Carta{0, 4, 1}
+		aux.Add(carta)
+		carta = cartas.Carta{11, 1, 1}
+		aux.Add(carta)
+		carta = cartas.Carta{12, 1, 1}
+		aux.Add(carta)
+		carta = cartas.Carta{13, 1, 1}
+		aux.Add(carta)
 
-	t.Combinaciones.PushBack(aux)
+		t.Combinaciones.PushBack(aux)
 
-	aux2:= doublylinkedlist.New()
-	carta = cartas.Carta{6, 4, 1}
-	aux2.Add(carta)
-	carta = cartas.Carta{6, 1, 1}
-	aux2.Add(carta)
-	carta = cartas.Carta{6, 3, 1}
-	aux2.Add(carta)
+		aux2:= doublylinkedlist.New()
+		carta = cartas.Carta{6, 4, 1}
+		aux2.Add(carta)
+		carta = cartas.Carta{6, 1, 1}
+		aux2.Add(carta)
+		carta = cartas.Carta{6, 3, 1}
+		aux2.Add(carta)
 
-	t.Combinaciones.PushBack(aux2)
+		t.Combinaciones.PushBack(aux2)
 	*/
 
 	return t
@@ -622,7 +629,7 @@ func EscaleraValida(jugada *doublylinkedlist.List) bool {
 		CartaValorMirar := carta1.Valor //Sacamos este valor por si es un comodin
 		PaloCartaMirar := carta1.Palo
 
-		fmt.Println("SAUL", PaloCartaRef,PaloCartaMirar,carta,carta1,!EsComodin(CartaValorRef),!EsComodin(CartaValorMirar), PaloCartaRef != PaloCartaMirar)
+		fmt.Println("SAUL", PaloCartaRef, PaloCartaMirar, carta, carta1, !EsComodin(CartaValorRef), !EsComodin(CartaValorMirar), PaloCartaRef != PaloCartaMirar)
 		if PaloCartaRef != PaloCartaMirar && !EsComodin(CartaValorRef) && !EsComodin(CartaValorMirar) { //Si tiene distinto palo, no valido
 			fmt.Println("False 1")
 			return false
