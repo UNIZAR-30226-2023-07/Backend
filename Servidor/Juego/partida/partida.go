@@ -92,7 +92,7 @@ func IniciarPartida(idPartida string, canalPartida chan string, estabaPausada bo
 	}
 	ab := make([]bool, numJugad) //DESCOMENTAR
 
-	t := tablero.Tablero{doublylinkedlist.New(), doublylinkedlist.New(), list.New()} //DESCOMENTAR
+	t := tablero.Tablero{doublylinkedlist.New(), doublylinkedlist.New(), list.New(), cartas.Carta{}, true} //DESCOMENTAR
 
 	if !estabaPausada {
 		fmt.Println("Partida creada")
@@ -314,7 +314,7 @@ func IniciarPartida(idPartida string, canalPartida chan string, estabaPausada bo
 						} else if resp == "Robar_carta_descartes" {
 							if t.Descartes.Size() > 0 {
 								//tablero.RobarDescartes(t.Descartes, jugador.(jugadores.Jugador).Mano) //COMENTADO
-								c := tablero.RobarDescartes(t.Descartes, jugador.(jugadores.Jugador).Mano) //En caso de que haya, robamos la carta del mazo de descartes y se la damos al jugador //DESCOMENTAR
+								c := tablero.RobarDescartes(t.Descartes, jugador.(jugadores.Jugador).Mano, t) //En caso de que haya, robamos la carta del mazo de descartes y se la damos al jugador //DESCOMENTAR
 								carta_robada = true
 								canalPartida <- strconv.Itoa(c.Valor) + "," + strconv.Itoa(c.Palo) + "," + strconv.Itoa(c.Color) //DESCOMENTAR
 							} else {
@@ -452,7 +452,7 @@ func IniciarPartida(idPartida string, canalPartida chan string, estabaPausada bo
 							}
 						}*/
 
-						tablero.FinTurno(t.Mazo, jugador.(jugadores.Jugador).Mano, t.Descartes, i_input) //Y esta función colocará esa carta en el mazo de descartes
+						tablero.FinTurno(t.Mazo, jugador.(jugadores.Jugador).Mano, t.Descartes, i_input, t) //Y esta función colocará esa carta en el mazo de descartes
 						// devolver descartes y combinaciones
 						// recorrer el mazo de descartes y pasar cada componente a string
 						for i := 0; i < t.Descartes.Size(); i++ { //DESCOMENTAR todo el for

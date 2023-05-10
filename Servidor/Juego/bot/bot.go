@@ -484,11 +484,12 @@ func separarJokers(mano *doublylinkedlist.List) (*doublylinkedlist.List, *doubly
 	return mano, joker
 }
 
-func descarteBot(mazo *doublylinkedlist.List, mano *doublylinkedlist.List, descarte *doublylinkedlist.List) {
-	mano = cartas.SortStart(mano, 0)
-	tablero.FinTurno(mazo, mano, descarte, mano.Size()-1)
-}
-
+/*
+	func descarteBot(mazo *doublylinkedlist.List, mano *doublylinkedlist.List, descarte *doublylinkedlist.List) {
+		mano = cartas.SortStart(mano, 0)
+		tablero.FinTurno(mazo, mano, descarte, mano.Size()-1)
+	}
+*/
 func CalcularPuntosPosibles(mano *doublylinkedlist.List) (int, *doublylinkedlist.List) { //Función encargada de revisar los puntos posibles de una mano
 	puntos := 0
 	puntos_trio := 0
@@ -672,7 +673,7 @@ func Bot_En_Funcionamiento(t tablero.Tablero, jugador interface{}, ab bool) {
 
 			des := jugadores.CartaMasBaja(jugador.(jugadores.Jugador).Mano)
 
-			tablero.FinTurno(t.Mazo, jugador.(jugadores.Jugador).Mano, t.Descartes, des)
+			tablero.FinTurno(t.Mazo, jugador.(jugadores.Jugador).Mano, t.Descartes, des, t)
 
 			cartas.MostrarMano(jugador.(jugadores.Jugador).Mano)
 		} else {
@@ -709,7 +710,7 @@ func Bot_En_Funcionamiento(t tablero.Tablero, jugador interface{}, ab bool) {
 
 			des := jugadores.CartaMasAlta(jugador.(jugadores.Jugador).Mano)
 
-			tablero.FinTurno(t.Mazo, jugador.(jugadores.Jugador).Mano, t.Descartes, des)
+			tablero.FinTurno(t.Mazo, jugador.(jugadores.Jugador).Mano, t.Descartes, des, t)
 
 			cartas.MostrarMano(jugador.(jugadores.Jugador).Mano)
 		}
@@ -760,7 +761,7 @@ func Bot_En_Funcionamiento(t tablero.Tablero, jugador interface{}, ab bool) {
 
 		des := jugadores.CartaMasAlta(jugador.(jugadores.Jugador).Mano)
 
-		tablero.FinTurno(t.Mazo, jugador.(jugadores.Jugador).Mano, t.Descartes, des)
+		tablero.FinTurno(t.Mazo, jugador.(jugadores.Jugador).Mano, t.Descartes, des, t)
 
 	}
 
