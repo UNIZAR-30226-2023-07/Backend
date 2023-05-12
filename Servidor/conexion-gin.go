@@ -289,6 +289,9 @@ func main() {
 		R.Cartas = M.Cartas
 		R.Info = M.Info
 
+		par := strings.Split(s.Request.URL.Path, "/")
+		idPartida := par[4]
+
 		if M.Tipo == "Jugadores" {
 			fmt.Println("Se envia el numero de jugadores")
 			partidas[s.Request.URL.Path] <- M.Info
@@ -331,7 +334,7 @@ func main() {
 				if respuesta == "ganador" {
 					respuesta = <-partidas[s.Request.URL.Path]
 					R.Info = respuesta
-					FinPartida(respuesta)
+					Handlers.FinPartida(respuesta, idPartida)
 				}
 			} else {
 				fmt.Println(respuesta)
@@ -350,7 +353,7 @@ func main() {
 					respuesta = <-partidas[s.Request.URL.Path]
 				} else if respuesta == "ganador" {
 					respuesta = <-partidas[s.Request.URL.Path]
-					FinPartida(respuesta)
+					Handlers.FinPartida(respuesta, idPartida)
 				}
 				fmt.Println("Respuesta:", respuesta)
 				R.Info = respuesta
@@ -389,7 +392,7 @@ func main() {
 					if respuesta == "ganador" {
 						respuesta = <-partidas[s.Request.URL.Path]
 						RD.Ganador = respuesta
-						FinPartida(respuesta)
+						Handlers.FinPartida(respuesta, idPartida)
 					} else {
 						respuesta = <-partidas[s.Request.URL.Path] // turno
 						RD.Turno = respuesta
@@ -707,8 +710,4 @@ func main() {
 	})
 	// Start and run the server
 	router.Run(":3001")
-}
-
-func FinPartida(turnoGanador string) {
-
 }
