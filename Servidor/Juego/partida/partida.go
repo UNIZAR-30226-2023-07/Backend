@@ -578,7 +578,7 @@ func IniciarPartida(idPartida string, canalPartida chan string, estabaPausada bo
 									}
 									//fmt.Printf("Tipo de combinacion: %T\n", combinacion)
 									cartas.MostrarMano(combinacion)
-									if tablero.TrioValido(combinacion) || tablero.EscaleraValida(combinacion) { //Si la combinación es valida, la añadimos a la lista definitiva
+									if (tablero.TrioValido(combinacion) || tablero.EscaleraValida(combinacion)) && tablero.NumComodines(combinacion) < 2{ //Si la combinación es valida, la añadimos a la lista definitiva
 										// crea una copia de la lista original
 										copia := doublylinkedlist.New()
 										for e := 0; e < combinacion.Size(); e++ {
@@ -690,7 +690,7 @@ func IniciarPartida(idPartida string, canalPartida chan string, estabaPausada bo
 								}
 								//fmt.Printf("Tipo de combinacion: %T\n", combinacion)
 								cartas.MostrarMano(combinacion)
-								if tablero.TrioValido(combinacion) || tablero.EscaleraValida(combinacion) {
+								if (tablero.TrioValido(combinacion) || tablero.EscaleraValida(combinacion)) && tablero.NumComodines(combinacion) < 2 {
 									puntos = puntos + tablero.SumaCartas(combinacion)
 									fmt.Println("Combinación valida, tienes ", puntos, "puntos")
 									// crea una copia de la lista original
