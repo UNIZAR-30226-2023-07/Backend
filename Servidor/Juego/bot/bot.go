@@ -592,7 +592,7 @@ func ComprobarColocarCarta(m *doublylinkedlist.List, t *tablero.Tablero) {
 			break
 		}*/
 		for j := 0; j < t.Combinaciones.Len(); j++ {
-			r := tablero.AnyadirCarta(l_aux, m, t, j)
+			r := tablero.AnyadirCarta(m, t, j, i)
 			if r != -1 {
 				fmt.Printf("Se ha añadido una carta a una combinacion")
 				if r == 1 {

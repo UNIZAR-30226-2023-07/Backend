@@ -282,10 +282,11 @@ func AnyadirJoker(jugada *doublylinkedlist.List, mano *doublylinkedlist.List, t 
 	}
 }
 
-func AnyadirCarta(jugada *doublylinkedlist.List, mano *doublylinkedlist.List, t *Tablero, idCombinacion int) int {
-	if !jugada.Empty() {
+func AnyadirCarta(mano *doublylinkedlist.List, t *Tablero, idCombinacion int,idCarta int) int {
+	fmt.Println(mano.Size(), "taman mano")
+	if idCarta > -1 && idCarta <= mano.Size() - 1 {
 		listaJokers := doublylinkedlist.New()
-		v1, _ := jugada.Get(0)
+		v1, _ := mano.Get(idCarta)
 		carta, _ := v1.(cartas.Carta)
 		id_comb := 0
 		for e := t.Combinaciones.Front(); e != nil; e = e.Next() {
@@ -305,6 +306,7 @@ func AnyadirCarta(jugada *doublylinkedlist.List, mano *doublylinkedlist.List, t 
 					}else{
 						listaC.Add(carta)
 						if NumComodines(listaC) > 1{
+							fmt.Println("MAS DE UN COMODIN")
 							return -1
 						}
 					}
@@ -341,24 +343,34 @@ func AnyadirCarta(jugada *doublylinkedlist.List, mano *doublylinkedlist.List, t 
 						/*carta := cartas.Carta{0, 4, 1}
 						mano.Add(carta)*/
 						
-						if(carta.Valor != 0){
+						v1, _ := posJ.Get(0)
+						j, _ := v1.(int)
+						fmt.Println("J = ", j)
+						aux, _ := listaJokers.Get(0)
+						aux_j, _ := aux.(cartas.Carta)
+						k := -1
+						for i := 0; i < listaC.Size(); i++ {
+							valorAnyaLista, _ := listaC.Get(i)
+							cartaAnyaLista, _ := valorAnyaLista.(cartas.Carta)
+							if(carta.Valor == cartaAnyaLista.Valor){
+								k = i
+								fmt.Println("K = ", k)
+							}
+
+						}
+						if(j == k){
 							t.Combinaciones.Remove(e)
 							t.Combinaciones.PushBack(listaC)
 							return 1
 						}else{
-							for i := 0; i < posJ.Size(); i++ {
-								v1, _ := posJ.Get(i)
-								j, _ := v1.(int)
-								fmt.Println(j,"HEEEY",posJ.Size())
-								aux, _ := listaJokers.Get(i)
-								fmt.Println("PIPI", aux)
-								aux_j, _ := aux.(cartas.Carta)
+							if(j < k){
+								listaC.Insert(j,aux_j)
+							}else{
 								listaC.Insert(j + 1,aux_j)
-							
-								
 							}
 							t.Combinaciones.Remove(e)
 							t.Combinaciones.PushBack(listaC)
+							mano.Remove(idCarta)
 							return 0
 						}
 						
@@ -416,8 +428,7 @@ func AnyadirCarta(jugada *doublylinkedlist.List, mano *doublylinkedlist.List, t 
 					}
 					t.Combinaciones.Remove(e)
 					t.Combinaciones.PushBack(listaC)
-					ind := mano.IndexOf(carta)
-					mano.Remove(ind)
+					mano.Remove(idCarta)
 					fmt.Println("Valido")
 					return 0
 				}else{
@@ -436,6 +447,7 @@ func AnyadirCarta(jugada *doublylinkedlist.List, mano *doublylinkedlist.List, t 
 						listaC.Remove(listaC.Size() - 2)
 					}
 					listaC = SortStartMenorMayor(listaC, 0)
+					fmt.Println(listaC, "listaC")
 					if(a_carta.Valor == 1){
 						listaC.Add(a_carta)
 					}
@@ -454,8 +466,7 @@ func AnyadirCarta(jugada *doublylinkedlist.List, mano *doublylinkedlist.List, t 
 							}else{
 								t.Combinaciones.Remove(e)
 								t.Combinaciones.PushBack(listaC)
-								ind := mano.IndexOf(carta)
-								mano.Remove(ind)
+								mano.Remove(idCarta)
 								return 0
 							}
 							
@@ -466,8 +477,7 @@ func AnyadirCarta(jugada *doublylinkedlist.List, mano *doublylinkedlist.List, t 
 					}
 					t.Combinaciones.Remove(e)
 					t.Combinaciones.PushBack(listaC)
-					ind := mano.IndexOf(carta)
-					mano.Remove(ind)
+					mano.Remove(idCarta)
 
 					return 0
 				}
