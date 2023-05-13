@@ -187,8 +187,6 @@ func IniciarPartida(c *gin.Context, partidaNueva *melody.Melody, torneoNuevo *me
 
 	if pDAO.HayPartida(p.Clave) && pDAO.EsCreador(p.Clave, p.Codigo) && pDAO.JugadoresEnLobby(p.Clave) {
 
-		pDAO.IniciarPartida(p.Clave) //Cambia el estado de la partida
-
 		turnos := parDAO.GetJugadoresTurnos(p.Clave)
 		njug := pDAO.NJugadoresPartida(p.Clave)
 
@@ -317,6 +315,7 @@ func IniciarPartida(c *gin.Context, partidaNueva *melody.Melody, torneoNuevo *me
 			//pDAO.DelTableroGuardado(p.Clave)
 
 		}
+		pDAO.IniciarPartida(p.Clave) //Cambia el estado de la partida
 
 		c.JSON(http.StatusOK, gin.H{
 			"res": "ok",
