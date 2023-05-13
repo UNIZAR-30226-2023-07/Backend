@@ -312,7 +312,7 @@ func IniciarPartida(c *gin.Context, partidaNueva *melody.Melody, torneoNuevo *me
 				canalPartida <- abiertos[i]
 			}
 
-			//pDAO.DelTableroGuardado(p.Clave)
+			pDAO.DelTableroGuardado(p.Clave)
 
 		}
 		pDAO.IniciarPartida(p.Clave) //Cambia el estado de la partida
