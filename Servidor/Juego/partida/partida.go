@@ -45,6 +45,12 @@ type RespuestaDescarte struct {
 	Ganador       string     `json:"ganador"`
 }
 
+type RespuestaReanudar struct {
+	Emisor   string `json:"emisor"`
+	Receptor string `json:"receptor"`
+	Tipo     string `json:"tipo"`
+}
+
 // func inicio_turno(espera chan string, wait chan bool) { //COMENTADO
 func inicio_turno(espera chan string, wait chan bool, canalPartida chan string) { //DESCOMENTAR
 	fin := false
@@ -188,6 +194,17 @@ func IniciarPartida(idPartida string, canalPartida chan string, estabaPausada bo
 			}
 		}
 		fmt.Println("Ya empieza la partida")
+
+		var RR RespuestaReanudar
+		RR.Emisor = "Servidor"
+		RR.Receptor = "todos"
+		RR.Tipo = "Partida_reanudada"
+
+		msg, _ := json.MarshalIndent(&RR, "", "\t")
+		ws.BroadcastFilter(msg, func(q *melody.Session) bool { //Envia la información a todos con la misma url
+			return q.Request.URL.Path == "/api/ws/partida/"+idPartida
+		})
+
 	} //DESCOMENTAR
 
 	espera := make(chan string)
@@ -578,7 +595,7 @@ func IniciarPartida(idPartida string, canalPartida chan string, estabaPausada bo
 									}
 									//fmt.Printf("Tipo de combinacion: %T\n", combinacion)
 									cartas.MostrarMano(combinacion)
-									if (tablero.TrioValido(combinacion) || tablero.EscaleraValida(combinacion)) && tablero.NumComodines(combinacion) < 2{ //Si la combinación es valida, la añadimos a la lista definitiva
+									if (tablero.TrioValido(combinacion) || tablero.EscaleraValida(combinacion)) && tablero.NumComodines(combinacion) < 2 { //Si la combinación es valida, la añadimos a la lista definitiva
 										// crea una copia de la lista original
 										copia := doublylinkedlist.New()
 										for e := 0; e < combinacion.Size(); e++ {
@@ -813,8 +830,8 @@ func IniciarPartida(idPartida string, canalPartida chan string, estabaPausada bo
 							i_carta, _ := strconv.Atoi(input)
 							l_aux := doublylinkedlist.New()
 							l_aux.Add(jugador.(jugadores.Jugador).Mano.Get(i_carta))
-							r := tablero.AnyadirCarta( jugador.(jugadores.Jugador).Mano, &t, t_combinacion,i_carta) //Comprobamos si no es valida, lo es, o si lo es y nos devuelve joker
-							if r != -1 {                                                                          //Si lo es la colocamos
+							r := tablero.AnyadirCarta(jugador.(jugadores.Jugador).Mano, &t, t_combinacion, i_carta) //Comprobamos si no es valida, lo es, o si lo es y nos devuelve joker
+							if r != -1 {                                                                            //Si lo es la colocamos
 								fmt.Println("Carta colocada con exito")
 								if r == 1 { //Y si es necesario recibimos el Joker
 									canalPartida <- "joker"
