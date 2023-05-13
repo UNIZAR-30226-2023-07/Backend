@@ -85,6 +85,9 @@ func main() {
 		//Modifica nombre, foto y descripción de un jugador
 		api.POST("/jugador/mod", Handlers.PostModJug)
 
+		//Borrar jugador
+		api.GET("/jugador/del/:code", Handlers.DelJugador)
+
 		//Devulve las partidas pendientes en las que participa el usuario
 		api.GET("/partidas/pausadas/get/:code", Handlers.GetPausadas)
 

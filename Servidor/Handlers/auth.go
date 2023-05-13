@@ -75,7 +75,6 @@ func PostRegister(c *gin.Context) {
 			"res": "email no valido",
 		})
 	}
-
 }
 
 func PostModLogin(c *gin.Context) {

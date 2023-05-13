@@ -312,8 +312,8 @@ func (JDAO *JugadoresDAO) ValJugador(JVO *VO.JugadoresVO) bool {
 	return res
 }
 
-// Devuelve true si el nombre del jugador esta en uso
-func (JDAO *JugadoresDAO) EstaJugador(nombre string) bool {
+// Devuelve true si el codigo del jugador esta en uso
+func (JDAO *JugadoresDAO) EstaJugador(code string) bool {
 	//String para la conexión
 	psqlcon := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable", host, port, user, password, dbname)
 
@@ -327,8 +327,8 @@ func (JDAO *JugadoresDAO) EstaJugador(nombre string) bool {
 	res := false
 
 	//Buscamos si existe ese usuario
-	isj := "SELECT * FROM JUGADORES WHERE nombre = $1"
-	rows, err := db.Query(isj, nombre)
+	isj := "SELECT * FROM JUGADORES WHERE codigo = $1"
+	rows, err := db.Query(isj, code)
 	CheckError(err)
 
 	defer rows.Close()

@@ -108,3 +108,21 @@ func GetPausadas(c *gin.Context) {
 		"partidas": partidas,
 	})
 }
+
+func DelJugador(c *gin.Context) {
+
+	code := c.Param("code")
+
+	jDAO := DAO.JugadoresDAO{}
+
+	if jDAO.EstaJugador(code) {
+		jDAO.DelJugador(code)
+		c.JSON(http.StatusOK, gin.H{
+			"res": "usuario eliminado",
+		})
+	} else {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"res": "usuario no existente",
+		})
+	}
+}
