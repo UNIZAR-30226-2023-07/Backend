@@ -813,7 +813,7 @@ func IniciarPartida(idPartida string, canalPartida chan string, estabaPausada bo
 							i_carta, _ := strconv.Atoi(input)
 							l_aux := doublylinkedlist.New()
 							l_aux.Add(jugador.(jugadores.Jugador).Mano.Get(i_carta))
-							r := tablero.AnyadirCarta(l_aux, jugador.(jugadores.Jugador).Mano, &t, t_combinacion) //Comprobamos si no es valida, lo es, o si lo es y nos devuelve joker
+							r := tablero.AnyadirCarta( jugador.(jugadores.Jugador).Mano, &t, t_combinacion,i_carta) //Comprobamos si no es valida, lo es, o si lo es y nos devuelve joker
 							if r != -1 {                                                                          //Si lo es la colocamos
 								fmt.Println("Carta colocada con exito")
 								if r == 1 { //Y si es necesario recibimos el Joker
