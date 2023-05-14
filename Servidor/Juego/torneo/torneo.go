@@ -56,8 +56,8 @@ func IniciarTorneo(idPartida string, canalPartida chan string, estabaPausada boo
 		if estabaPausada {
 			respuesta := <-canalPartida
 			for respuesta != "Fin_puntos" {
-				respuesta = <-canalPartida
 				puntos = append(puntos, respuesta)
+				respuesta = <-canalPartida
 			}
 			var RP RespuestaPuntos
 			RP.Emisor = "Servidor"
