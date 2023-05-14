@@ -316,8 +316,8 @@ func (pDAO *PartidasDAO) AddCombinacion(c VO.CombinacionesVO) {
 	defer db.Close()
 
 	//Añadimos una nueva combinación a la BD
-	addc := "INSERT INTO COMBINACIONES VALUES (DEFAULT, $1, $2, $3)"
-	_, err = db.Exec(addc, c.GetPartida(), c.GetCarta(), c.GetNcomb())
+	addc := "INSERT INTO COMBINACIONES VALUES (DEFAULT, $1, $2, $3, $4)"
+	_, err = db.Exec(addc, c.GetPartida(), c.GetCarta(), c.GetNcomb(), c.GetOrden())
 	CheckError(err)
 }
 
@@ -388,10 +388,10 @@ func (pDAO *PartidasDAO) GetCombinaciones(p string) []*VO.CombinacionesVO {
 	defer db.Close()
 
 	//Obtenemos todas las combinaciones de una partida
-	qComb := "SELECT carta, ncomb " +
+	qComb := "SELECT carta, ncomb, orden " +
 		"FROM COMBINACIONES " +
 		"WHERE partida = $1 " +
-		"ORDER BY ncomb, carta ASC"
+		"ORDER BY ncomb, orden ASC"
 	rows, err := db.Query(qComb, p)
 	CheckError(err)
 
@@ -401,11 +401,12 @@ func (pDAO *PartidasDAO) GetCombinaciones(p string) []*VO.CombinacionesVO {
 	for rows.Next() {
 		var carta int
 		var ncomb int
+		var orden int
 
-		err := rows.Scan(&carta, &ncomb)
+		err := rows.Scan(&carta, &ncomb, &orden)
 		CheckError(err)
 
-		c := VO.NewCombinacionesVO(p, carta, ncomb)
+		c := VO.NewCombinacionesVO(p, carta, ncomb, orden)
 		res = append(res, c)
 
 	}
@@ -461,7 +462,7 @@ func (pDAO *PartidasDAO) GetMano(p string, j string) []*VO.CartasVO {
 	//cerrar base de datos
 	defer db.Close()
 
-	//Obtenemos todas las combinaciones de una partida
+	//Obtenemos todas las manos de un jugador
 	qMaz := "SELECT m.carta " +
 		"FROM MANOS AS m JOIN PARTICIPAR AS p ON m.turno = p.turno AND m.partida = p.partida " +
 		"WHERE m.partida = $1 and p.jugador = $2"
@@ -498,7 +499,7 @@ func (pDAO *PartidasDAO) GetDescarte(p string) *VO.CartasVO {
 	//cerrar base de datos
 	defer db.Close()
 
-	//Obtenemos todas las combinaciones de una partida
+	//Obtenemos el descarte
 	qDes := "SELECT carta FROM DESCARTES WHERE partida = $1"
 	rows, err := db.Query(qDes, p)
 	CheckError(err)
@@ -541,7 +542,7 @@ func (pDAO *PartidasDAO) DelTableroGuardado(p string) {
 	_, err = db.Exec(delm, p)
 	CheckError(err)
 
-	//Eliminamos combinaciones de una partida
+	//Eliminamos descartes de una partida
 	deld := "DELETE FROM DESCARTES WHERE partida = $1"
 	_, err = db.Exec(deld, p)
 	CheckError(err)

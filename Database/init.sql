@@ -67,6 +67,7 @@ CREATE TABLE COMBINACIONES (
 	partida 	text REFERENCES PARTIDAS (clave),
 	carta 		serial REFERENCES CARTAS (id),
 	ncomb		integer NOT NULL,
+	orden 		integer NOT NULL,
 	UNIQUE(partida, carta),
 	PRIMARY KEY (id)
 );

@@ -440,7 +440,7 @@ func PausarPartida(c *gin.Context, partidaNueva *melody.Melody, partidas map[str
 			for j := 0; j < len(Combinaciones[i]); j++ {
 				comb := strings.Split(Combinaciones[i][j], ",")
 				carta, _ := strconv.Atoi((comb[0] + comb[1] + comb[2]))
-				c := VO.NewCombinacionesVO(p.Clave, carta, i)
+				c := VO.NewCombinacionesVO(p.Clave, carta, i, j)
 				pDAO.AddCombinacion(*c)
 			}
 		}
