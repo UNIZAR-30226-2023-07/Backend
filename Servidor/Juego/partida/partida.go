@@ -110,6 +110,7 @@ func IniciarPartida(idPartida string, canalPartida chan string, estabaPausada bo
 			listaJ.Add(jugador)
 			ab[i] = false
 		}
+
 	} else { //DESCOMENTAR
 		fmt.Println("Partida reanudada")
 
@@ -195,22 +196,22 @@ func IniciarPartida(idPartida string, canalPartida chan string, estabaPausada bo
 		}
 		fmt.Println("Ya empieza la partida")
 
-		var RR RespuestaReanudar
-		RR.Emisor = "Servidor"
-		RR.Receptor = "todos"
-		RR.Tipo = "Partida_reanudada"
-
-		msg, _ := json.MarshalIndent(&RR, "", "\t")
-		ws.BroadcastFilter(msg, func(q *melody.Session) bool { //Envia la información a todos con la misma url
-			return q.Request.URL.Path == "/api/ws/partida/"+idPartida
-		})
-
 	} //DESCOMENTAR
 
 	espera := make(chan string)
 	wait := make(chan bool)
 	//go inicio_turno(espera, wait) //Inicio de la escucha a la terminal //COMENTADO
 	go inicio_turno(espera, wait, canalPartida) //Inicio de la escucha a la terminal //DESCOMENTAR
+
+	var RR RespuestaReanudar
+	RR.Emisor = "Servidor"
+	RR.Receptor = "todos"
+	RR.Tipo = "Partida_Creada"
+
+	msg, _ := json.MarshalIndent(&RR, "", "\t")
+	ws.BroadcastFilter(msg, func(q *melody.Session) bool { //Envia la información a todos con la misma url
+		return q.Request.URL.Path == "/api/ws/partida/"+idPartida
+	})
 
 	partida := true
 	turno := true
