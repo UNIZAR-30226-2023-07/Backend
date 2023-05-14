@@ -213,6 +213,20 @@ func IniciarPartida(c *gin.Context, partidaNueva *melody.Melody, torneoNuevo *me
 			}
 			// Indicar al DAO que hay bots en la partida
 		}
+
+		if pDAO.EstaPausada(p.Clave) {
+			// cambiar la posición de los bots en el slice de turnos
+			if turnos[0][0] == "bot1" {
+				turnos = append(turnos[1:], turnos[0])
+				if turnos[0][0] == "bot2" {
+					turnos = append(turnos[1:], turnos[0])
+					if turnos[0][0] == "bot3" {
+						turnos = append(turnos[1:], turnos[0])
+					}
+				}
+			}
+		}
+
 		M1.Turnos = turnos
 
 		msg1, _ := json.MarshalIndent(&M1, "", "\t")
