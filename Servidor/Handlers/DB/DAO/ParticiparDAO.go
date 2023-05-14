@@ -129,7 +129,7 @@ func (pDAO *ParticiparDAO) GetJugadoresTurnos(p string) [][]string {
 	var res [][]string
 
 	//Buscamos los jugadores junto a su turno
-	isp := "SELECT jugador, turno FROM PARTICIPAR WHERE partida = $1"
+	isp := "SELECT jugador, turno FROM PARTICIPAR WHERE partida = $1 ORDER BY turno ASC"
 	rows, err := db.Query(isp, p)
 	CheckError(err)
 
@@ -167,7 +167,7 @@ func (pDAO *ParticiparDAO) GetJugadoresEnLobby(p string) []string {
 	var res []string
 
 	//Buscamos los jugadores junto a su turno
-	isp := "SELECT jugador FROM PARTICIPAR WHERE partida = $1 AND enlobby = 1"
+	isp := "SELECT jugador FROM PARTICIPAR WHERE partida = $1 AND enlobby = 1 ORDER BY turno ASC"
 	rows, err := db.Query(isp, p)
 	CheckError(err)
 
