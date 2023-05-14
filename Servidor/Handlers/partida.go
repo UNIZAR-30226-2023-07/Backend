@@ -311,6 +311,16 @@ func IniciarPartida(c *gin.Context, partidaNueva *melody.Melody, torneoNuevo *me
 			//Recuperar manos
 			//Como todos los jugadores de antes deben de estar en el lobby podemos usar esta funcion
 			jugadores := parDAO.GetJugadoresEnLobby(p.Clave)
+			// cambiar orden de los bots
+			if jugadores[0] == "bot1" {
+				jugadores = append(jugadores[1:], jugadores[0])
+				if jugadores[0] == "bot2" {
+					jugadores = append(jugadores[1:], jugadores[0])
+					if jugadores[0] == "bot3" {
+						jugadores = append(jugadores[1:], jugadores[0])
+					}
+				}
+			}
 			for i := 0; i < len(jugadores); i++ {
 				mano := pDAO.GetMano(p.Clave, jugadores[i])
 				for j := 0; j < len(mano); j++ {
