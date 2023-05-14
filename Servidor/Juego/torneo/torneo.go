@@ -31,6 +31,12 @@ type M_jugadores struct {
 	Info   string   `json:"info"`
 }
 
+type RespuestaPuntos struct {
+	Emisor string   `json:"emisor"`
+	Tipo   string   `json:"tipo"`
+	Puntos []string `json:"puntos"`
+}
+
 // func IniciarTorneo() {
 func IniciarTorneo(idPartida string, canalPartida chan string, estabaPausada bool, es_bot []bool, torneoNuevo *melody.Melody, partidaNueva *melody.Melody) {
 
@@ -53,6 +59,15 @@ func IniciarTorneo(idPartida string, canalPartida chan string, estabaPausada boo
 				respuesta = <-canalPartida
 				puntos = append(puntos, respuesta)
 			}
+			var RP RespuestaPuntos
+			RP.Emisor = "Servidor"
+			RP.Tipo = "Puntos"
+			RP.Puntos = puntos
+			msg2, _ := json.MarshalIndent(&RP, "", "\t")
+			torneoNuevo.BroadcastFilter(msg2, func(q *melody.Session) bool { //Envia la información a todos con la misma url
+				return q.Request.URL.Path == ("/api/ws/torneo/" + idPartida)
+			})
+
 		}
 
 		// nueva partida
@@ -67,6 +82,7 @@ func IniciarTorneo(idPartida string, canalPartida chan string, estabaPausada boo
 				j.P_tor = 0
 				if estabaPausada {
 					j.P_tor, _ = strconv.Atoi(puntos[i])
+					fmt.Println("puntos del jugador", j.Id, ":", j.P_tor)
 				}
 				listaJtotal.Add(j)
 			}
@@ -178,9 +194,10 @@ func IniciarTorneo(idPartida string, canalPartida chan string, estabaPausada boo
 		} else {
 			//Actualizar los puntos en la BD
 			// devolver los puntos de la partida
-			for i := 0; i < listaJ.Size(); i++ {
-				jugador, _ := listaJ.Get(i)
+			for i := 0; i < listaJtotal.Size(); i++ {
+				jugador, _ := listaJtotal.Get(i)
 				puntos := jugador.(jugadores.Jugador).P_tor
+				fmt.Println("id:", jugador.(jugadores.Jugador).Id, "puntos:", puntos)
 				canalPartida <- strconv.Itoa(puntos)
 			}
 			canalPartida <- "fin"
