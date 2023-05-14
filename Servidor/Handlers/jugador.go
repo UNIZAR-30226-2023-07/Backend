@@ -11,7 +11,7 @@ import (
 type ModJug struct {
 	Email  string `json:"email" binding:"required"`
 	Nombre string `json:"nombre" binding:"required"`
-	Foto   int    `json:"foto" binding:"required"`
+	Foto   int    `json:"foto"` // binding:"required"`
 	Descp  string `json:"descp" binding:"required"`
 }
 
