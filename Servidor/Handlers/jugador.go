@@ -151,7 +151,7 @@ func HistorialJugador(c *gin.Context) {
 		if partidas[i].GetTipo() == "amistosa" {
 			gana = particip[i].GetPuntos() == 1
 		} else {
-			gana = particip[i].GetPuntos() == 100
+			gana = particip[i].GetPuntos() < 100
 		}
 
 		m := Msg{

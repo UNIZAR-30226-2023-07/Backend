@@ -174,6 +174,7 @@ func IniciarTorneo(idPartida string, canalPartida chan string, estabaPausada boo
 				for i := 0; i < listaJtotal.Size(); i++ {
 					//Actualizamos los puntos, el DAO ya se preocupa de diferenciar entre bots y jugadores
 					parDAO.UpdatePuntosJug(i, idPartida, puntos[i])
+					parDAO.UpdatePuntos2(idPartida, strconv.Itoa(i), puntos[i])
 				}
 			}
 
