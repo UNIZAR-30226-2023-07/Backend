@@ -511,6 +511,11 @@ func FinPartida(turnoGanador string, clave string) {
 	parDAO := DAO.ParticiparDAO{}
 	//Ponemos la partida como finalizada
 	pDAO.TerminarPartida(clave)
+
+	//Si no es torneo ponemos un uno en la tabla de participar para indicar que ha ganado
+	if !pDAO.EsTorneo(clave) {
+		parDAO.UpdatePuntos2(clave, turnoGanador, "1")
+	}
 	//Actualizamos las partidas ganads y jugadas de cada jugador
 	for i := 0; i < len(parDAO.GetJugadoresEnLobby(clave)); i++ {
 		//El dao ya se preocupa de no asignar las partidas a un bot

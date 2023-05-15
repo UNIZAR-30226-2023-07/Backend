@@ -88,6 +88,9 @@ func main() {
 		//Borrar jugador
 		api.GET("/jugador/del/:code", Handlers.DelJugador)
 
+		//Devuelve el historial de partidas de un jugador
+		api.GET("/jugador/historial/:code", Handlers.HistorialJugador)
+
 		//Devulve las partidas pendientes en las que participa el usuario
 		api.GET("/partidas/pausadas/get/:code", Handlers.GetPausadas)
 

@@ -395,3 +395,45 @@ func (jDAO *JugadoresDAO) PartidasPausadas(j string) []*VO.PartidasVO {
 	return res
 
 }
+
+// Devuelve partidas pausadas por un jugador
+func (jDAO *JugadoresDAO) HisotialPartidas(j string) ([]*VO.PartidasVO, []*VO.ParticiparVO) {
+	//String para la conexión
+	psqlcon := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable", host, port, user, password, dbname)
+
+	//abrir base de datos
+	db, err := sql.Open("postgres", psqlcon)
+	CheckError(err)
+
+	//cerrar base de datos
+	defer db.Close()
+
+	//Obtenemos todos las partidas pausadas
+	qPausa := "SELECT p.clave, p.creador, p.tipo, pr.puntos_resultado " +
+		"FROM PARTIDAS AS p JOIN PARTICIPAR AS pr ON p.clave = pr.partida " +
+		"WHERE p.estado = 'terminada' AND pr.jugador = $1 "
+	rows, err := db.Query(qPausa, j)
+	CheckError(err)
+
+	var res1 []*VO.PartidasVO
+	var res2 []*VO.ParticiparVO
+
+	defer rows.Close()
+	for rows.Next() {
+		var clave string
+		var creador string
+		var tipo string
+		var puntos int
+
+		err := rows.Scan(&clave, &creador, &tipo, &puntos)
+		CheckError(err)
+
+		p := VO.NewPartidasVO(clave, creador, tipo, "terminada")
+		par := VO.NewParticiparVO(clave, j, puntos, 0, "0", 0)
+		res1 = append(res1, p)
+		res2 = append(res2, par)
+	}
+
+	return res1, res2
+
+}

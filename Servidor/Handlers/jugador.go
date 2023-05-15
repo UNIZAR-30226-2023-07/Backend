@@ -126,3 +126,46 @@ func DelJugador(c *gin.Context) {
 		})
 	}
 }
+
+func HistorialJugador(c *gin.Context) {
+
+	code := c.Param("code")
+
+	jDAO := DAO.JugadoresDAO{}
+
+	type Msg struct {
+		Tipo    string
+		Creador string
+		Clave   string
+		Ganador bool
+		Puntos  int
+	}
+
+	var msgs []Msg
+
+	partidas, particip := jDAO.HisotialPartidas(code)
+	for i := 0; i < len(partidas); i++ {
+
+		var gana bool
+
+		if partidas[i].GetTipo() == "amistosa" {
+			gana = particip[i].GetPuntos() == 1
+		} else {
+			gana = particip[i].GetPuntos() == 100
+		}
+
+		m := Msg{
+			Tipo:    partidas[i].GetTipo(),
+			Creador: partidas[i].GetCreador(),
+			Clave:   partidas[i].GetClave(),
+			Ganador: gana,
+			Puntos:  particip[i].GetPuntos(),
+		}
+
+		msgs = append(msgs, m)
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"partidas": msgs,
+	})
+}

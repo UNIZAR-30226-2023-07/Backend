@@ -263,6 +263,25 @@ func (pDAO *ParticiparDAO) UpdatePuntos(p string, j string, puntos string) {
 
 }
 
+// Actualiza los puntos del torneo en curso
+func (pDAO *ParticiparDAO) UpdatePuntos2(p string, turno string, puntos string) {
+	//String para la conexión
+	psqlcon := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable", host, port, user, password, dbname)
+
+	//abrir base de datos
+	db, err := sql.Open("postgres", psqlcon)
+	CheckError(err)
+
+	//cerrar base de datos
+	defer db.Close()
+
+	//Modifica los puntos de un jugador
+	modp := "UPDATE PARTICIPAR SET puntos_resultado = $3 WHERE partida = $2 AND turno = $1"
+	_, e := db.Exec(modp, turno, p, puntos)
+	CheckError(e)
+
+}
+
 // Devuelve los puntos del torneo en curso
 func (pDAO *ParticiparDAO) GetPuntos(p string) []string {
 	//String para la conexión
