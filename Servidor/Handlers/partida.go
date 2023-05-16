@@ -211,9 +211,11 @@ func IniciarPartida(c *gin.Context, partidaNueva *melody.Melody, torneoNuevo *me
 					es_bot[i] = true
 					var stringBot []string
 					stringBot = append(stringBot, "bot"+strconv.Itoa(b), strconv.Itoa(i))
-					// Añadimos los bots a la BD
-					bot := VO.NewParticiparVO(p.Clave, "bot"+strconv.Itoa(b), 0, i, "no", 1)
-					parDAO.AddParticipar(*bot)
+					if !pDAO.EstaPausada(p.Clave) {
+						// Añadimos los bots a la BD
+						bot := VO.NewParticiparVO(p.Clave, "bot"+strconv.Itoa(b), 0, i, "no", 1)
+						parDAO.AddParticipar(*bot)
+					}
 					turnos = append(turnos, stringBot)
 					b += 1
 				} else {
