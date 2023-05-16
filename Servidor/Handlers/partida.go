@@ -189,6 +189,15 @@ func IniciarPartida(c *gin.Context, partidaNueva *melody.Melody, torneoNuevo *me
 
 		turnos := parDAO.GetJugadoresTurnos(p.Clave)
 		njug := pDAO.NJugadoresPartida(p.Clave)
+		fmt.Println(njug, "jugadores")
+		numJugadores := njug
+		// restar 1 a los jugadores que no son bots
+		for i := 0; i < numJugadores; i++ {
+			if turnos[i][1] != "bot" {
+				njug--
+			}
+		}
+		fmt.Println(njug, "jugadores sin bots")
 
 		var M1 Turnos
 		M1.Emisor = "Servidor"
