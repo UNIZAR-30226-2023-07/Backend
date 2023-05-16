@@ -193,7 +193,7 @@ func IniciarPartida(c *gin.Context, partidaNueva *melody.Melody, torneoNuevo *me
 		numJugadores := njug
 		// restar 1 a los jugadores que no son bots
 		for i := 0; i < numJugadores; i++ {
-			if turnos[i][1] == "bot1" || turnos[i][1] == "bot2" || turnos[i][1] == "bot3" {
+			if turnos[i][0] == "bot1" || turnos[i][0] == "bot2" || turnos[i][0] == "bot3" {
 				njug--
 			}
 		}
